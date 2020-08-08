@@ -1,0 +1,9 @@
+{
+    "id": "123",
+    "name": "log created",
+    "user_id": "teste",
+    "bot_id": "teste",
+    "outputData": {
+        "message": "data from creations"
+    }
+}
