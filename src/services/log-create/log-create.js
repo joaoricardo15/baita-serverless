@@ -3,15 +3,15 @@ const ddb = new AWS.DynamoDB.DocumentClient();
 
 module.exports.handler = (event, context, callback) => {  
 
-    const { user_id, bot_id, name, outputData } = event;
+    const { user_id, bot_id, name, output_data } = event;
 
     const timestamp = Date.now();
 
-    const outputResultData = outputData.errorMessage ? { message: outputData.errorMessage } : outputData.data ? outputData.data : {};
-    const success = outputData.errorMessage ? false : true;
+    const outputResultData = output_data.errorMessage ? { message: output_data.errorMessage } : output_data.data ? output_data.data : {};
+    const success = output_data.errorMessage ? false : true;
     const log = {
         name,
-        outputData: outputResultData,
+        output_data: outputResultData,
         success,
         timestamp,
     };

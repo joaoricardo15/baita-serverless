@@ -3,9 +3,9 @@ const ddb = new AWS.DynamoDB.DocumentClient();
 
 module.exports.handler = (event, context, callback) => {
 
-    const triggerInput = JSON.parse(event.body);
+    const input_data = JSON.parse(event.body);
 
-    const { user_id, email, name, } = triggerInput;
+    const { user_id, email, name, } = input_data;
 
     var params = {
         TableName:'users',

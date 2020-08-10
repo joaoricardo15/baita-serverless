@@ -1,0 +1,61 @@
+const AWS = require('aws-sdk');
+const ddb = new AWS.DynamoDB.DocumentClient();
+const apigateway = new AWS.ApiGatewayV2();
+const lambda = new AWS.Lambda();
+const s3 = new AWS.S3();
+
+const BOTS_BUCKET = process.env.BOTS_BUCKET;
+
+module.exports.handler = (event, context, callback) => {
+
+    const input_data = JSON.parse(event.body);
+
+    const { user_id, bot_id, api_id } = input_data;
+
+    var dbParams = {
+        TableName:'bots',
+        Key: {
+            "user_id": user_id,
+            "bot_id": bot_id
+        }
+    };
+
+    ddb.delete(dbParams).promise()
+        .then(() => {
+  
+            const apiParams = {
+                ApiId: api_id
+            };
+
+            apigateway.deleteApi(apiParams).promise()
+                .then(api => {
+
+                    const lambdaParams = {
+                        FunctionName: `${bot_id}`
+                    };
+
+                    lambda.deleteFunction(lambdaParams).promise()
+                        .then(lambda => {
+                            
+                            var bucketParams = {
+                                Bucket: BOTS_BUCKET,
+                                Key: `${bot_id}.zip`
+                            };
+                
+                            s3.deleteObject(bucketParams).promise()
+                                .then(bucket => {
+                                    callback(null, {
+                                        statusCode: 200,
+                                        headers: {
+                                            "Access-Control-Allow-Origin": "*",
+                                        },
+                                        body: JSON.stringify({
+                                            success: true,
+                                            message: 'bot deleted successfully',
+                                        })
+                                    }); 
+                                }).catch(error => callback(error));
+                        }).catch(error => callback(error));
+                }).catch(error => callback(error));
+        }).catch(error => callback(error));
+};

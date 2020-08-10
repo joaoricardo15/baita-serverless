@@ -1,5 +1,9 @@
+# package
 .webpack
 node_modules
+.serverless
+package-lock.json
 
+# secrets
 src/services/auth/public_key
 src/services/auth/secrets.json

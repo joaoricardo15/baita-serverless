@@ -1,5 +1,3 @@
 {
-    "user_id": "teste",
-    "name": "teste",
-    "email": "teste@teste.com.br"
+    "body": "{\"user_id\":\"asd|teste\",\"name\":\"teste\",\"email\":\"teste@teste.com.br\"}"
 }
