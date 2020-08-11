@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const AUTH0_DOMAIN = process.env.AUTH0_DOMAIN;
+const AUTH0_CLIENT_ID = process.env.AUTH0_CLIENT_ID;
 const AUTH0_CLIENT_PUBLIC_KEY = process.env.AUTH0_CLIENT_PUBLIC_KEY;
 
 const generatePolicy = (principalId, effect, resource) => {
@@ -20,7 +20,6 @@ const generatePolicy = (principalId, effect, resource) => {
   return authResponse;
 };
 
-// Reusable Authorizer function, set on `authorizer` field in serverless.yml
 module.exports.handler = (event, context, callback) => {
 
   if (!event.authorizationToken) {
@@ -58,7 +57,6 @@ module.exports.publicEndpoint = (event, context, callback) => callback(null, {
   }),
 });
 
-// Private API
 module.exports.privateEndpoint = (event, context, callback) => callback(null, {
   statusCode: 200,
   headers: {

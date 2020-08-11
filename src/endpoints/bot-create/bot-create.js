@@ -10,7 +10,7 @@ var zip = new JSZip();
 
 const BOTS_ROLE = process.env.BOTS_ROLE;
 const BOTS_BUCKET = process.env.BOTS_BUCKET;
-const LOG_CREATE_FUNCTION = process.env.LOG_CREATE_FUNCTION;
+const FUNCTIONS_PREFIX = process.env.FUNCTIONS_PREFIX;
 
 module.exports.handler = (event, context, callback) => {
 
@@ -23,15 +23,9 @@ module.exports.handler = (event, context, callback) => {
     const botConfig = {
         bot_id,
         user_id,
-        name,
-        tasks: [
-          {
-  
-          },
-          {
-  
-          }
-        ]
+        name: '',
+        trigger: {},
+        tasks: []
     };
 
     const bot_code = `
@@ -44,22 +38,19 @@ const bot_id = '${bot_id}';
 module.exports.handler = async (event, context, callback) => {
 
     const trigger_name = 'webhook';
-    let trigger_data = null;
+    let trigger_data;
     
-    try {
-        trigger_data = JSON.parse(event.body);
-    } catch (error) {
-        console.log(error);
-    }
+    if (event.body)
+        try {
+            trigger_data = JSON.parse(event.body);
+        } catch (error) {
+            trigger_data = event.body;
+        }
     
-    console.log(event)
-    console.log(context)
     const logSet = await lambda.invoke({
-        FunctionName: '${LOG_CREATE_FUNCTION}',
+        FunctionName: '${FUNCTIONS_PREFIX}-log-create',
         Payload: JSON.stringify({ user_id, bot_id, name: trigger_name, output_data: { success: true, data: trigger_data } })
     }).promise();
-
-    console.log(trigger_data)
 
     callback(null, {
         statusCode: 200,
@@ -108,11 +99,11 @@ module.exports.handler = async (event, context, callback) => {
                                 CredentialsArn: BOTS_ROLE,
                                 RouteKey: 'ANY /bot',
                                 Target: lambda.FunctionArn,
-                                CorsConfiguration: {
-                                    AllowHeaders: ['*'],
-                                    AllowOrigins: ['*'],
-                                    AllowMethods: ['*']
-                                }
+                                // CorsConfiguration: {
+                                //     AllowHeaders: ['*'],
+                                //     AllowOrigins: ['*'],
+                                //     AllowMethods: ['*']
+                                // }
                             }
 
                             apigateway.createApi(apiParams).promise()
@@ -137,6 +128,7 @@ module.exports.handler = async (event, context, callback) => {
                                                 body: JSON.stringify({
                                                     success: true,
                                                     message: 'bot created successfully',
+                                                    data: dbParams.Item
                                                 })
                                             }); 
                                         }).catch(error => callback(error));

@@ -8,7 +8,14 @@ const BOTS_BUCKET = process.env.BOTS_BUCKET;
 
 module.exports.handler = (event, context, callback) => {
 
-    const input_data = JSON.parse(event.body);
+    let input_data;
+    
+    if (event.body)
+        try {
+            input_data = JSON.parse(event.body);
+        } catch (error) {
+            input_data = event.body;
+        }
 
     const { user_id, bot_id, api_id } = input_data;
 
