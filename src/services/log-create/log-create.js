@@ -7,28 +7,28 @@ module.exports.handler = (event, context, callback) => {
 
     const timestamp = Date.now();
 
-    const outputResultData = output_data.errorMessage ? { message: output_data.errorMessage } : output_data.data ? output_data.data : {};
+    const result_output_data = output_data.errorMessage ? { message: output_data.errorMessage } : output_data.data ? output_data.data : {};
     const success = output_data.errorMessage ? false : true;
     const log = {
         name,
-        output_data: outputResultData,
+        output_data: result_output_data,
         success,
         timestamp,
     };
     
-    const logSet = {
+    const log_set = {
         bot_id,
         user_id, 
         timestamp,
         logs: [log]
     };
         
-    var params = {
+    const log_params = {
         TableName:'logs',
-        Item: logSet
+        Item: log_set
     };
                     
-    ddb.put(params).promise()
+    ddb.put(log_params).promise()
         .then(() => callback(null, { success: true, data: { logSet_id: timestamp } }))
         .catch(err => callback(err));
-};
+}

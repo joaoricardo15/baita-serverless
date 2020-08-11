@@ -49,8 +49,8 @@ module.exports.handler = (event, context, callback) => {
 module.exports.publicEndpoint = (event, context, callback) => callback(null, {
   statusCode: 200,
   headers: {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Credentials': true,
+    'Content-type': 'application/json',
+    'Access-Control-Allow-Origin': '*'
   },
   body: JSON.stringify({
     message: 'Hi ⊂◉‿◉つ from Public API',
@@ -60,8 +60,8 @@ module.exports.publicEndpoint = (event, context, callback) => callback(null, {
 module.exports.privateEndpoint = (event, context, callback) => callback(null, {
   statusCode: 200,
   headers: {
+    'Content-type': 'application/json',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Credentials': true,
   },
   body: JSON.stringify({
     message: 'Hi ⊂◉‿◉つ from Private API. Only logged in users can see this',

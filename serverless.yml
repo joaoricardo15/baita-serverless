@@ -29,12 +29,21 @@ provider:
       Resource: '*'
 
 functions:
+  ### services ### 
   auth:
     handler: src/services/auth/auth.handler
   log-create:
     handler: src/services/log-create/log-create.handler
   log-update:
     handler: src/services/log-update/log-update.handler
+  sample-update:
+    handler: src/services/sample-update/sample-update.handler
+
+  ### tasks ### 
+  http-request:
+    handler: src/tasks/http-request/http-request.handler
+
+  ### endpoints ### 
   user-create:
     handler: src/endpoints/user-create/user-create.handler
     events:
@@ -64,6 +73,24 @@ functions:
     events:
       - http:
           path: bot/delete
+          method: post
+          cors: true
+          # authorizer:
+          #   name: auth
+  bot-test:
+    handler: src/endpoints/bot-test/bot-test.handler
+    events:
+      - http:
+          path: bot/test
+          method: post
+          cors: true
+          # authorizer:
+          #   name: auth
+  bot-deploy:
+    handler: src/endpoints/bot-deploy/bot-deploy.handler
+    events:
+      - http:
+          path: bot/deploy
           method: post
           cors: true
           # authorizer:

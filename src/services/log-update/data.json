@@ -1,8 +1,10 @@
 {
     "id": "123",
     "name": "log created",
-    "user_id": "teste",
     "bot_id": "teste",
+    "input_data": {
+        "message": "asd"
+    },
     "outputData": {
         "message": "data from creations"
     }

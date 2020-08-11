@@ -16,7 +16,7 @@ module.exports.handler = (event, context, callback) => {
 
     const input_data = JSON.parse(event.body);
 
-    const { user_id, name } =  input_data;
+    const { user_id } =  input_data;
 
     const bot_id = uuidv4();
 
@@ -24,7 +24,9 @@ module.exports.handler = (event, context, callback) => {
         bot_id,
         user_id,
         name: '',
-        trigger: {},
+        trigger: {
+            sample_results: []
+        },
         tasks: []
     };
 
@@ -37,7 +39,6 @@ const bot_id = '${bot_id}';
 
 module.exports.handler = async (event, context, callback) => {
 
-    const trigger_name = 'webhook';
     let trigger_data;
     
     if (event.body)
@@ -47,22 +48,23 @@ module.exports.handler = async (event, context, callback) => {
             trigger_data = event.body;
         }
     
-    const logSet = await lambda.invoke({
-        FunctionName: '${FUNCTIONS_PREFIX}-log-create',
-        Payload: JSON.stringify({ user_id, bot_id, name: trigger_name, output_data: { success: true, data: trigger_data } })
+    await lambda.invoke({
+        FunctionName: '${FUNCTIONS_PREFIX}-sample-update',
+        Payload: JSON.stringify({ user_id, bot_id, output_data: trigger_data })
     }).promise();
 
     callback(null, {
         statusCode: 200,
         headers: {
-            "Access-Control-Allow-Origin": "*",
+            'Content-type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
         },
         body: JSON.stringify({
-            success: true,
-            data: trigger_data
+            bot_id,
+            success: true
         })
     }); 
-}
+};
     `
 
     zip.file("index.js", bot_code);
@@ -80,14 +82,14 @@ module.exports.handler = async (event, context, callback) => {
                 .then(bucket => {
                     
                     const lambdaParams = {
-                        Code: {
-                            S3Bucket: BOTS_BUCKET,
-                            S3Key: `${bot_id}.zip`
-                        },
                         FunctionName: bot_id,
                         Handler: 'index.handler',
                         Runtime: 'nodejs12.x',
-                        Role: BOTS_ROLE
+                        Role: BOTS_ROLE,
+                        Code: {
+                            S3Bucket: BOTS_BUCKET,
+                            S3Key: `${bot_id}.zip`
+                        }
                     };
 
                     lambda.createFunction(lambdaParams).promise()
@@ -99,11 +101,11 @@ module.exports.handler = async (event, context, callback) => {
                                 CredentialsArn: BOTS_ROLE,
                                 RouteKey: 'ANY /bot',
                                 Target: lambda.FunctionArn,
-                                // CorsConfiguration: {
-                                //     AllowHeaders: ['*'],
-                                //     AllowOrigins: ['*'],
-                                //     AllowMethods: ['*']
-                                // }
+                                CorsConfiguration: {
+                                    AllowHeaders: ['*'],
+                                    AllowOrigins: ['*'],
+                                    AllowMethods: ['*']
+                                }
                             }
 
                             apigateway.createApi(apiParams).promise()
@@ -123,7 +125,8 @@ module.exports.handler = async (event, context, callback) => {
                                             callback(null, {
                                                 statusCode: 200,
                                                 headers: {
-                                                    "Access-Control-Allow-Origin": "*",
+                                                    'Content-type': 'application/json',
+                                                    'Access-Control-Allow-Origin': '*'
                                                 },
                                                 body: JSON.stringify({
                                                     success: true,
