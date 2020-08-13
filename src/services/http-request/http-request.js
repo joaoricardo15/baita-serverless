@@ -67,7 +67,7 @@ exports.handler = (event, context, callback) => {
 
             callback(null, {
                 success: true,
-                data: request_result.data
+                data: request_result
             });
         });
         res.on('error', error => {

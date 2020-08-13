@@ -1,0 +1,14 @@
+{ 
+    "config": {
+        "url": "https://www.receitaws.com.br/v1/cnpj",
+        "metrod": "GET",
+        "url_params": [
+            {
+                "input_field": "cnpj"
+            }
+        ]
+    },
+    "input_data": {
+        "cnpj": "27865757000102" 
+    }
+}
