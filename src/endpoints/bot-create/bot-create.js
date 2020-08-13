@@ -1,11 +1,10 @@
-const { v4: uuidv4 } = require('uuid');
 const AWS = require('aws-sdk');
+var JSZip = require("jszip");
+const { v4: uuidv4 } = require('uuid');
 const ddb = new AWS.DynamoDB.DocumentClient();
 const apigateway = new AWS.ApiGatewayV2();
 const lambda = new AWS.Lambda();
 const s3 = new AWS.S3();
-
-var JSZip = require("jszip");
 var zip = new JSZip();
 
 const BOTS_ROLE = process.env.BOTS_ROLE;
@@ -20,14 +19,23 @@ module.exports.handler = (event, context, callback) => {
 
     const bot_id = uuidv4();
 
+    const task_id = Date.now();
+
     const botConfig = {
         bot_id,
         user_id,
         name: '',
-        trigger: {
-            sample_results: []
-        },
-        tasks: []
+        tasks: [
+            {
+                id: task_id,
+                type: 'trigger',
+            }
+        ],
+        samples: [
+            {
+                id: task_id
+            }
+        ]
     };
 
     const bot_code = `
@@ -50,7 +58,7 @@ module.exports.handler = async (event, context, callback) => {
     
     await lambda.invoke({
         FunctionName: '${FUNCTIONS_PREFIX}-sample-update',
-        Payload: JSON.stringify({ user_id, bot_id, output_data: trigger_data })
+        Payload: JSON.stringify({ user_id, bot_id, task_index: 0, output_data: trigger_data })
     }).promise();
 
     callback(null, {
@@ -60,7 +68,6 @@ module.exports.handler = async (event, context, callback) => {
             'Access-Control-Allow-Origin': '*'
         },
         body: JSON.stringify({
-            bot_id,
             success: true
         })
     }); 

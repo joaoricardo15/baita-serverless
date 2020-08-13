@@ -13,49 +13,46 @@ module.exports.handler = (event, context, callback) => {
 
     const input_data = JSON.parse(event.body);
 
-    const { user_id, bot_id, trigger, tasks } =  input_data;
+    const { user_id, bot_id, tasks } =  input_data;
 
-    let innerCode = '';
+    if (!tasks || !tasks.length || tasks.length < 2 || tasks[0].type !== 'trigger')
+        callback('invalid bot config');
+    else {
 
-    for (let i = 0; i < tasks.length; i++) {
-        innerCode +=  `
+        let innerCode = '';
 
-    const { cpf } = trigger_data;
+        for (let i = 1; i < tasks.length; i++) {
 
-    let formatedCpf = cpf + "";
-  
-    if (formatedCpf.includes(".") || formatedCpf.includes("-") || formatedCpf.includes(" ") || formatedCpf.includes(",")) {
-        formatedCpf = formatedCpf.split(".").join("");
-        formatedCpf = formatedCpf.split("-").join("");
-        formatedCpf = formatedCpf.split(" ").join("");
-        formatedCpf = formatedCpf.split(",").join("");
-    }
+            let input_fields = '';
+            for (let j = 0; j < tasks[i].service_data.input_fields.length; j++)
+                input_fields += `'${tasks[i].service_data.input_fields[j].variable_name}': trigger_data['${tasks[i].service_data.input_fields[j].variable_name}'],`
 
-    const action${i}Name = '${tasks[i].name}';
-    const action${i}ApiToken = "0477aec73fcc3a5518dce98e4ae95ce346540e5f";
+            innerCode +=  `
+
+    const action${i}_name = '${tasks[i].name}';
     
-    const action${i}Input = {
-      field_name: "cpf",
-      search_term: formatedCpf
+    const action${i}_input_data = {
+      ${input_fields}
     };
+
+    const action${i}_config = ${JSON.stringify(tasks[i].service_config)};
     
-    const action${i}Response = await lambda.invoke({
-      FunctionName: 'action_pipedrive-search-person',//'${FUNCTIONS_PREFIX}-${tasks[i].function_name}',
-      Payload: JSON.stringify({ api_token: action${i}ApiToken, payload: action${i}Input }),
+    const action${i}_response = await lambda.invoke({
+      FunctionName: '${FUNCTIONS_PREFIX}-${tasks[i].service_name}',
+      Payload: JSON.stringify({ config: action${i}_config, input_data: action${i}_input_data }),
     }).promise();
     
-    const action${i}Result = JSON.parse(action${i}Response.Payload);
+    const action${i}_output_data = JSON.parse(action${i}_response.Payload);
     
     await lambda.invoke({
       FunctionName: '${FUNCTIONS_PREFIX}-log-update',
-      Payload: JSON.stringify({ id: logSet_id, user_id, bot_id, name: action${i}Name, input_data: action${i}Input, output_data: action${i}Result })
+      Payload: JSON.stringify({ id: logSet_id, user_id, bot_id, name: action${i}_name, input_data: action${i}_input_data, output_data: action${i}_output_data })
     }).promise();
 
-    ${true && `output_data = action${i}Result;`}
-`
-    }
+    ${tasks[i].bot_output ? `output_data = action${i}_output_data;` : ''}`
+        }
 
-    const bot_code = `
+        const bot_code = `
 const AWS = require('aws-sdk');
 const lambda = new AWS.Lambda({ region: "us-east-1" });
 
@@ -65,8 +62,8 @@ let output_data;
 
 module.exports.handler = async (event, context, callback) => {
 
-    const trigger_name = '${trigger.name}';
-    
+    const trigger_name = '${tasks[0].name}';
+
     let trigger_data;
     
     if (event.body)
@@ -78,7 +75,7 @@ module.exports.handler = async (event, context, callback) => {
     
     await lambda.invoke({
         FunctionName: '${FUNCTIONS_PREFIX}-sample-update',
-        Payload: JSON.stringify({ user_id, bot_id, output_data: trigger_data })
+        Payload: JSON.stringify({ user_id, bot_id, task_index: 0, output_data: trigger_data })
     }).promise();
 
     const logSet = await lambda.invoke({
@@ -100,53 +97,54 @@ ${innerCode}
             data: output_data
         })
     }); 
-}
+};
 `
 
-    zip.file("index.js", bot_code);
-    zip.generateAsync({ type: "base64" })
-        .then(package => {
-        
-            const buffer = new Buffer.from(package, 'base64');
-            const bucketParams = {
-                Bucket: BOTS_BUCKET,
-                Key: `${bot_id}.zip`,
-                Body: buffer
-            };
+        zip.file("index.js", bot_code);
+        zip.generateAsync({ type: "base64" })
+            .then(package => {
+            
+                const buffer = new Buffer.from(package, 'base64');
+                const bucketParams = {
+                    Bucket: BOTS_BUCKET,
+                    Key: `${bot_id}.zip`,
+                    Body: buffer
+                };
 
-            s3.upload(bucketParams).promise()
-                .then(bucket => {
-                    
-                    const lambdaParams = {
-                        FunctionName: bot_id,
-                        S3Bucket: BOTS_BUCKET,
-                        S3Key: `${bot_id}.zip`
-                    };
+                s3.upload(bucketParams).promise()
+                    .then(bucket => {
+                        
+                        const lambdaParams = {
+                            FunctionName: bot_id,
+                            S3Bucket: BOTS_BUCKET,
+                            S3Key: `${bot_id}.zip`
+                        };
 
-                    lambda.updateFunctionCode(lambdaParams).promise()
-                        .then(lambda => {
+                        lambda.updateFunctionCode(lambdaParams).promise()
+                            .then(lambda => {
 
-                            const dbParams = {
-                                TableName:'bots',
-                                Item: input_data
-                            };
+                                const dbParams = {
+                                    TableName:'bots',
+                                    Item: input_data
+                                };
 
-                            ddb.put(dbParams).promise()
-                                .then(() => {
-                                    callback(null, {
-                                        statusCode: 200,
-                                        headers: {
-                                            'Content-type': 'application/json',
-                                            'Access-Control-Allow-Origin': '*'
-                                        },
-                                        body: JSON.stringify({
-                                            success: true,
-                                            message: 'bot created successfully',
-                                            data: dbParams.Item
-                                        })
-                                    }); 
-                                }).catch(error => callback(error));    
-                        }).catch(error => callback(error));
-                }).catch(error => callback(error));
-        }).catch(error => callback(error));
+                                ddb.put(dbParams).promise()
+                                    .then(() => {
+                                        callback(null, {
+                                            statusCode: 200,
+                                            headers: {
+                                                'Content-type': 'application/json',
+                                                'Access-Control-Allow-Origin': '*'
+                                            },
+                                            body: JSON.stringify({
+                                                success: true,
+                                                message: 'bot created successfully',
+                                                data: dbParams.Item
+                                            })
+                                        }); 
+                                    }).catch(error => callback(error));    
+                            }).catch(error => callback(error));
+                    }).catch(error => callback(error));
+            }).catch(error => callback(error));
+    }
 };

@@ -1,5 +1,5 @@
 const AWS = require('aws-sdk');
-const lambda = new AWS.Lambda({ region: "us-east-1" });
+const lambda = new AWS.Lambda();
 
 const FUNCTIONS_PREFIX = process.env.FUNCTIONS_PREFIX;
 
@@ -13,15 +13,15 @@ module.exports.handler = (event, context, callback) => {
         test_input_data = event.body;
     }
 
-    const { user_id, bot_id, task_index, task_name, task_data, input_data } = test_input_data;
+    const { user_id, bot_id, task_index, service_name, service_config, input_data } = test_input_data;
 
     lambda.invoke({
-      FunctionName: `${FUNCTIONS_PREFIX}-${task_name}`,
-      Payload: JSON.stringify({ task_data, input_data }),
+      FunctionName: `${FUNCTIONS_PREFIX}-${service_name}`,
+      Payload: JSON.stringify({ config: service_config, input_data }),
     }).promise()
         .then(task_tesponse => {
             
-            const task_result = JSON.parse(task_tesponse.Payload).data;
+            const task_result = JSON.parse(task_tesponse.Payload);
 
             lambda.invoke({
                 FunctionName: `${FUNCTIONS_PREFIX}-sample-update`,

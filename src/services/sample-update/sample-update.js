@@ -22,10 +22,10 @@ module.exports.handler = (event, context, callback) => {
         ReturnValues:"ALL_NEW"
     };
 
-    if (task_index === undefined) {
-        sample_params.UpdateExpression = "set #tg.sample_results = list_append(if_not_exists(#tg.sample_results, :empty_list), :sample)";
+    if (task_index == 0) {
+        sample_params.UpdateExpression = `set #smp[${task_index}].sample_results = list_append(if_not_exists(#smp.sample_results, :empty_list), :sample)`;
         sample_params.ExpressionAttributeNames = {
-            "#tg": 'trigger'
+            "#smp": 'samples'
         };
         sample_params. ExpressionAttributeValues = {
             ":sample": [sample],
@@ -33,15 +33,15 @@ module.exports.handler = (event, context, callback) => {
         };
     }
     else {
-        sample_params.UpdateExpression = `set #tk[${task_index}].sample_result = :sample`;
+        sample_params.UpdateExpression = `set #smp[${task_index}].sample_result = :sample`;
         sample_params.ExpressionAttributeNames = {
-            "#tk": `tasks`
+            "#smp": 'samples'
         };
         sample_params. ExpressionAttributeValues = {
             ":sample": sample,
         };
     }
-        
+
     ddb.update(sample_params).promise()
         .then(result => {
             callback(null, {  

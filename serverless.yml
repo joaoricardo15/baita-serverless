@@ -38,10 +38,8 @@ functions:
     handler: src/services/log-update/log-update.handler
   sample-update:
     handler: src/services/sample-update/sample-update.handler
-
-  ### tasks ### 
   http-request:
-    handler: src/tasks/http-request/http-request.handler
+    handler: src/services/http-request/http-request.handler
 
   ### endpoints ### 
   user-create:
