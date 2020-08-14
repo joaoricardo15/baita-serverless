@@ -35,7 +35,7 @@ exports.handler = (event, context, callback) => {
 
             const encoded_source = encodeURIComponent(source).replace(/[!'()*]/g, (c) => '%' + c.charCodeAt(0).toString(16));
         
-            path += `${query_params[i].name}=${encoded_source}&`;
+            path += `${query_params[i].var_name}=${encoded_source}&`;
         }
     }
             

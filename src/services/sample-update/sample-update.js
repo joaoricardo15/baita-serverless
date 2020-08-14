@@ -23,19 +23,21 @@ module.exports.handler = (event, context, callback) => {
     };
 
     if (task_index == 0) {
-        sample_params.UpdateExpression = `set #smp[${task_index}].sample_results = list_append(if_not_exists(#smp.sample_results, :empty_list), :sample)`;
+        sample_params.UpdateExpression = `set #tks[${task_index}].sample_result = :sample, #tg = list_append(if_not_exists(#tg, :empty_list), :sample_list)`;
         sample_params.ExpressionAttributeNames = {
-            "#smp": 'samples'
+            "#tks": 'tasks',
+            "#tg": 'trigger_samples'
         };
         sample_params. ExpressionAttributeValues = {
-            ":sample": [sample],
-            ":empty_list": []
+            ":sample": sample,
+            ":empty_list": [],
+            ":sample_list": [sample]
         };
     }
     else {
-        sample_params.UpdateExpression = `set #smp[${task_index}].sample_result = :sample`;
+        sample_params.UpdateExpression = `set #tks[${task_index}].sample_result = :sample`;
         sample_params.ExpressionAttributeNames = {
-            "#smp": 'samples'
+            "#tks": 'tasks'
         };
         sample_params. ExpressionAttributeValues = {
             ":sample": sample,
