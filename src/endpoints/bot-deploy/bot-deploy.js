@@ -66,16 +66,18 @@ module.exports.handler = (event, context, callback) => {
       Payload: JSON.stringify({ config: task${i}_config, input_data: task${i}_input_data }),
     }).promise();
     
-    const task${i}_output_data = JSON.parse(task${i}_response.Payload);
+    const task${i}_result = JSON.parse(task${i}_response.Payload);
 
-    const task${i}_output_data_result = task${i}_output_data.errorMessage ? { message: task${i}_output_data.errorMessage } : task${i}_output_data.data ? task${i}_output_data.data : {};
-    const task${i}_success = task${i}_output_data.errorMessage ? false : true;
+    const task${i}_success = task${i}_result.success;
+
+    const task${i}_output_data = task${i}_success ? task${i}_result.data : { message: task${i}_result.message || task${i}_result.errorMessage || 'nothing for you this time : (' };
+    
     const task${i}_timestamp = Date.now();
 
     logs.push({
         name: task${i}_name,
         input_data: task${i}_input_data,
-        output_data: task${i}_output_data_result,
+        output_data: task${i}_output_data,
         timestamp: task${i}_timestamp,
         success: task${i}_success
     });
@@ -110,7 +112,7 @@ module.exports.handler = async (event, context, callback) => {
 
     logs.push({
         name: task0_name,
-        output_data: { success: true, data: task0_output_data },
+        output_data: task0_output_data,
         timestamp: task0_timestamp,
         success: true
     });

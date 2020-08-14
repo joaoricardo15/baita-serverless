@@ -45,7 +45,7 @@ module.exports.handler = (event, context, callback) => {
                             data: {                       
                                 total: total,
                                 logs: log.Items,
-                                last_run: log.Items[0].timestamp
+                                last_run: log.Items.length ? log.Items[0].timestamp : undefined
                             }
                         })
                     })

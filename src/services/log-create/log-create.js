@@ -21,5 +21,5 @@ module.exports.handler = (event, context, callback) => {
                     
     ddb.put(logParams).promise()
         .then(() => callback(null, { success: true }))
-        .catch(err => callback(err));
+        .callback({ success: false, ...error });
 }

@@ -71,8 +71,8 @@ exports.handler = (event, context, callback) => {
             });
         });
         res.on('error', error => {
-          callback(error);
-        })
+          callback({ success: false, ...error });
+        });
     });
 
     if (input_data) req.write(JSON.stringify(input_data));

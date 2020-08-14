@@ -23,9 +23,13 @@ module.exports.handler = (event, context, callback) => {
             
             const task_result = JSON.parse(task_tesponse.Payload);
 
+            const task_success = task_result;
+
+            const task_output_data = task_success ? task_result.data : { message: task_result.message || task_result.errorMessage || 'nothing for you this time : (' };
+    
             lambda.invoke({
                 FunctionName: `${FUNCTIONS_PREFIX}-sample-update`,
-                Payload: JSON.stringify({ user_id, bot_id, task_index, input_data, output_data: task_result })
+                Payload: JSON.stringify({ user_id, bot_id, task_index, input_data, output_data: task_output_data })
             }).promise()
                 .then(update_response => {
         
