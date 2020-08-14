@@ -34,8 +34,6 @@ functions:
     handler: src/services/auth/auth.handler
   log-create:
     handler: src/services/log-create/log-create.handler
-  log-update:
-    handler: src/services/log-update/log-update.handler
   sample-update:
     handler: src/services/sample-update/sample-update.handler
   http-request:
@@ -89,6 +87,15 @@ functions:
     events:
       - http:
           path: bot/deploy
+          method: post
+          cors: true
+          # authorizer:
+          #   name: auth
+  bot-detach:
+    handler: src/endpoints/bot-detach/bot-detach.handler
+    events:
+      - http:
+          path: bot/detach
           method: post
           cors: true
           # authorizer:

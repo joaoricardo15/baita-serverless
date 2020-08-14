@@ -5,7 +5,7 @@ module.exports.handler = (event, context, callback) => {
 
     const { bot_id } = event.queryStringParameters;
     
-    const params = { 
+    const queryParams = { 
         TableName: 'logs',
         Limit:20,
         KeyConditionExpression: "bot_id = :id",
@@ -15,21 +15,40 @@ module.exports.handler = (event, context, callback) => {
         ScanIndexForward: false
     };
     
-    ddb.query(params).promise()
-        .then(data => {
-            callback(null, {
-                statusCode: 200,
-                headers: {
-                    'Content-type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
+    ddb.query(queryParams).promise()
+        .then(log => {
+            
+            const scanParams = { 
+                TableName: 'logs',
+                ProjectionExpression: 'logs',
+                FilterExpression: "bot_id = :id",
+                ExpressionAttributeValues: {
+                    ":id": bot_id
                 },
-                body: JSON.stringify({
-                    success: true,
-                    data: data.Items
-                })
-            })
-        })
-        .catch(error => {
-            callback(error);
-        });
+            };
+
+            ddb.scan(scanParams).promise()
+                .then(scan => {
+
+                    let total = 0;
+                    for (let i = 0; i < scan.Items.length; i++)
+                        total += scan.Items[i].logs.length;
+
+                    callback(null, {
+                        statusCode: 200,
+                        headers: {
+                            'Content-type': 'application/json',
+                            'Access-Control-Allow-Origin': '*'
+                        },
+                        body: JSON.stringify({
+                            success: true,
+                            data: {                       
+                                total: total,
+                                logs: log.Items,
+                                last_run: log.Items[0].timestamp
+                            }
+                        })
+                    })
+                }).catch(error => callback(error));
+        }).catch(error => callback(error));
 };

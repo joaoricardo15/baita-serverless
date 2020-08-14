@@ -16,7 +16,17 @@ module.exports.handler = (event, context, callback) => {
     const { user_id, bot_id, tasks } =  input_data;
 
     if (!tasks || !tasks.length || tasks.length < 2 || tasks[0].type !== 'trigger')
-        callback('invalid bot config');
+        callback(null, {
+            statusCode: 200,
+            headers: {
+                'Content-type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            body: JSON.stringify({
+                success: false,
+                message: 'invalid bot config'
+            })
+        });
     else {
 
         let innerCode = '';
@@ -24,11 +34,25 @@ module.exports.handler = (event, context, callback) => {
         for (let i = 1; i < tasks.length; i++) {
 
             let input_fields = '';
-            for (let j = 0; j < tasks[i].service_data.input_fields.length; j++)
-                input_fields += `'${tasks[i].service_data.input_fields[j].var_name}': ${tasks[i].input_data[tasks[i].service_data.input_fields[j].var_name]},`
-
+            for (let j = 0; j < tasks[i].service_data.input_fields.length; j++) {
+                const var_name = tasks[i].service_data.input_fields[j].var_name;
+                if (!tasks[i].service_name || !tasks[i].service_config)
+                    callback(null, {
+                        statusCode: 200,
+                        headers: {
+                            'Content-type': 'application/json',
+                            'Access-Control-Allow-Origin': '*'
+                        },
+                        body: JSON.stringify({
+                            success: false,
+                            message: 'invalid bot config'
+                        })
+                    });
+                else if (tasks[i].input_data && tasks[i].input_data[var_name])
+                    input_fields += `'${var_name}': ${tasks[i].input_data[var_name]},`
+            }
+                
             innerCode +=  `
-
     const task${i}_name = '${tasks[i].name}';
     
     const task${i}_input_data = {
@@ -43,11 +67,18 @@ module.exports.handler = (event, context, callback) => {
     }).promise();
     
     const task${i}_output_data = JSON.parse(task${i}_response.Payload);
-    
-    await lambda.invoke({
-      FunctionName: '${FUNCTIONS_PREFIX}-log-update',
-      Payload: JSON.stringify({ id: logSet_id, user_id, bot_id, name: task${i}_name, input_data: task${i}_input_data, output_data: task${i}_output_data })
-    }).promise();
+
+    const task${i}_output_data_result = task${i}_output_data.errorMessage ? { message: task${i}_output_data.errorMessage } : task${i}_output_data.data ? task${i}_output_data.data : {};
+    const task${i}_success = task${i}_output_data.errorMessage ? false : true;
+    const task${i}_timestamp = Date.now();
+
+    logs.push({
+        name: task${i}_name,
+        input_data: task${i}_input_data,
+        output_data: task${i}_output_data_result,
+        timestamp: task${i}_timestamp,
+        success: task${i}_success
+    });
 
     ${tasks[i].bot_output ? `output_data = task${i}_output_data;` : ''}`
         }
@@ -56,11 +87,13 @@ module.exports.handler = (event, context, callback) => {
 const AWS = require('aws-sdk');
 const lambda = new AWS.Lambda({ region: "us-east-1" });
 
-const user_id = '${user_id}';
-const bot_id = '${bot_id}';
-let output_data;
-
 module.exports.handler = async (event, context, callback) => {
+
+    const user_id = '${user_id}';
+    const bot_id = '${bot_id}';
+
+    const logs = [];
+    let output_data;
 
     const task0_name = '${tasks[0].name}';
 
@@ -73,14 +106,20 @@ module.exports.handler = async (event, context, callback) => {
             task0_output_data = event.body;
         }
 
-    const logSet = await lambda.invoke({
+    const task0_timestamp = Date.now();
+
+    logs.push({
+        name: task0_name,
+        output_data: { success: true, data: task0_output_data },
+        timestamp: task0_timestamp,
+        success: true
+    });
+${innerCode}
+    lambda.invoke({
         FunctionName: '${FUNCTIONS_PREFIX}-log-create',
-        Payload: JSON.stringify({ user_id, bot_id, name: task0_name, output_data: { success: true, data: task0_output_data } })
+        Payload: JSON.stringify({ user_id, bot_id, logs })
     }).promise();
 
-    const logCreationResult = JSON.parse(logSet.Payload);
-    const logSet_id = logCreationResult.data && logCreationResult.data.logSet_id;
-${innerCode}
     callback(null, {
         statusCode: 200,
         headers: {
@@ -124,18 +163,20 @@ ${innerCode}
                                         "bot_id": bot_id,
                                         "user_id": user_id
                                     },
-                                    UpdateExpression: 'set #tk = :tk',
+                                    UpdateExpression: 'set #tk = :tk, #act = :act',
                                     ExpressionAttributeNames: {
-                                        "#tk": 'tasks'
+                                        "#tk": 'tasks',
+                                        "#act": 'active'
                                     },
                                     ExpressionAttributeValues: {
-                                        ":tk": tasks
+                                        ":tk": tasks,
+                                        ":act": true
                                     },
                                     ReturnValues:"ALL_NEW"
                                 };
 
                                 ddb.update(dbParams).promise()
-                                    .then(() => {
+                                    .then(data => {
                                         callback(null, {
                                             statusCode: 200,
                                             headers: {
@@ -145,9 +186,9 @@ ${innerCode}
                                             body: JSON.stringify({
                                                 success: true,
                                                 message: 'bot created successfully',
-                                                data: dbParams.Item
+                                                data: data.Attributes
                                             })
-                                        }); 
+                                        });
                                     }).catch(error => callback(error));    
                             }).catch(error => callback(error));
                     }).catch(error => callback(error));

@@ -25,6 +25,7 @@ module.exports.handler = (event, context, callback) => {
         bot_id,
         user_id,
         name: '',
+        active: false,
         tasks: [
             {
                 id: task_id,

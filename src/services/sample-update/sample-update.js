@@ -5,7 +5,7 @@ module.exports.handler = (event, context, callback) => {
 
     const { user_id, bot_id, task_index, input_data, output_data } = event;
 
-    const timestamp = new Date().toString();
+    const timestamp = Date.now();
 
     const sample = {
         input_data,
@@ -45,10 +45,10 @@ module.exports.handler = (event, context, callback) => {
     }
 
     ddb.update(sample_params).promise()
-        .then(result => {
+        .then(data => {
             callback(null, {  
                 success: true, 
-                data: result.Attributes 
+                data: data.Attributes
             });
         }).catch(err => callback(err));
 };
