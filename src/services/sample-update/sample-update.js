@@ -50,5 +50,6 @@ module.exports.handler = (event, context, callback) => {
                 success: true, 
                 data: data.Attributes
             });
-        }).callback({ success: false, ...error });
+        })
+        .catch(error => callback({ success: false, ...error }));
 };

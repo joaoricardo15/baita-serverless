@@ -3,7 +3,7 @@ const ddb = new AWS.DynamoDB.DocumentClient();
 
 module.exports.handler = (event, context, callback) => {
 
-    const { user_id } = event.queryStringParameters;
+    const { user_id } = event.pathParameters;
     
     const params = { 
         TableName: 'bots',

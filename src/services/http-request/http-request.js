@@ -20,7 +20,9 @@ exports.handler = (event, context, callback) => {
                 url_params[i].service_auth ? auth[url_params[i].service_auth] : 
                 url_params[i].input_field ? input_data[url_params[i].input_field] : ''
     
-            path += `${source}/`
+            const encoded_source = encodeURIComponent(source).replace(/[!'()*]/g, (c) => '%' + c.charCodeAt(0).toString(16));
+
+            path += `${encoded_source}/`
         }
     }
 

@@ -13,7 +13,7 @@ provider:
   runtime: nodejs12.x
   stage: ${opt:stage, 'dev'}
   environment:
-    AUTH0_CLIENT_ID: ${file(./src/services/auth/secrets.json):AUTH0_CLIENT_ID}
+    AUTH0_DOMAIN: ${file(./src/services/auth/secrets.json):AUTH0_DOMAIN}
     AUTH0_CLIENT_PUBLIC_KEY: ${file(./src/services/auth/public_key)}
     BOTS_ROLE: arn:aws:iam::514311354050:role/${self:service}-custom-bots
     BOTS_BUCKET: ${self:service}-${self:provider.stage}-custom-bots
@@ -29,23 +29,36 @@ provider:
       Resource: '*'
 
 functions:
-  ### services ### 
+  ### internal services ### 
   auth:
     handler: src/services/auth/auth.handler
   log-create:
     handler: src/services/log-create/log-create.handler
   sample-update:
     handler: src/services/sample-update/sample-update.handler
+  
+  ### custom bot services ### 
   http-request:
     handler: src/services/http-request/http-request.handler
 
-  ### endpoints ### 
+  ### user endpoints ### 
   user-create:
     handler: src/endpoints/user-create/user-create.handler
     events:
       - http:
           path: user/create
           method: post
+  user-bots:
+    handler: src/endpoints/user-bots/user-bots.handler
+    events:
+      - http:
+          path: user/{user_id}/bots
+          method: get
+          cors: true
+          authorizer:
+            name: auth
+  
+  ### bot endpoints ### 
   bot-create:
     handler: src/endpoints/bot-create/bot-create.handler
     events:
@@ -53,8 +66,8 @@ functions:
           path: bot/create
           method: post
           cors: true
-          # authorizer:
-          #   name: auth
+          authorizer:
+            name: auth
   bot-update:
     handler: src/endpoints/bot-update/bot-update.handler
     events:
@@ -62,8 +75,8 @@ functions:
           path: bot/update
           method: post
           cors: true
-          # authorizer:
-          #   name: auth
+          authorizer:
+            name: auth
   bot-delete:
     handler: src/endpoints/bot-delete/bot-delete.handler
     events:
@@ -71,8 +84,8 @@ functions:
           path: bot/delete
           method: post
           cors: true
-          # authorizer:
-          #   name: auth
+          authorizer:
+            name: auth
   bot-test:
     handler: src/endpoints/bot-test/bot-test.handler
     events:
@@ -80,8 +93,8 @@ functions:
           path: bot/test
           method: post
           cors: true
-          # authorizer:
-          #   name: auth
+          authorizer:
+            name: auth
   bot-deploy:
     handler: src/endpoints/bot-deploy/bot-deploy.handler
     events:
@@ -89,8 +102,8 @@ functions:
           path: bot/deploy
           method: post
           cors: true
-          # authorizer:
-          #   name: auth
+          authorizer:
+            name: auth
   bot-detach:
     handler: src/endpoints/bot-detach/bot-detach.handler
     events:
@@ -98,23 +111,23 @@ functions:
           path: bot/detach
           method: post
           cors: true
-          # authorizer:
-          #   name: auth
-  user-get-bots:
-    handler: src/endpoints/user-get-bots/user-get-bots.handler
+          authorizer:
+            name: auth
+  bot-logs:
+    handler: src/endpoints/bot-logs/bot-logs.handler
     events:
       - http:
-          path: user/bots
+          path: bot/{bot_id}/logs
           method: get
           cors: true
-          # authorizer:
-          #   name: auth
-  user-get-logs:
-    handler: src/endpoints/user-get-logs/user-get-logs.handler
+          authorizer:
+            name: auth
+  bot-usage:
+    handler: src/endpoints/bot-usage/bot-usage.handler
     events:
       - http:
-          path: user/logs
+          path: bot/{bot_id}/usage
           method: get
           cors: true
-          # authorizer:
-          #   name: auth
+          authorizer:
+            name: auth
