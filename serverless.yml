@@ -50,6 +50,8 @@ functions:
   ### custom bot services ### 
   http-request:
     handler: src/services/http-request/http-request.handler
+  oauth2-request:
+    handler: src/services/oauth2-request/oauth2-request.handler
 
   ### user endpoints ### 
   user-create:
@@ -65,8 +67,26 @@ functions:
           path: user/{user_id}/bots
           method: get
           cors: true
-          authorizer:
-            name: auth
+          # authorizer:
+          #   name: auth
+  user-bot:
+    handler: src/endpoints/user-bot/user-bot.handler
+    events:
+      - http:
+          path: user/{user_id}/bot/{bot_id}
+          method: get
+          cors: true
+          # authorizer:
+          #   name: auth
+  user-connections:
+    handler: src/endpoints/user-connections/user-connections.handler
+    events:
+      - http:
+          path: user/{user_id}/connections
+          method: get
+          cors: true
+          # authorizer:
+          #   name: auth
   
   ### connection endpoints ### 
   pipedrive-connect:
@@ -75,6 +95,8 @@ functions:
       - http:
           path: pipedrive/connect
           method: get
+          # authorizer:
+          #   name: auth
 
   ### bot endpoints ### 
   bot-create:
@@ -84,8 +106,8 @@ functions:
           path: bot/create
           method: post
           cors: true
-          authorizer:
-            name: auth
+          # authorizer:
+          #   name: auth
   bot-update:
     handler: src/endpoints/bot-update/bot-update.handler
     events:
@@ -93,8 +115,8 @@ functions:
           path: bot/update
           method: post
           cors: true
-          authorizer:
-            name: auth
+          # authorizer:
+          #   name: auth
   bot-delete:
     handler: src/endpoints/bot-delete/bot-delete.handler
     events:
@@ -102,8 +124,8 @@ functions:
           path: bot/delete
           method: post
           cors: true
-          authorizer:
-            name: auth
+          # authorizer:
+          #   name: auth
   bot-test:
     handler: src/endpoints/bot-test/bot-test.handler
     events:
@@ -111,8 +133,8 @@ functions:
           path: bot/test
           method: post
           cors: true
-          authorizer:
-            name: auth
+          # authorizer:
+          #   name: auth
   bot-deploy:
     handler: src/endpoints/bot-deploy/bot-deploy.handler
     events:
@@ -120,8 +142,8 @@ functions:
           path: bot/deploy
           method: post
           cors: true
-          authorizer:
-            name: auth
+          # authorizer:
+          #   name: auth
   bot-detach:
     handler: src/endpoints/bot-detach/bot-detach.handler
     events:
@@ -129,8 +151,8 @@ functions:
           path: bot/detach
           method: post
           cors: true
-          authorizer:
-            name: auth
+          # authorizer:
+          #   name: auth
   bot-logs:
     handler: src/endpoints/bot-logs/bot-logs.handler
     events:
@@ -138,8 +160,8 @@ functions:
           path: bot/{bot_id}/logs
           method: get
           cors: true
-          authorizer:
-            name: auth
+          # authorizer:
+          #   name: auth
   bot-usage:
     handler: src/endpoints/bot-usage/bot-usage.handler
     events:
@@ -147,5 +169,5 @@ functions:
           path: bot/{bot_id}/usage
           method: get
           cors: true
-          authorizer:
-            name: auth
+          # authorizer:
+          #   name: auth

@@ -1,10 +1,14 @@
-const https = require('https');
+const Axios = require('axios');
 
 exports.handler = (event, context, callback) => {
-  
-    const { config, input_data } = event;
-    const { url, method, headers, auth, url_params, query_params } = config;
+
+    const { connection, config, input_data, output_path } = event;
+    const { path, method, headers, auth, body_params, url_params, query_params } = config;
     
+    let { api_url: url } = connection.app_config;
+
+    url += path;
+
     if (url_params && url_params.length) {
         url += '/';
         for (let i = 0; i < url_params.length; i++) {
@@ -34,12 +38,48 @@ exports.handler = (event, context, callback) => {
             url += `${query_params[i].var_name}=${encoded_source}&`;
         }
     }
-        
-    Axios({ url, auth, method, headers, data: input_data })
+
+    let data;
+    if (body_params && body_params.length) {
+        url += '/';
+        for (let i = 0; i < body_params.length; i++) {
+            const source =
+                body_params[i].value !== undefined ? body_params[i].value :
+                body_params[i].service_config ? config[body_params[i].service_config] : 
+                body_params[i].service_auth ? auth[body_params[i].service_auth] : 
+                body_params[i].input_field ? input_data[body_params[i].input_field] : ''
+    
+            data[body_params[i].var_name] = source;
+        }
+    }
+
+    Axios({ url, method, headers, data })
         .then(response => {
-            callback(null, {
-                success: true,
-                data: request_result
-            });
-        }).catch(error => callback(error));
+            if (!response.data)
+                return callback(null, { 
+                    success: true, 
+                    message: response.message || response.errorMessage || 'nothing for you this time : (' 
+                });
+            else {
+                let output_data = response.data
+
+                if (output_path) {
+                    const paths = output_path.split('.');
+
+                    for (let i = 0; i < paths.length; i++) {
+                        const type = paths[i].split(':')[0];
+                        const value = paths[i].split(':')[1];
+                        output_data = output_data[type === 'number' ? parseInt(value) : value]                
+                    }
+                }
+
+                callback(null, {
+                    success: true,
+                    data: output_data
+                });
+            }
+        }).catch(error => callback(null, {
+            success: false,
+            message: 'nothing for you this time : ('
+        }));
 };

@@ -26,7 +26,5 @@ module.exports.handler = (event, context, callback) => {
                 })
             });
         })
-        .catch(error => {
-            return callback(error);
-        });
+        .catch(error => callback(error));
 };

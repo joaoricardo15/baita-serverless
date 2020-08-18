@@ -10,7 +10,17 @@ const PIPEDRIVE_CLIENT_SECRET = process.env.PIPEDRIVE_CLIENT_SECRET;
 
 module.exports.handler = (event, context, callback) => {
 
-    const { code, state } = event.queryStringParameters;
+    const { code, state, error } = event.queryStringParameters;
+
+    if (error)
+        return callback(null, {
+            statusCode: 200,
+            headers: {
+                'Content-type': 'text/html'
+            },
+            body: '<script>window.close()</script>'
+        });
+
     const app_id = state.split(':')[0];
     const user_id = state.split(':')[1];
     const bot_id = state.split(':')[2];
@@ -38,9 +48,9 @@ module.exports.handler = (event, context, callback) => {
         url: PIPEDRIVE_AUTH_URL,
         data: body
     }).then(credentials_result => {
-            
+
             if (credentials_result.message)
-                callback(credentials_result);
+                return callback(credentials_result);
             else if (credentials_result.data) {
                 
                 const credentials = credentials_result.data;
@@ -52,9 +62,9 @@ module.exports.handler = (event, context, callback) => {
                         'Authorization': `Bearer ${credentials.access_token}` 
                     } 
                 }).then(user_result => {
-                
+
                     if (user_result.message || !user_result.data || !user_result.data.success)
-                        callback(user_result);
+                        return callback(user_result);
                     else {
 
                         const { id, name, email } = user_result.data.data;
@@ -90,7 +100,7 @@ module.exports.handler = (event, context, callback) => {
                                     },
                                     ReturnValues:"ALL_NEW"
                                 };
-                            
+
                                 ddb.update(sample_params).promise()
                                     .then(() => {
                                         callback(null, {

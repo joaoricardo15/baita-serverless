@@ -25,7 +25,7 @@ module.exports.handler = (event, context, callback) => {
             let scan_result = { total: 0 };
             if (scan.Items && scan.Items.length) {
                 for (let i = 0; i < scan.Items.length; i++)
-                    scan_result.total += scan.Items[i].logs.length - 1;
+                    scan_result.total += !scan.Items[i].logs ? 0 : scan.Items[i].logs.length - 1;
                 
                 scan_result['last_run'] = scan.Items[scan.Items.length -1].timestamp
                 scan_result['first_run'] = scan.Items[0].timestamp

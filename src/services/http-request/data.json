@@ -1,14 +1,20 @@
 { 
     "config": {
-        "url": "https://www.receitaws.com.br/v1/cnpj",
-        "method": "GET",
-        "url_params": [
-            {
-                "input_field": "cnpj"
-            }
+        "url": "https://api.pipedrive.com/v1/persons/search", 
+          "method": "GET",
+          "auth": {
+            "api_token": "0477aec73fcc3a5518dce98e4ae95ce346540e5f"
+        },
+        "query_params": [
+            { "value": 0, "var_name": "start" },
+            { "var_name": "api_token", "service_auth": "api_token" },
+            { "var_name": "term", "input_field": "search_term" },
+            { "var_name": "fields", "input_field": "field_name" }
         ]
     },
     "input_data": {
-        "cnpj": "27865757000102" 
-    }
+        "search_term": "12345678910",
+        "field_name": "custom_fields"
+    },
+    "output_path": "string:data.string:items.number:0"
 }

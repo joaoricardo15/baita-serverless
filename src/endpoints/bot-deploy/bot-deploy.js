@@ -16,7 +16,7 @@ module.exports.handler = (event, context, callback) => {
     const { user_id, bot_id, tasks } =  input_data;
 
     if (!tasks || !tasks.length || tasks.length < 2 || tasks[0].type !== 'trigger')
-        callback(null, {
+        return callback(null, {
             statusCode: 200,
             headers: {
                 'Content-type': 'application/json',
@@ -33,11 +33,14 @@ module.exports.handler = (event, context, callback) => {
 
         for (let i = 1; i < tasks.length; i++) {
 
+            const app = tasks[i].app;
+            const service = tasks[i].service;
+
             let input_fields = '';
-            for (let j = 0; j < tasks[i].service_data.input_fields.length; j++) {
-                const var_name = tasks[i].service_data.input_fields[j].var_name;
-                if (!tasks[i].service_name || !tasks[i].service_config)
-                    callback(null, {
+            for (let j = 0; j < service.service_config.input_fields.length; j++) {
+                const var_name = service.service_config.input_fields[j].var_name;
+                if (!service.service_name || !service.service_config || !tasks[i].input_data || !tasks[i].input_data[var_name])
+                    return callback(null, {
                         statusCode: 200,
                         headers: {
                             'Content-type': 'application/json',
@@ -48,29 +51,36 @@ module.exports.handler = (event, context, callback) => {
                             message: 'invalid bot config'
                         })
                     });
-                else if (tasks[i].input_data && tasks[i].input_data[var_name])
-                    input_fields += `'${var_name}': ${tasks[i].input_data[var_name]},`
+                else input_fields += `'${var_name}': ${tasks[i].input_data[var_name].value || tasks[i].input_data[var_name].var_name},`
             }
                 
             innerCode +=  `
-    const task${i}_name = '${tasks[i].name}';
+    const task${i}_name = '${tasks[i].service.name}';
     
     const task${i}_input_data = {
       ${input_fields}
     };
 
-    const task${i}_config = ${JSON.stringify(tasks[i].service_config)};
+    const task${i}_output_path = ${service.service_config.output_path ? `'${service.service_config.output_path}'` : 'undefined'};
+
+    const task${i}_connection = ${JSON.stringify({
+        user_id,
+        connection_id: tasks[i].connection_id,
+        app_config: app.app_config
+    })};
+
+    const task${i}_config = ${JSON.stringify(service.service_config)};
     
     const task${i}_response = await lambda.invoke({
-      FunctionName: '${FUNCTIONS_PREFIX}-${tasks[i].service_name}',
-      Payload: JSON.stringify({ config: task${i}_config, input_data: task${i}_input_data }),
+      FunctionName: '${FUNCTIONS_PREFIX}-${service.service_name}',
+      Payload: JSON.stringify({ connection: task${i}_connection, config: task${i}_config, input_data: task${i}_input_data, output_path: task${i}_output_path }),
     }).promise();
     
     const task${i}_result = JSON.parse(task${i}_response.Payload);
 
     const task${i}_success = task${i}_result.success;
 
-    const task${i}_output_data = task${i}_success ? task${i}_result.data : { message: task${i}_result.message || task${i}_result.errorMessage || 'nothing for you this time : (' };
+    const task${i}_output_data = task${i}_success && task${i}_result.data ? task${i}_result.data : { message: task${i}_result.message || task${i}_result.errorMessage || 'nothing for you this time : (' };
     
     const task${i}_timestamp = Date.now();
 
@@ -95,31 +105,37 @@ module.exports.handler = async (event, context, callback) => {
     const bot_id = '${bot_id}';
 
     const logs = [];
+    let error_result;
     let output_data;
 
-    const task0_name = '${tasks[0].name}';
+    try {
+        
+        const task0_name = '${tasks[0].service.name}';
 
-    let task0_output_data;
-    
-    if (event.body)
-        try {
-            task0_output_data = JSON.parse(event.body);
-        } catch (error) {
-            task0_output_data = event.body;
-        }
+        let task0_output_data;
+        
+        if (event.body)
+            try {
+                task0_output_data = JSON.parse(event.body);
+            } catch (error) {
+                task0_output_data = event.body;
+            }
 
-    const task0_timestamp = Date.now();
+        const task0_timestamp = Date.now();
 
-    logs.push({
-        name: task0_name,
-        output_data: task0_output_data,
-        timestamp: task0_timestamp,
-        success: true
-    });
+        logs.push({
+            name: task0_name,
+            output_data: task0_output_data,
+            timestamp: task0_timestamp,
+            success: true
+        });
 ${innerCode}
-    lambda.invoke({
+    } catch (error) {
+        error_result = error;
+    }
+    await lambda.invoke({
         FunctionName: '${FUNCTIONS_PREFIX}-log-create',
-        Payload: JSON.stringify({ user_id, bot_id, logs })
+        Payload: JSON.stringify({ user_id, bot_id, logs, error: error_result })
     }).promise();
 
     callback(null, {
@@ -130,7 +146,7 @@ ${innerCode}
         },
         body: JSON.stringify({
             success: true,
-            data: output_data
+            ...output_data
         })
     }); 
 };
