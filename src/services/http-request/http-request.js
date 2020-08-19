@@ -39,7 +39,7 @@ exports.handler = (event, context, callback) => {
         }
     }
 
-    let data;
+    let data = {};
     if (body_params && body_params.length) {
         url += '/';
         for (let i = 0; i < body_params.length; i++) {

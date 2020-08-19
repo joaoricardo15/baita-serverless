@@ -37,40 +37,47 @@ module.exports.handler = (event, context, callback) => {
             const service = tasks[i].service;
 
             let input_fields = '';
-            for (let j = 0; j < service.service_config.input_fields.length; j++) {
-                const var_name = service.service_config.input_fields[j].var_name;
-                if (!service.service_name || !service.service_config || !tasks[i].input_data || !tasks[i].input_data[var_name])
-                    return callback(null, {
-                        statusCode: 200,
-                        headers: {
-                            'Content-type': 'application/json',
-                            'Access-Control-Allow-Origin': '*'
-                        },
-                        body: JSON.stringify({
-                            success: false,
-                            message: 'invalid bot config'
-                        })
-                    });
-                else input_fields += `'${var_name}': ${tasks[i].input_data[var_name].value || tasks[i].input_data[var_name].var_name},`
-            }
+            if (service.service_config.input_source === 'service_fields')
+                for (let j = 0; j < service.service_config.input_fields.length; j++) {
+                    
+                    const var_name = service.service_config.input_fields[j].var_name;
+
+                    const input_field = tasks[i].input_data.find(x => x.var_name === var_name);
+                    console.log(input_field)
+                    if (!service.service_name || !service.service_config || !tasks[i].input_data || !input_field)
+                        return callback(null, {
+                            statusCode: 200,
+                            headers: {
+                                'Content-type': 'application/json',
+                                'Access-Control-Allow-Origin': '*'
+                            },
+                            body: JSON.stringify({
+                                success: false,
+                                message: 'invalid bot config'
+                            })
+                        });
+                    else input_fields += `'${var_name}': ${input_field.value || input_field.var_value},`
+                }
+            else if (service.service_config.input_source === 'input_fields')
+                for (let j = 0; j < tasks[i].input_data.length; j++) {
+                    input_fields += `'${tasks[i].input_data[j].var_name}': ${tasks[i].input_data[j].value || tasks[i].input_data[j].var_value},`
+                }
                 
             innerCode +=  `
     const task${i}_name = '${tasks[i].service.name}';
     
-    const task${i}_input_data = {
-      ${input_fields}
-    };
-
-    const task${i}_output_path = ${service.service_config.output_path ? `'${service.service_config.output_path}'` : 'undefined'};
-
     const task${i}_connection = ${JSON.stringify({
         user_id,
         connection_id: tasks[i].connection_id,
         app_config: app.app_config
     })};
 
+    const task${i}_input_data = { ${input_fields} };
+
     const task${i}_config = ${JSON.stringify(service.service_config)};
     
+    const task${i}_output_path = ${service.service_config.output_path ? `'${service.service_config.output_path}'` : 'undefined'};
+
     const task${i}_response = await lambda.invoke({
       FunctionName: '${FUNCTIONS_PREFIX}-${service.service_name}',
       Payload: JSON.stringify({ connection: task${i}_connection, config: task${i}_config, input_data: task${i}_input_data, output_path: task${i}_output_path }),

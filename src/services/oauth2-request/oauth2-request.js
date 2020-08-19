@@ -82,7 +82,7 @@ exports.handler = (event, context, callback) => {
                     }
                 }
 
-                let request_data;
+                let request_data = {};
                 if (body_params && body_params.length) {
                     request_url += '/';
 
