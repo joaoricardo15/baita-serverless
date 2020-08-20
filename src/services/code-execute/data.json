@@ -1,0 +1,7 @@
+{
+    "input_data": {
+        "code": "output = { id: 123, title: 'abc' };",
+        "animal": "lion",
+        "count": 2
+    }
+}

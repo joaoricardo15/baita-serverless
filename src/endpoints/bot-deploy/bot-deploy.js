@@ -56,11 +56,11 @@ module.exports.handler = (event, context, callback) => {
                                 message: 'invalid bot config'
                             })
                         });
-                    else input_fields += `'${var_name}': ${input_field.value || input_field.var_value},`
+                    else input_fields += `'${var_name}': ${tasks[i].input_data[j].value ? `\`${tasks[i].input_data[j].value}\`` : `task${tasks[i].input_data[j].output_index}_output_data['${tasks[i].input_data[j].output_name}']`},`
                 }
             else if (service.service_config.input_source === 'input_fields')
                 for (let j = 0; j < tasks[i].input_data.length; j++) {
-                    input_fields += `'${tasks[i].input_data[j].var_name}': ${tasks[i].input_data[j].value || tasks[i].input_data[j].var_value},`
+                    input_fields += `'${tasks[i].input_data[j].var_name}': ${tasks[i].input_data[j].value ? `\`${tasks[i].input_data[j].value}\`` : `task${tasks[i].input_data[j].output_index}_output_data['${tasks[i].input_data[j].output_name}']`},`
                 }
                 
             innerCode +=  `

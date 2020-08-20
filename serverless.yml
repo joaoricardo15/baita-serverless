@@ -52,6 +52,8 @@ functions:
     handler: src/services/http-request/http-request.handler
   oauth2-request:
     handler: src/services/oauth2-request/oauth2-request.handler
+  code-execute:
+    handler: src/services/code-execute/code-execute.handler
 
   ### user endpoints ### 
   user-create:
