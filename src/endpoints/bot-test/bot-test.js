@@ -29,7 +29,7 @@ module.exports.handler = (event, context, callback) => {
     if (service.service_config.input_source === 'service_fields')
         for (let i = 0; i < service.service_config.input_fields.length; i++) {
             const var_name = service.service_config.input_fields[i].var_name;
-            console.log(task.input_data)
+
             const input_field = task.input_data.find(x => x.var_name === var_name);
 
             if (!service.service_name || !service.service_config || !task.input_data || !input_field)

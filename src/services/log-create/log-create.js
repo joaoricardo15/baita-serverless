@@ -3,7 +3,7 @@ const ddb = new AWS.DynamoDB.DocumentClient();
 
 module.exports.handler = (event, context, callback) => {  
 
-    const { user_id, bot_id, logs, error } = event;
+    const { user_id, bot_id, usage, logs, error } = event;
 
     const timestamp = Date.now();
     
@@ -12,6 +12,7 @@ module.exports.handler = (event, context, callback) => {
         user_id,
         error,
         timestamp,
+        usage,
         logs
     };
         

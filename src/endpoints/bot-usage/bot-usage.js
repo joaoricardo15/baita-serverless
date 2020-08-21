@@ -7,40 +7,46 @@ module.exports.handler = (event, context, callback) => {
             
     const scanParams = { 
         TableName: 'logs',
-        ProjectionExpression: '#lgs,#tst',
-        FilterExpression: "#id = :id",
+        ProjectionExpression: '#usg',
+        KeyConditionExpression: "#id = :id",
         ExpressionAttributeNames: {
             "#id": "bot_id",
-            "#lgs": "logs",
-            "#tst": "timestamp"
+            "#usg": "usage"
         },
         ExpressionAttributeValues: {
             ":id": bot_id
         },
     };
 
-    ddb.scan(scanParams).promise()
-        .then(scan => {
+    let scan_result = { total: 0 };
 
-            let scan_result = { total: 0 };
-            if (scan.Items && scan.Items.length) {
-                for (let i = 0; i < scan.Items.length; i++)
-                    scan_result.total += !scan.Items[i].logs ? 0 : scan.Items[i].logs.length - 1;
-                
-                scan_result['last_run'] = scan.Items[scan.Items.length -1].timestamp
-                scan_result['first_run'] = scan.Items[0].timestamp
-            }
+    ddb.query(scanParams, onQuery);
 
-            callback(null, {
-                statusCode: 200,
-                headers: {
-                    'Content-type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
-                },
-                body: JSON.stringify({
-                    success: true,
-                    data: scan_result
+    function onQuery(err, query) {
+        if (err) callback(error)
+        else {        
+
+            query.Items.forEach(item => {
+                scan_result.total += item.usage;
+            });
+
+            if (typeof query.LastEvaluatedKey != "undefined") {
+                scanParams.ExclusiveStartKey = query.LastEvaluatedKey;
+                ddb.query(scanParams, onQuery);
+            } else {
+                callback(null, {
+                    statusCode: 200,
+                    headers: {
+                        'Content-type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    body: JSON.stringify({
+                        success: true,
+                        data: scan_result
+                    })
                 })
-            })
-        }).catch(error => callback(error));
+            }
+                
+        }
+    }
 };

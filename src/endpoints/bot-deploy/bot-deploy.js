@@ -43,7 +43,7 @@ module.exports.handler = (event, context, callback) => {
                     const var_name = service.service_config.input_fields[j].var_name;
 
                     const input_field = tasks[i].input_data.find(x => x.var_name === var_name);
-                    console.log(input_field)
+
                     if (!service.service_name || !service.service_config || !tasks[i].input_data || !input_field)
                         return callback(null, {
                             statusCode: 200,
@@ -99,6 +99,8 @@ module.exports.handler = (event, context, callback) => {
         success: task${i}_success
     });
 
+    if (task${i}_success) usage += 1;
+
     ${tasks[i].bot_output ? `output_data = task${i}_output_data;` : ''}`
         }
 
@@ -111,6 +113,7 @@ module.exports.handler = async (event, context, callback) => {
     const user_id = '${user_id}';
     const bot_id = '${bot_id}';
 
+    let usage = 0;
     const logs = [];
     let error_result;
     let output_data;
@@ -142,7 +145,7 @@ ${innerCode}
     }
     await lambda.invoke({
         FunctionName: '${FUNCTIONS_PREFIX}-log-create',
-        Payload: JSON.stringify({ user_id, bot_id, logs, error: error_result })
+        Payload: JSON.stringify({ user_id, bot_id, usage, logs, error: error_result })
     }).promise();
 
     callback(null, {
