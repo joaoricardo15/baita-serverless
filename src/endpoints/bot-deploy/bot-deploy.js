@@ -9,6 +9,13 @@ var zip = new JSZip();
 const BOTS_BUCKET = process.env.BOTS_BUCKET;
 const FUNCTIONS_PREFIX = process.env.FUNCTIONS_PREFIX;
 
+const comparationExpressions = {
+    'equals': ' == ',
+    'diferent': ' != ',
+    'exists': '',
+    'donotexists': ''
+}
+
 module.exports.handler = (event, context, callback) => {
 
     const input_data = JSON.parse(event.body);
@@ -62,6 +69,19 @@ module.exports.handler = (event, context, callback) => {
                 for (let j = 0; j < tasks[i].input_data.length; j++) {
                     input_fields += `'${tasks[i].input_data[j].var_name}': ${tasks[i].input_data[j].value ? `\`${tasks[i].input_data[j].value}\`` : `task${tasks[i].input_data[j].output_index}_output_data['${tasks[i].input_data[j].output_name}']`},`
                 }
+
+            let conditions = '';
+            for (let j = 0; j < tasks[i].conditions.length; j++) {
+                
+                let andConditions = '';
+                for (let k = 0; k < tasks[i].conditions[j].andConditions.length; k++) {
+                    andConditions += `${k === 0 ? '' : ' && '}${tasks[i].conditions[j].andConditions[k].value ? 
+                        `\`${tasks[i].conditions[j].andConditions[k].value}\`` : 
+                        `${tasks[i].conditions[j].andConditions[k].comparation_type === 'donotexists' ? '!' : ''}task${tasks[i].conditions[j].andConditions[k].output_index}_output_data['${tasks[i].conditions[j].andConditions[k].output_name}']${comparationExpressions[tasks[i].conditions[j].andConditions[k].comparation_type]}${tasks[i].conditions[j].andConditions[k].comparation_value ? `'${tasks[i].conditions[j].andConditions[k].comparation_value}'` : ''}`}`
+                }
+                if (andConditions)
+                    conditions += `${j === 0 ? '' : ' || '}(${andConditions})`;
+            }
                 
             innerCode +=  `
     const task${i}_name = '${tasks[i].service.name}';
@@ -78,30 +98,41 @@ module.exports.handler = (event, context, callback) => {
     
     const task${i}_output_path = ${service.service_config.output_path ? `'${service.service_config.output_path}'` : 'undefined'};
 
-    const task${i}_response = await lambda.invoke({
-      FunctionName: '${FUNCTIONS_PREFIX}-${service.service_name}',
-      Payload: JSON.stringify({ connection: task${i}_connection, config: task${i}_config, input_data: task${i}_input_data, output_path: task${i}_output_path }),
-    }).promise();
-    
-    const task${i}_result = JSON.parse(task${i}_response.Payload);
+    let task${i}_output_data;
 
-    const task${i}_success = task${i}_result.success;
-
-    const task${i}_output_data = task${i}_success && task${i}_result.data ? task${i}_result.data : { message: task${i}_result.message || task${i}_result.errorMessage || 'nothing for you this time : (' };
-    
-    const task${i}_timestamp = Date.now();
-
-    logs.push({
+    const task${i}_output_log = {
         name: task${i}_name,
-        input_data: task${i}_input_data,
-        output_data: task${i}_output_data,
-        timestamp: task${i}_timestamp,
-        success: task${i}_success
-    });
+        input_data: task${i}_input_data
+    };
 
-    if (task${i}_success) usage += 1;
+    if (${conditions ? conditions : true}) {
+        const task${i}_response = await lambda.invoke({
+            FunctionName: '${FUNCTIONS_PREFIX}-${service.service_name}',
+            Payload: JSON.stringify({ connection: task${i}_connection, config: task${i}_config, input_data: task${i}_input_data, output_path: task${i}_output_path }),
+        }).promise();
+    
+        const task${i}_result = JSON.parse(task${i}_response.Payload);
 
-    ${tasks[i].bot_output ? `output_data = task${i}_output_data;` : ''}`
+        const task${i}_success = task${i}_result.success;
+
+        const task${i}_timestamp = Date.now();
+        
+        task${i}_output_data = task${i}_success && task${i}_result.data ? task${i}_result.data : { message: task${i}_result.message || task${i}_result.errorMessage || 'nothing for you this time : (' };
+
+        if (task${i}_success) usage += 1;
+
+        task${i}_output_log['output_data'] = task${i}_output_data;
+        task${i}_output_log['timestamp'] = task${i}_timestamp;
+        task${i}_output_log['status'] = task${i}_success ? 'success' : 'fail';
+    } else {
+        const task${i}_timestamp = Date.now();
+        
+        task${i}_output_log['timestamp'] = task${i}_timestamp;
+        task${i}_output_log['status'] = 'filtered';
+    }
+
+    logs.push(task${i}_output_log);
+    ${tasks[i].bot_output ? `\noutput_data = task${i}_output_data;\n\n` : ''}`
         }
 
         const bot_code = `
@@ -137,12 +168,13 @@ module.exports.handler = async (event, context, callback) => {
             name: task0_name,
             output_data: task0_output_data,
             timestamp: task0_timestamp,
-            success: true
+            status: 'success'
         });
 ${innerCode}
     } catch (error) {
         error_result = error;
     }
+    
     await lambda.invoke({
         FunctionName: '${FUNCTIONS_PREFIX}-log-create',
         Payload: JSON.stringify({ user_id, bot_id, usage, logs, error: error_result })
