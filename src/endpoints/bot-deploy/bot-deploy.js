@@ -69,19 +69,20 @@ module.exports.handler = (event, context, callback) => {
                 for (let j = 0; j < tasks[i].input_data.length; j++) {
                     input_fields += `'${tasks[i].input_data[j].var_name}': ${tasks[i].input_data[j].value ? `\`${tasks[i].input_data[j].value}\`` : `task${tasks[i].input_data[j].output_index}_output_data['${tasks[i].input_data[j].output_name}']`},`
                 }
-
+            
             let conditions = '';
-            for (let j = 0; j < tasks[i].conditions.length; j++) {
-                
-                let andConditions = '';
-                for (let k = 0; k < tasks[i].conditions[j].andConditions.length; k++) {
-                    andConditions += `${k === 0 ? '' : ' && '}${tasks[i].conditions[j].andConditions[k].value ? 
-                        `\`${tasks[i].conditions[j].andConditions[k].value}\`` : 
-                        `${tasks[i].conditions[j].andConditions[k].comparation_type === 'donotexists' ? '!' : ''}task${tasks[i].conditions[j].andConditions[k].output_index}_output_data['${tasks[i].conditions[j].andConditions[k].output_name}']${comparationExpressions[tasks[i].conditions[j].andConditions[k].comparation_type]}${tasks[i].conditions[j].andConditions[k].comparation_value ? `'${tasks[i].conditions[j].andConditions[k].comparation_value}'` : ''}`}`
+            if (tasks[i].conditions)
+                for (let j = 0; j < tasks[i].conditions.length; j++) {
+                    
+                    let andConditions = '';
+                    for (let k = 0; k < tasks[i].conditions[j].andConditions.length; k++) {
+                        andConditions += `${k === 0 ? '' : ' && '}${tasks[i].conditions[j].andConditions[k].value ? 
+                            `\`${tasks[i].conditions[j].andConditions[k].value}\`` : 
+                            `${tasks[i].conditions[j].andConditions[k].comparation_type === 'donotexists' ? '!' : ''}task${tasks[i].conditions[j].andConditions[k].output_index}_output_data['${tasks[i].conditions[j].andConditions[k].output_name}']${comparationExpressions[tasks[i].conditions[j].andConditions[k].comparation_type]}${tasks[i].conditions[j].andConditions[k].comparation_value ? `'${tasks[i].conditions[j].andConditions[k].comparation_value}'` : ''}`}`
+                    }
+                    if (andConditions)
+                        conditions += `${j === 0 ? '' : ' || '}(${andConditions})`;
                 }
-                if (andConditions)
-                    conditions += `${j === 0 ? '' : ' || '}(${andConditions})`;
-            }
                 
             innerCode +=  `
     const task${i}_name = '${tasks[i].service.name}';
