@@ -38,6 +38,7 @@ module.exports.handler = (event, context, callback) => {
         };
     }
     else {
+
         sample_params.UpdateExpression = `set #tks[${task_index}].sample_result = :sample`;
         sample_params.ExpressionAttributeNames = {
             "#tks": 'tasks'
@@ -45,6 +46,7 @@ module.exports.handler = (event, context, callback) => {
         sample_params. ExpressionAttributeValues = {
             ":sample": sample,
         };
+        
     }
 
     ddb.update(sample_params).promise()

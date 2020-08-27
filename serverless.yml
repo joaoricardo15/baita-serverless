@@ -327,4 +327,4 @@ resources:
       Value: soi
       Export:
         Name: ${self:provider.environment.SERVICE_PREFIX}-botsRoleArn
-      
+

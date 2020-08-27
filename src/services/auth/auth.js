@@ -4,7 +4,6 @@ const AUTH0_AUDIENCE = process.env.AUTH0_AUDIENCE;
 const AUTH0_CLIENT_PUBLIC_KEY = process.env.AUTH0_CLIENT_PUBLIC_KEY;
 
 const generatePolicy = (principalId, effect, resource) => {
-
   const authResponse = {};
 
   authResponse.principalId = principalId;
@@ -20,6 +19,7 @@ const generatePolicy = (principalId, effect, resource) => {
     policyDocument.Statement[0] = statementOne;
     authResponse.policyDocument = policyDocument;
   }
+  
   return authResponse;
 };
 

@@ -214,7 +214,7 @@ ${active ? `
         if (${active ? false : '!test_task_index'})
             await lambda.invoke({
                 FunctionName: '${SERVICE_PREFIX}-sample-update',
-                Payload: JSON.stringify({ user_id, bot_id, task_index: 0, output_data: task0_output_data })
+                Payload: JSON.stringify({ user_id, bot_id, task_index: 0, status: 'success', output_data: task0_output_data })
             }).promise();
 `}${innerCode}
     } catch (error) {
