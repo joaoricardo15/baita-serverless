@@ -4,7 +4,9 @@ const apigateway = new AWS.ApiGatewayV2();
 const lambda = new AWS.Lambda();
 const s3 = new AWS.S3();
 
+const BOTS_TABLE = process.env.BOTS_TABLE;
 const BOTS_BUCKET = process.env.BOTS_BUCKET;
+const SERVICE_PREFIX = process.env.SERVICE_PREFIX;
 
 module.exports.handler = (event, context, callback) => {
 
@@ -20,7 +22,7 @@ module.exports.handler = (event, context, callback) => {
     const { user_id, bot_id, api_id } = input_data;
 
     var dbParams = {
-        TableName:'bots',
+        TableName: BOTS_TABLE,
         Key: {
             "user_id": user_id,
             "bot_id": bot_id
@@ -38,7 +40,7 @@ module.exports.handler = (event, context, callback) => {
                 .then(api => {
 
                     const lambdaParams = {
-                        FunctionName: `${bot_id}`
+                        FunctionName: `${SERVICE_PREFIX}-bot-${bot_id}`,
                     };
 
                     lambda.deleteFunction(lambdaParams).promise()

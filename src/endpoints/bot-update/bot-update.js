@@ -1,6 +1,8 @@
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 
+const BOTS_TABLE = process.env.BOTS_TABLE;
+
 module.exports.handler = (event, context, callback) => {
 
     let input_data;
@@ -11,20 +13,24 @@ module.exports.handler = (event, context, callback) => {
         input_data = event.body;
     }
 
-    const { user_id, bot_id, tasks } = input_data;
+    const { user_id, bot_id, name, active, tasks } = input_data;
 
     const dbParams = {
-        TableName:"bots",
+        TableName: BOTS_TABLE,
         Key:{
             "bot_id": bot_id,
             "user_id": user_id
         },
-        UpdateExpression: 'set #tk = :tk',
+        UpdateExpression: 'set #tk = :tk, #nm = :nm, #act = :act',
         ExpressionAttributeNames: {
-            "#tk": 'tasks'
+            "#tk": 'tasks',
+            "#nm": 'name',
+            "#act": 'active'
         },
         ExpressionAttributeValues: {
-            ":tk": tasks
+            ":tk": tasks,
+            ":nm": name,
+            ":act": active
         },
         ReturnValues:"ALL_NEW"
     };

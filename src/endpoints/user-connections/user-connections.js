@@ -1,12 +1,14 @@
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 
+const CONNECTIONS_TABLE = process.env.CONNECTIONS_TABLE;
+
 module.exports.handler = (event, context, callback) => {
 
     const { user_id } = event.pathParameters;
     
     const queryParams = { 
-        TableName: 'connections',
+        TableName: CONNECTIONS_TABLE,
         KeyConditionExpression: '#user = :user',
         ProjectionExpression: '#user,#app,#connection,#name,#email',
         ExpressionAttributeNames: {

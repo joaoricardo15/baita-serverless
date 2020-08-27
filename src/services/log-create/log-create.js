@@ -1,6 +1,8 @@
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 
+const LOGS_TABLE = process.env.LOGS_TABLE;
+
 module.exports.handler = (event, context, callback) => {  
 
     const { user_id, bot_id, usage, logs, error } = event;
@@ -17,7 +19,7 @@ module.exports.handler = (event, context, callback) => {
     };
         
     const logParams = {
-        TableName:'logs',
+        TableName: LOGS_TABLE,
         Item: log_set
     };
                     

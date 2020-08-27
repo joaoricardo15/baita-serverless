@@ -7,9 +7,10 @@ const lambda = new AWS.Lambda();
 const s3 = new AWS.S3();
 var zip = new JSZip();
 
-const BOTS_ROLE = process.env.BOTS_ROLE;
+const BOTS_PERMISSION = process.env.BOTS_PERMISSION;
+const BOTS_TABLE = process.env.BOTS_TABLE;
 const BOTS_BUCKET = process.env.BOTS_BUCKET;
-const FUNCTIONS_PREFIX = process.env.FUNCTIONS_PREFIX;
+const SERVICE_PREFIX = process.env.SERVICE_PREFIX;
 
 module.exports.handler = (event, context, callback) => {
 
@@ -53,7 +54,7 @@ module.exports.handler = async (event, context, callback) => {
         }
     
     await lambda.invoke({
-        FunctionName: '${FUNCTIONS_PREFIX}-sample-update',
+        FunctionName: '${SERVICE_PREFIX}-sample-update',
         Payload: JSON.stringify({ user_id, bot_id, task_index: 0, output_data: task0_output_data })
     }).promise();
 
@@ -82,13 +83,13 @@ module.exports.handler = async (event, context, callback) => {
             };
 
             s3.upload(bucketParams).promise()
-                .then(bucket => {
+                .then(() => {
                     
                     const lambdaParams = {
-                        FunctionName: bot_id,
+                        FunctionName: `${SERVICE_PREFIX}-bot-${bot_id}`,
                         Handler: 'index.handler',
                         Runtime: 'nodejs12.x',
-                        Role: BOTS_ROLE,
+                        Role: BOTS_PERMISSION,
                         Code: {
                             S3Bucket: BOTS_BUCKET,
                             S3Key: `${bot_id}.zip`
@@ -99,9 +100,9 @@ module.exports.handler = async (event, context, callback) => {
                         .then(lambda => {
     
                             const apiParams = {
-                                Name: bot_id,
+                                Name: `${SERVICE_PREFIX}-bot-${bot_id}`,
                                 ProtocolType: 'HTTP',
-                                CredentialsArn: BOTS_ROLE,
+                                CredentialsArn: BOTS_PERMISSION,
                                 RouteKey: 'ANY /bot',
                                 Target: lambda.FunctionArn,
                                 CorsConfiguration: {
@@ -115,7 +116,7 @@ module.exports.handler = async (event, context, callback) => {
                                 .then(api => {
 
                                     const dbParams = {
-                                        TableName:'bots',
+                                        TableName: BOTS_TABLE,
                                         Item: { 
                                             ...botConfig, 
                                             api_id: api.ApiId,

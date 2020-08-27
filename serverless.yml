@@ -1,8 +1,10 @@
-service: bots-serverless
+service: baita-help
 
 plugins:
   - serverless-offline
   - serverless-plugin-webpack
+  - serverless-deployment-bucket
+  - serverless-pseudo-parameters
 
 custom:
   webpack:
@@ -10,33 +12,45 @@ custom:
 
 provider:
   name: aws
+  role: serviceRole
   runtime: nodejs12.x
   stage: ${opt:stage, 'dev'}
+  apiName: ${self:provider.environment.SERVICE_API}
+  deploymentBucket:
+    name: ${self:provider.environment.SERVICE_BUCKET}
+    blockPublicAccess: true
   environment:
-    BOTS_ROLE: arn:aws:iam::514311354050:role/${self:service}-custom-bots
-    BOTS_BUCKET: ${self:service}-${self:provider.stage}-custom-bots
-    FUNCTIONS_PREFIX: ${self:service}-${self:provider.stage}
-    SERVERLESS_DEV_URL: https://a0nk59poy8.execute-api.us-east-1.amazonaws.com/dev
+    SERVICE_PREFIX: ${self:service}-${self:provider.stage}
+    SERVICE_API: ${self:provider.environment.SERVICE_PREFIX}-serverless
+    SERVICE_ROLE: ${self:provider.environment.SERVICE_PREFIX}-serverless
+    SERVICE_DEV_URL: https://zko7q8qwm3.execute-api.us-east-1.amazonaws.com/dev
+    SERVICE_PROD_URL: https://1yp22xgyt1.execute-api.us-east-1.amazonaws.com/prod
+
+    # Database
+    APPS_TABLE: ${self:provider.environment.SERVICE_PREFIX}-apps
+    BOTS_TABLE: ${self:provider.environment.SERVICE_PREFIX}-bots
+    LOGS_TABLE: ${self:provider.environment.SERVICE_PREFIX}-logs
+    USERS_TABLE: ${self:provider.environment.SERVICE_PREFIX}-users
+    CONNECTIONS_TABLE: ${self:provider.environment.SERVICE_PREFIX}-connections
+
+    # Buckets
+    BOTS_BUCKET: ${self:provider.environment.SERVICE_PREFIX}-bots
+    SERVICE_BUCKET: ${self:provider.environment.SERVICE_PREFIX}-serverless
+
+    # Iam
+    BOTS_ROLE: ${self:provider.environment.SERVICE_PREFIX}-bots
+    BOTS_POLICY: ${self:provider.environment.SERVICE_PREFIX}-bots
+    # BOTS_PERMISSION: arn:aws:iam::#{AWS::AccountId}:role/${self:provider.environment.SERVICE_PREFIX}-bots
+    BOTS_PERMISSION: arn:aws:iam::514311354050:role/${self:provider.environment.SERVICE_PREFIX}-bots
 
     # Auth0
-    AUTH0_DOMAIN: ${file(./src/services/auth/secrets.json):AUTH0_DOMAIN}
+    AUTH0_AUDIENCE: ${file(./src/services/auth/secrets.json):AUTH0_AUDIENCE}
     AUTH0_CLIENT_PUBLIC_KEY: ${file(./src/services/auth/public_key)}
     
     # Pipedrive
-    
     PIPEDRIVE_CLIENT_ID: 0b90044d228f2740
     PIPEDRIVE_CLIENT_SECRET: 62bb19b0fcf2126926e2f787439a7032e6659cc0
     PIPEDRIVE_AUTH_URL: https://oauth.pipedrive.com/oauth/token
-
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - 's3:*'
-        - 'lambda:*'
-        - 'dynamodb:*'
-        - 'apigateway:*'
-        - 'iam:PassRole'
-      Resource: '*'
 
 functions:
   ### internal services ### 
@@ -128,15 +142,6 @@ functions:
           cors: true
           # authorizer:
           #   name: auth
-  bot-test:
-    handler: src/endpoints/bot-test/bot-test.handler
-    events:
-      - http:
-          path: bot/test
-          method: post
-          cors: true
-          # authorizer:
-          #   name: auth
   bot-deploy:
     handler: src/endpoints/bot-deploy/bot-deploy.handler
     events:
@@ -146,11 +151,11 @@ functions:
           cors: true
           # authorizer:
           #   name: auth
-  bot-detach:
-    handler: src/endpoints/bot-detach/bot-detach.handler
+  bot-test:
+    handler: src/endpoints/bot-test/bot-test.handler
     events:
       - http:
-          path: bot/detach
+          path: bot/test
           method: post
           cors: true
           # authorizer:
@@ -173,3 +178,153 @@ functions:
           cors: true
           # authorizer:
           #   name: auth
+
+resources:
+  Resources:
+    # Database 
+    appsTable:
+      Type: AWS::DynamoDB::Table
+      # DeletionPolicy: Retain
+      Properties:
+        TableName: ${self:provider.environment.APPS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: app_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: app_id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    botsTable:
+      Type: AWS::DynamoDB::Table
+      # DeletionPolicy: Retain
+      Properties:
+        TableName: ${self:provider.environment.BOTS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: user_id
+            AttributeType: S
+          - AttributeName: bot_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: user_id
+            KeyType: HASH
+          - AttributeName: bot_id
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    logsTable:
+      Type: AWS::DynamoDB::Table
+      # DeletionPolicy: Retain
+      Properties:
+        TableName: ${self:provider.environment.LOGS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: bot_id
+            AttributeType: S
+          - AttributeName: timestamp
+            AttributeType: N
+        KeySchema:
+          - AttributeName: bot_id
+            KeyType: HASH
+          - AttributeName: timestamp
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    usersTable:
+      Type: AWS::DynamoDB::Table
+      # DeletionPolicy: Retain
+      Properties:
+        TableName: ${self:provider.environment.USERS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: user_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: user_id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    connectionsTable:
+      Type: AWS::DynamoDB::Table
+      # DeletionPolicy: Retain
+      Properties:
+        TableName: ${self:provider.environment.CONNECTIONS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: user_id
+            AttributeType: S
+          - AttributeName: connection_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: user_id
+            KeyType: HASH
+          - AttributeName: connection_id
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    
+    # Butckets
+    botsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.BOTS_BUCKET}
+    
+    # Iam
+    serviceRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ${self:provider.environment.SERVICE_ROLE}
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: sts:AssumeRole
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+        Policies:
+          - PolicyName: ${self:provider.environment.BOTS_POLICY}
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - 's3:*'
+                    - 'lambda:*'
+                    - 'dynamodb:*'
+                    - 'apigateway:*'
+                    - 'iam:PassRole'
+                  Resource: '*'
+    botsRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ${self:provider.environment.BOTS_ROLE}
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: sts:AssumeRole
+              Principal:
+                Service:
+                  - events.amazonaws.com
+                  - lambda.amazonaws.com
+                  - apigateway.amazonaws.com
+        Policies:
+          - PolicyName: ${self:provider.environment.BOTS_POLICY}
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - lambda:InvokeFunction
+                  Resource: '*'
+  
+  Outputs:
+    botsRoleArn:
+      Description: The ID of the VPC
+      Value: soi
+      Export:
+        Name: ${self:provider.environment.SERVICE_PREFIX}-botsRoleArn
+      

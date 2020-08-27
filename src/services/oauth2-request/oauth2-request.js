@@ -2,12 +2,14 @@ const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 const Axios = require('axios');
 
+const CONNECTIONS_TABLE = process.env.CONNECTIONS_TABLE;
+
 exports.handler = (event, context, callback) => {
 
     const { connection, config, input_data, output_path } = event;
 
     const getParams = { 
-        TableName: 'connections',
+        TableName: CONNECTIONS_TABLE,
         Key: {
             "user_id": connection.user_id,
             "connection_id": connection.connection_id

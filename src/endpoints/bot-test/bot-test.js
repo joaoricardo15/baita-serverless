@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk');
 const lambda = new AWS.Lambda();
 
-const FUNCTIONS_PREFIX = process.env.FUNCTIONS_PREFIX;
+const SERVICE_PREFIX = process.env.SERVICE_PREFIX;
 
 module.exports.handler = (event, context, callback) => {
 
@@ -24,7 +24,7 @@ module.exports.handler = (event, context, callback) => {
         app_config: app.app_config
     }
 
-    let service_input_data = {};
+    let input_data = {};
 
     if (service.service_config.input_source === 'service_fields')
         for (let i = 0; i < service.service_config.input_fields.length; i++) {
@@ -45,28 +45,30 @@ module.exports.handler = (event, context, callback) => {
                     })
                 });
                 
-            else service_input_data[var_name] = input_field.sample_value;
+            else input_data[var_name] = input_field.sample_value;
         }
     else if (service.service_config.input_source === 'input_fields')
         for (let i = 0; i < task.input_data.length; i++) {
-            service_input_data[task.input_data[i].var_name] = task.input_data[i].sample_value;
+            input_data[task.input_data[i].var_name] = task.input_data[i].sample_value;
         }
 
     lambda.invoke({
-      FunctionName: `${FUNCTIONS_PREFIX}-${service.service_name}`,
-      Payload: JSON.stringify({ connection, config: service.service_config, input_data: service_input_data, output_path: service.service_config.output_path }),
+        FunctionName: `${SERVICE_PREFIX}-bot-${bot_id}`,
+        Payload: JSON.stringify({ test_task_index: task_index, test_input_data: input_data })
     }).promise()
         .then(task_tesponse => {
             
-            const task_result = JSON.parse(task_tesponse.Payload);
+            const invoke_result = JSON.parse(task_tesponse.Payload);
+            
+            const task_result = JSON.parse(invoke_result.body);
 
             const task_success = task_result.success;
 
             const task_output_data = task_success && task_result.data ? task_result.data : { message: task_result.message || task_result.errorMessage || 'nothing for you this time : (' };
-
+            console.log(task_result)
             lambda.invoke({
-                FunctionName: `${FUNCTIONS_PREFIX}-sample-update`,
-                Payload: JSON.stringify({ user_id, bot_id, task_index, input_data: service_input_data, output_data: task_output_data })
+                FunctionName: `${SERVICE_PREFIX}-sample-update`,
+                Payload: JSON.stringify({ user_id, bot_id, task_index, input_data: input_data, output_data: task_output_data })
             }).promise()
                 .then(update_response => {
         

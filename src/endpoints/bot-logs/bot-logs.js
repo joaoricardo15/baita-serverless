@@ -1,12 +1,14 @@
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 
+const LOGS_TABLE = process.env.LOGS_TABLE;
+
 module.exports.handler = (event, context, callback) => {
 
     const { bot_id } = event.pathParameters;
     
     const queryParams = { 
-        TableName: 'logs',
+        TableName: LOGS_TABLE,
         Limit:20,
         KeyConditionExpression: "bot_id = :id",
         ExpressionAttributeValues: {

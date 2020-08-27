@@ -3,7 +3,9 @@ const ddb = new AWS.DynamoDB.DocumentClient();
 const { URLSearchParams } = require('url');
 const Axios = require('axios');
 
-const SERVERLESS_DEV_URL = process.env.SERVERLESS_DEV_URL;
+const BOTS_TABLE = process.env.BOTS_TABLE;
+const CONNECTIONS_TABLE = process.env.CONNECTIONS_TABLE;
+const SERVICE_PROD_URL = process.env.SERVICE_PROD_URL;
 const PIPEDRIVE_AUTH_URL = process.env.PIPEDRIVE_AUTH_URL;
 const PIPEDRIVE_CLIENT_ID = process.env.PIPEDRIVE_CLIENT_ID;
 const PIPEDRIVE_CLIENT_SECRET = process.env.PIPEDRIVE_CLIENT_SECRET;
@@ -29,7 +31,7 @@ module.exports.handler = (event, context, callback) => {
     const body = new URLSearchParams({
         code,
         'grant_type': 'authorization_code',
-        'redirect_uri': `${SERVERLESS_DEV_URL}/pipedrive/connect`
+        'redirect_uri': `${SERVICE_PROD_URL}/pipedrive/connect`
     });
 
     const auth = {
@@ -40,15 +42,21 @@ module.exports.handler = (event, context, callback) => {
     const headers = {
         'Content-Type': 'application/x-www-form-urlencoded'
     };
-
-    Axios({
+    console.log({
         auth,
         headers,
         method: 'post',
         url: PIPEDRIVE_AUTH_URL,
         data: body
+    })
+    Axios({
+        // auth,
+        // headers,
+        method: 'post',
+        url: PIPEDRIVE_AUTH_URL,
+        // data: body
     }).then(credentials_result => {
-
+console.log(credentials_result)
             if (credentials_result.message)
                 return callback(credentials_result);
             else if (credentials_result.data) {
@@ -71,7 +79,7 @@ module.exports.handler = (event, context, callback) => {
                         const connection_id = id.toString();
 
                         const params = {
-                            TableName:'connections',
+                            TableName: CONNECTIONS_TABLE,
                             Item: {
                                 name,
                                 email,
@@ -86,7 +94,7 @@ module.exports.handler = (event, context, callback) => {
                             .then(() => {
                             
                                 const sample_params = {
-                                    TableName:"bots",
+                                    TableName: BOTS_TABLE,
                                     Key:{
                                         "bot_id": bot_id,
                                         "user_id": user_id

@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const AUTH0_DOMAIN = process.env.AUTH0_DOMAIN;
+const AUTH0_AUDIENCE = process.env.AUTH0_AUDIENCE;
 const AUTH0_CLIENT_PUBLIC_KEY = process.env.AUTH0_CLIENT_PUBLIC_KEY;
 
 const generatePolicy = (principalId, effect, resource) => {
@@ -32,7 +32,7 @@ module.exports.handler = (event, context, callback) => {
   if (!(tokenParts[0].toLowerCase() === 'bearer' && tokenValue))
     return callback('Unauthorized');
   
-  const options = { audience: AUTH0_DOMAIN };
+  const options = { audience: AUTH0_AUDIENCE };
 
   try {
     jwt.verify(tokenValue, AUTH0_CLIENT_PUBLIC_KEY, options, (verifyError, decoded) => {

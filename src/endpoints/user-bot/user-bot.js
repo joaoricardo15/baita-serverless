@@ -1,12 +1,14 @@
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 
+const BOTS_TABLE = process.env.BOTS_TABLE;
+
 module.exports.handler = (event, context, callback) => {
 
     const { user_id, bot_id } = event.pathParameters;
             
     const getParams = { 
-        TableName: 'bots',
+        TableName: BOTS_TABLE,
         Key: {
             "user_id": user_id,
             "bot_id": bot_id
