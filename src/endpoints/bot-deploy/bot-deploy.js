@@ -11,8 +11,8 @@ const BOTS_BUCKET = process.env.BOTS_BUCKET;
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX;
 
 const comparationExpressions = {
-    'equals': ' == ',
-    'diferent': ' != ',
+    'equals': '==',
+    'diferent': '!=',
     'exists': '',
     'donotexists': ''
 }
@@ -64,53 +64,66 @@ module.exports.handler = (event, context, callback) => {
                                 message: 'invalid bot config'
                             })
                         });
-                    else if (var_name && (tasks[i].input_data[j].value || (tasks[i].input_data[j].output_index !== undefined && tasks[i].input_data[j].output_name))) 
-                        input_fields += `'${var_name}': ${tasks[i].input_data[j].value ? `\`${tasks[i].input_data[j].value}\`` : `task${tasks[i].input_data[j].output_index}_output_data['${tasks[i].input_data[j].output_name}']`},`
+                    else {
+                        if (var_name && ((!active && input_field.sample_value) || (input_field.value || (input_field.output_index !== undefined && input_field.output_name))))
+                            input_fields += `'${var_name}': ${!active ? `\`${input_field.sample_value}\`` : input_field.value ? `\`${input_field.value}\`` : `task${input_field.output_index}_output_data['${input_field.output_name}']`},`
+                    }
                 }
             else if (service.service_config.input_source === 'input_fields')
-                for (let j = 0; j < tasks[i].input_data.length; j++)
-                    if (tasks[i].input_data[j].var_name && (tasks[i].input_data[j].value || (tasks[i].input_data[j].output_index !== undefined && tasks[i].input_data[j].output_name)))    
-                        input_fields += `'${tasks[i].input_data[j].var_name}': ${tasks[i].input_data[j].value ? `\`${tasks[i].input_data[j].value}\`` : `task${tasks[i].input_data[j].output_index}_output_data['${tasks[i].input_data[j].output_name}']`},`
-            
+                for (let j = 0; j < tasks[i].input_data.length; j++) {
+                    const input_field = tasks[i].input_data[j]
+                    
+                    if (input_field.var_name && ((!active && input_field.sample_value) || (input_field.value || (input_field.output_index !== undefined && input_field.output_name))))    
+                        input_fields += `'${input_field.var_name}': ${!active ? `\`${input_field.sample_value}\`` : input_field.value ? `\`${input_field.value}\`` : `task${input_field.output_index}_output_data['${input_field.output_name}']`},`
+                }
+                    
             let conditions = '';
             if (tasks[i].conditions)
                 for (let j = 0; j < tasks[i].conditions.length; j++) {
                     
                     let andConditions = '';
+                    
                     for (let k = 0; k < tasks[i].conditions[j].andConditions.length; k++) {
-                        if (tasks[i].conditions[j].andConditions[k].comparation_type && tasks[i].conditions[j].andConditions[k].comparation_value && (tasks[i].conditions[j].andConditions[k].value || (tasks[i].conditions[j].andConditions[k].output_index && tasks[i].conditions[j].andConditions[k].output_name)))
-                            andConditions += `${k === 0 ? '' : ' && '}${tasks[i].conditions[j].andConditions[k].value ? 
-                                `\`${tasks[i].conditions[j].andConditions[k].value}\`` : 
-                                `${tasks[i].conditions[j].andConditions[k].comparation_type === 'donotexists' ? '!' : ''}task${tasks[i].conditions[j].andConditions[k].output_index}_output_data['${tasks[i].conditions[j].andConditions[k].output_name}']${comparationExpressions[tasks[i].conditions[j].andConditions[k].comparation_type]}${tasks[i].conditions[j].andConditions[k].comparation_value ? `'${tasks[i].conditions[j].andConditions[k].comparation_value}'` : ''}`}`
+                        
+                        const andCondition = tasks[i].conditions[j].andConditions[k];
+
+                        const condition_value = !active ? `\`${andCondition.sample_value}\`` : andCondition.value ? `\`${andCondition.value}\`` : `task${andCondition.output_index}_output_data['${andCondition.output_name}']`;
+                        
+                        const condition_expression = comparationExpressions[andCondition.comparation_type];
+                        
+                        const comparation_value = andCondition.comparation_value;
+
+                        if (condition_value && andCondition.comparation_type)
+                            andConditions += `${k === 0 ? '' : ' && '}${andCondition.comparation_type === 'donotexists' ? `!${condition_value}` : andCondition.comparation_type === 'exists' ? `${condition_value}` : `${condition_value} ${condition_expression} ${comparation_value}`}`;
                     }
                     if (andConditions)
                         conditions += `${j === 0 ? '' : ' || '}(${andConditions})`;
                 }
                 
             innerCode +=  `
+        const task${i}_name = '${tasks[i].service.name}';
+
+        const task${i}_input_data = { ${input_fields} };
 
         let task${i}_output_data;
-
-        const task${i}_name = '${tasks[i].service.name}';
         
-        const task${i}_connection = ${JSON.stringify({
-            user_id,
-            connection_id: tasks[i].connection_id,
-            app_config: app.app_config
-        })};
-
-        const task${i}_input_data = ${active ? `{ ${input_fields} }` : `test_task_index === ${i} ? test_input_data : { ${input_fields} }`};
-
-        const task${i}_config = ${JSON.stringify(service.service_config)};
-        
-        const task${i}_output_path = ${service.service_config.output_path ? `'${service.service_config.output_path}'` : 'undefined'};
-
-        const task${i}_output_log = {
+        let task${i}_output_log = {
             name: task${i}_name,
             input_data: task${i}_input_data
         };
 
         if (${active ? true : `test_task_index === ${i}`} && ${conditions ? conditions : true}) {
+        
+            const task${i}_connection = ${JSON.stringify({
+                user_id,
+                connection_id: tasks[i].connection_id,
+                app_config: app.app_config
+            })};
+    
+            const task${i}_config = ${JSON.stringify(service.service_config)};
+            
+            const task${i}_output_path = ${service.service_config.output_path ? `'${service.service_config.output_path}'` : 'undefined'};
+            
             const task${i}_response = await lambda.invoke({
                 FunctionName: '${SERVICE_PREFIX}-${service.service_name}',
                 Payload: JSON.stringify({ connection: task${i}_connection, config: task${i}_config, input_data: task${i}_input_data, output_path: task${i}_output_path }),
@@ -119,56 +132,44 @@ module.exports.handler = (event, context, callback) => {
             const task${i}_result = JSON.parse(task${i}_response.Payload);
 
             const task${i}_success = task${i}_result.success;
-
-            const task${i}_timestamp = Date.now();
             
             task${i}_output_data = task${i}_success && task${i}_result.data ? task${i}_result.data : { message: task${i}_result.message || task${i}_result.errorMessage || 'nothing for you this time : (' };
 
-            if (${active ? false : `test_task_index === ${i}`})
-                return callback(null, {
-                    statusCode: 200,
-                    headers: {
-                        'Content-type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
-                    },
-                    body: JSON.stringify({
-                        success: task${i}_success,
-                        data: task${i}_output_data
-                    })
-                });
-            else {
-                if (task${i}_success) usage += 1;
-
-                task${i}_output_log['output_data'] = task${i}_output_data;
-                task${i}_output_log['timestamp'] = task${i}_timestamp;
-                task${i}_output_log['status'] = task${i}_success ? 'success' : 'fail';
-            }
-        } else {
-            if (${active ? false : `test_task_index === ${i}`})
-                return callback(null, {
-                    statusCode: 200,
-                    headers: {
-                        'Content-type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
-                    },
-                    body: JSON.stringify({
-                        success: true,
-                        data: {
-                            message: 'task filtered'
-                        }
-                    })
-                });
-            else {
-                const task${i}_timestamp = Date.now();
+            task${i}_output_log['output_data'] = task${i}_output_data;
             
-                task${i}_output_log['timestamp'] = task${i}_timestamp;
-                task${i}_output_log['status'] = 'filtered';
-            }
-        }
+            const task${i}_timestamp = Date.now();
+            
+            task${i}_output_log['timestamp'] = task${i}_timestamp;
+            
+            task${i}_output_log['status'] = task${i}_success ? 'success' : 'fail';
+${active ? `
+            if (task${i}_success) usage += 1;
+` : ''}
+        } else {
 
+            const task${i}_timestamp = Date.now();
+
+            task${i}_output_log['timestamp'] = task${i}_timestamp;
+            
+            task${i}_output_log['status'] = 'filtered';
+        }        
+${active ? `
         logs.push(task${i}_output_log);
-${tasks[i].bot_output ? `
-        \noutput_data = task${i}_output_data;\n\n
+` : `
+        if (test_task_index === ${i})
+            return callback(null, {
+                statusCode: 200,
+                headers: {
+                    'Content-type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                body: JSON.stringify({
+                    success: true,
+                    data: task${i}_output_log
+                })
+            });
+`}${tasks[i].bot_output ? `
+        output_data = task${i}_output_data;
 ` : ''}`};
 
         const bot_code = `
@@ -179,28 +180,26 @@ module.exports.handler = async (event, context, callback) => {
 
     const user_id = '${user_id}';
     const bot_id = '${bot_id}';
-
+${active ? `
     let usage = 0;
     const logs = [];
     let error_result;
+` : ''}
     let output_data;
 
     try {
-        
-        const task0_name = '${tasks[0].service.name}';
 
         let task0_output_data;
-        
+
         if (event.body)
             try {
                 task0_output_data = JSON.parse(event.body);
             } catch (error) {
                 task0_output_data = event.body;
             }
-        
-        
-        const { test_task_index, test_input_data } = event;
-${active ? `
+${active ? `   
+        const task0_name = '${tasks[0].service.name}';
+
         const task0_timestamp = Date.now();
 
         logs.push({
@@ -210,14 +209,18 @@ ${active ? `
             status: 'success'
         });
 ` : `
-        if (${active ? false : '!test_task_index && !test_input_data'})
+        const { test_task_index } = event;
+
+        if (${active ? false : '!test_task_index'})
             await lambda.invoke({
                 FunctionName: '${SERVICE_PREFIX}-sample-update',
                 Payload: JSON.stringify({ user_id, bot_id, task_index: 0, output_data: task0_output_data })
             }).promise();
 `}${innerCode}
     } catch (error) {
+${active ? `
         error_result = error;
+` : ''}
     }
 ${active ? `
     await lambda.invoke({
@@ -225,7 +228,6 @@ ${active ? `
         Payload: JSON.stringify({ user_id, bot_id, usage, logs, error: error_result })
     }).promise();
 ` : '' }
-
     callback(null, {
         statusCode: 200,
         headers: {

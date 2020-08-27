@@ -4,8 +4,11 @@ const AUTH0_AUDIENCE = process.env.AUTH0_AUDIENCE;
 const AUTH0_CLIENT_PUBLIC_KEY = process.env.AUTH0_CLIENT_PUBLIC_KEY;
 
 const generatePolicy = (principalId, effect, resource) => {
+
   const authResponse = {};
+
   authResponse.principalId = principalId;
+
   if (effect && resource) {
     const policyDocument = {};
     policyDocument.Version = '2012-10-17';

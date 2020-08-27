@@ -5,11 +5,12 @@ const BOTS_TABLE = process.env.BOTS_TABLE;
 
 module.exports.handler = (event, context, callback) => {  
 
-    const { user_id, bot_id, task_index, input_data, output_data } = event;
+    const { user_id, bot_id, task_index, status, input_data, output_data } = event;
 
     const timestamp = Date.now();
 
     const sample = {
+        status,
         input_data,
         output_data,
         timestamp
