@@ -71,7 +71,7 @@ module.exports.handler = (event, context, callback) => {
                             
                                 if (user_result.message || user_result.errorMessage)
                                     return callback(null, callback_payload);
-                                else {
+                                else if (user_result.data) {
 
                                     const bot_params = {
                                         TableName: BOTS_TABLE,
@@ -111,10 +111,22 @@ module.exports.handler = (event, context, callback) => {
                                                     callback(null, callback_payload);
                                                 }).catch(error => callback(null, callback_payload));
                                         }).catch(error => callback(null, callback_payload));
-                                }
-                            }).catch(error => callback(null, callback_payload));
+                                    }
+                            }).catch(error => callback(null, {
+                                statusCode: 200,
+                                headers: { 'Content-type': 'text/html' },
+                                body: JSON.stringify(error.response.data)
+                            }));
                         }
-                }).catch(error => callback(null, callback_payload));
+                }).catch(error => callback(null, {
+                    statusCode: 200,
+                    headers: { 'Content-type': 'text/html' },
+                    body: JSON.stringify(error.response.data)
+                }));
             }
-        }).catch(error => callback(null, callback_payload));
+    }).catch(error => callback(null, {
+        statusCode: 200,
+        headers: { 'Content-type': 'text/html' },
+        body: JSON.stringify(error.response.data)
+    }));
 };

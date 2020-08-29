@@ -16,9 +16,7 @@ module.exports.handler = (event, context, callback) => {
 
     const callback_payload = {
         statusCode: 200,
-        headers: {
-            'Content-type': 'text/html'
-        },
+        headers: { 'Content-type': 'text/html' },
         body: '<script>window.close()</script>'
     }
 
@@ -42,7 +40,7 @@ module.exports.handler = (event, context, callback) => {
     const data = new URLSearchParams({
         code,
         'grant_type': 'authorization_code',
-        'redirect_uri': `${SERVICE_PROD_URL}/pipedrive/connect`
+        'redirect_uri': `${SERVICE_PROD_URL}/connectors/pipedrive`
     });
 
     Axios({
@@ -50,12 +48,12 @@ module.exports.handler = (event, context, callback) => {
         method: 'post',
         url: PIPEDRIVE_AUTH_URL,
         headers,
-        data: data
+        data
     }).then(credentials_result => {
 
             if (credentials_result.message || credentials_result.errorMessage)
                 return callback(null, callback_payload);
-            else if (credentials_result.message || credentials_result.errorMessage) {
+            else if (credentials_result.data) {
                 
                 const credentials = credentials_result.data;
 
@@ -70,6 +68,9 @@ module.exports.handler = (event, context, callback) => {
                     if (user_result.message || user_result.errorMessage)
                         callback(null, callback_payload);
                     else {
+
+                        const { id, name, email } = user_result.data.data;
+                        const connection_id = id.toString();
 
                         const sample_params = {
                             TableName: BOTS_TABLE,
@@ -90,9 +91,6 @@ module.exports.handler = (event, context, callback) => {
                         ddb.update(sample_params).promise()
                             .then(() => {
 
-                                const { id, name, email } = user_result.data.data;
-                                const connection_id = id.toString();
-
                                 const params = {
                                     TableName: CONNECTIONS_TABLE,
                                     Item: {
@@ -109,10 +107,18 @@ module.exports.handler = (event, context, callback) => {
                                 ddb.put(params).promise()
                                     .then(() => {
                                         callback(null, callback_payload);
-                                    }).catch(error => callback(null, callback_payload));
-                            }).catch(error => callback(null, callback_payload));
+                                    }).catch(error => callback(error));
+                            }).catch(error => callback(error));
                     }
-                }).catch(error => callback(null, callback_payload));
-            }
-        }).catch(error => callback(null, callback_payload));
+                }).catch(error => callback(null, {
+                    statusCode: 200,
+                    headers: { 'Content-type': 'text/html' },
+                    body: JSON.stringify(error.response.data)
+                })); 
+            }   
+        }).catch(error => callback(null, {
+            statusCode: 200,
+            headers: { 'Content-type': 'text/html' },
+            body: JSON.stringify(error.response.data)
+        })); 
 };
