@@ -123,21 +123,21 @@ functions:
           #   name: auth
   
   ### app connectors ### 
-  pipedrive-connect:
-    handler: src/connectors/pipedrive-connect/pipedrive-connect.handler
+  connectors-pipedrive:
+    handler: src/connectors/pipedrive/pipedrive.handler
     events:
       - http:
-          path: pipedrive/connect
+          path: connectors/pipedrive
           method: get
-  wix-connect:
-    handler: src/connectors/wix-connect/wix-connect.handler
+  connectors-wix:
+    handler: src/connectors/wix/wix.handler
     events:
       - http:
-          path: wix/connect
+          path: connectors/wix
           method: get
 
   ### app webhooks ### 
-  wix-webhook:
+  webhooks-wix:
     handler: src/webhooks/wix/wix.handler
     events:
       - http:
