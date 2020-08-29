@@ -24,19 +24,33 @@ exports.handler = (event, context, callback) => {
         const oauth2_url = connection.app_config.auth_url;
         const oauth2_method = connection.app_config.auth_method;
         const oauth2_type = connection.app_config.auth_type;
-        const api_url = connection.app_config.api_url;
-
-        const oauth2_auth = {
-            username: process.env[connection.app_config.auth_fields.username],
-            password: process.env[connection.app_config.auth_fields.password]
-        }
 
         const oauth2_headers = connection.app_config.auth_headers;
 
-        const oauth2_data = new URLSearchParams({
-            'grant_type': 'refresh_token',
-            'refresh_token': oauth2_refresh_token
-        });
+        let oauth2_data;
+        if (oauth2_headers['Content-type'] && oauth2_headers['Content-type'] === 'application/x-www-form-urlencoded')
+            oauth2_data = new URLSearchParams({
+                'grant_type': 'refresh_token',
+                'refresh_token': oauth2_refresh_token
+            });
+        else
+            oauth2_data = {
+                'grant_type': 'refresh_token',
+                'refresh_token': oauth2_refresh_token
+            }
+
+        let oauth2_auth;
+        if (oauth2_type === 'basic')
+            oauth2_auth = {
+                username: process.env[connection.app_config.auth_fields.username],
+                password: process.env[connection.app_config.auth_fields.password]
+            }
+        else if (oauth2_type === 'body') {
+            oauth2_data['client_id'] = process.env[connection.app_config.auth_fields.username];
+            oauth2_data['client_secret'] = process.env[connection.app_config.auth_fields.password];
+        }
+            
+        console.log({ url: oauth2_url, method: oauth2_method, auth: oauth2_auth, headers: oauth2_headers, data: oauth2_data })
 
         Axios({ url: oauth2_url, method: oauth2_method, auth: oauth2_auth, headers: oauth2_headers, data: oauth2_data })
             .then(response => {
