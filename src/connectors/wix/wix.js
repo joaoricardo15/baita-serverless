@@ -99,6 +99,7 @@ module.exports.handler = (event, context, callback) => {
                                                 TableName: CONNECTIONS_TABLE,
                                                 Item: {
                                                     name,
+                                                    app_name: name,
                                                     app_id,
                                                     user_id,
                                                     credentials,

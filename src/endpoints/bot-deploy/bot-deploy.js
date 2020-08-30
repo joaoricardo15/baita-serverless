@@ -105,7 +105,7 @@ module.exports.handler = (event, context, callback) => {
 
         const task${i}_input_data = { ${input_fields} };
 
-        let task${i}_output_data;
+        let task${i}_output_data = {};
         
         let task${i}_output_log = {
             name: task${i}_name,
@@ -145,6 +145,9 @@ module.exports.handler = (event, context, callback) => {
 ${active ? `
             if (task${i}_success) usage += 1;
 ` : ''}
+${active && tasks[i].bot_output ? `
+            if (task${i}_success) output_data = task${i}_output_data;
+` : ''}
         } else {
 
             const task${i}_timestamp = Date.now();
@@ -168,9 +171,7 @@ ${active ? `
                     data: task${i}_output_log
                 })
             });
-`}${tasks[i].bot_output ? `
-        output_data = task${i}_output_data;
-` : ''}`};
+`}`};
 
         const bot_code = `
 const AWS = require('aws-sdk');
@@ -208,6 +209,8 @@ ${active ? `
             timestamp: task0_timestamp,
             status: 'success'
         });
+
+        usage += 1;
 ` : `
         const { test_task_index } = event;
 

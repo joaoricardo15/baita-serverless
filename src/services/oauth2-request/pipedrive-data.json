@@ -1,6 +1,6 @@
 { 
     "connection": {
-        "user_id": "110944657139284874166",
+        "user_id": "110121804349224987489",
         "connection_id": "11673039",
         "app_config": {
             "name": "pipedrive",
@@ -8,7 +8,7 @@
             "api_url": "https://api.pipedrive.com/v1",
             "auth_url": "https://oauth.pipedrive.com/oauth/token",
             "auth_method": "POST",
-            "auth_type": "Bearer",
+            "auth_type": "basic",
             "auth_headers": {
                 "Content-type": "application/x-www-form-urlencoded"
             },
@@ -19,8 +19,8 @@
         }
     },
     "config": {
-        "url": "/persons/search",
-        "method": "GET",
+        "path": "/persons/search",
+        "method": "get",
         "query_params": [
             { "value": 0, "var_name": "start" },
             { "var_name": "term", "input_field": "search_term" },

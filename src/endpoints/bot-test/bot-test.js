@@ -28,7 +28,7 @@ module.exports.handler = (event, context, callback) => {
             const task_success = task_result.success;
 
             const task_output_data = task_success && task_result.data ? task_result.data : { message: task_result.message || task_result.errorMessage || 'nothing for you this time : (' };
-console.log({ user_id, bot_id, task_index, status: task_output_data.status, input_data: task_output_data.input_data, output_data: task_output_data.output_data })
+
             lambda.invoke({
                 FunctionName: `${SERVICE_PREFIX}-sample-update`,
                 Payload: JSON.stringify({ user_id, bot_id, task_index, status: task_output_data.status, input_data: task_output_data.input_data, output_data: task_output_data.output_data })

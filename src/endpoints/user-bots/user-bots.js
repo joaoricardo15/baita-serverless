@@ -5,8 +5,6 @@ const BOTS_TABLE = process.env.BOTS_TABLE;
 
 module.exports.handler = (event, context, callback) => {
 
-    console.log(process.env.BOTS_PERMISSION)
-
     const { user_id } = event.pathParameters;
     
     const params = { 

@@ -1,7 +1,7 @@
-{ 
+{
     "user_id": "100926812718157110734",
-    "bot_id": "a2a45177-6ff7-4b3f-ac28-670bd1779f18",
+    "bot_id": "d96a766a-f813-46ea-8be8-82ac64cdb50c",
     "task_index": 0,
-    "input_data": "asd",
-    "output_data": "asd"
-}
+    "status": "success",
+    "output_data": { "cpf": "123" }
+  }

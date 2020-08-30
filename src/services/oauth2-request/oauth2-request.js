@@ -19,7 +19,7 @@ exports.handler = (event, context, callback) => {
     ddb.get(getParams).promise()
         .then(get_result => {
 
-        const oauth2_refresh_token = get_result.Item.credentials.refresh_token;
+        const credentials = get_result.Item.credentials;
     
         const oauth2_url = connection.app_config.auth_url;
         const oauth2_method = connection.app_config.auth_method;
@@ -27,17 +27,33 @@ exports.handler = (event, context, callback) => {
 
         const oauth2_headers = connection.app_config.auth_headers;
 
+        const oauth2_refresh_token = credentials.refresh_token || credentials.access_token;
+
         let oauth2_data;
-        if (oauth2_headers['Content-type'] && oauth2_headers['Content-type'] === 'application/x-www-form-urlencoded')
-            oauth2_data = new URLSearchParams({
+        if (oauth2_headers['Content-type'] && oauth2_headers['Content-type'] === 'application/x-www-form-urlencoded') {
+            const data = {
                 'grant_type': 'refresh_token',
                 'refresh_token': oauth2_refresh_token
-            });
-        else
+            }
+
+            if (oauth2_type === 'body') {
+                data['client_id'] = process.env[connection.app_config.auth_fields.username];
+                data['client_secret'] = process.env[connection.app_config.auth_fields.password];
+            }
+        
+            oauth2_data = new URLSearchParams(data);
+        }
+        else {
             oauth2_data = {
                 'grant_type': 'refresh_token',
                 'refresh_token': oauth2_refresh_token
             }
+
+            if (oauth2_type === 'body') {
+                oauth2_data['client_id'] = process.env[connection.app_config.auth_fields.username];
+                oauth2_data['client_secret'] = process.env[connection.app_config.auth_fields.password];
+            }
+        }
 
         let oauth2_auth;
         if (oauth2_type === 'basic')
@@ -45,16 +61,10 @@ exports.handler = (event, context, callback) => {
                 username: process.env[connection.app_config.auth_fields.username],
                 password: process.env[connection.app_config.auth_fields.password]
             }
-        else if (oauth2_type === 'body') {
-            oauth2_data['client_id'] = process.env[connection.app_config.auth_fields.username];
-            oauth2_data['client_secret'] = process.env[connection.app_config.auth_fields.password];
-        }
-            
-        console.log({ url: oauth2_url, method: oauth2_method, auth: oauth2_auth, headers: oauth2_headers, data: oauth2_data })
 
         Axios({ url: oauth2_url, method: oauth2_method, auth: oauth2_auth, headers: oauth2_headers, data: oauth2_data })
             .then(response => {
-                
+
                 const access_token = response.data.access_token;
 
                 const { path, method, headers, auth, body_params, url_params, query_params } = config;
@@ -98,7 +108,7 @@ exports.handler = (event, context, callback) => {
                     }
                 }
 
-                let request_data = {};
+                let request_data;
                 if (body_params && body_params.length) {
                     request_url += '/';
 
@@ -107,7 +117,9 @@ exports.handler = (event, context, callback) => {
                             body_params[i].value !== undefined ? body_params[i].value :
                             body_params[i].service_config ? config[body_params[i].service_config] : 
                             body_params[i].input_field ? input_data[body_params[i].input_field] : ''
-                
+                        
+                        if (!request_data) request_data = {};
+
                         request_data[body_params[i].var_name] = source;
                     }
                 }
