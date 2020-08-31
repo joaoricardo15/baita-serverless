@@ -16,7 +16,6 @@
     "jszip": "^3.5.0",
     "serverless-deployment-bucket": "^1.1.2",
     "serverless-offline": "^6.5.0",
-    "serverless-plugin-ifelse": "^1.0.5",
     "serverless-plugin-webpack": "^1.5.1",
     "uuid": "^8.3.0",
     "webpack": "^4.44.1"

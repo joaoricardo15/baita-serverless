@@ -2,25 +2,12 @@ service: baita-help
 
 plugins:
   - serverless-offline
-  - serverless-plugin-ifelse
   - serverless-plugin-webpack
   - serverless-deployment-bucket
 
 custom:
   webpack:
     config: ./webpack.config.js
-  serverlessIfElse:
-      - If: '"${self:provider.stage}" == "prod"'
-        Set:
-          provider.apiGateway.restApiId: 1yp22xgyt1
-      # Exclude:
-      #   - functions.func1.events.0.http.authorizer
-      # ElseExclude:
-      #     - provider.environment.ENV2
-      # ElseSet:
-      #      provider.timeout: 120
-      # - ExcludeIf:
-      #      functions.func1: '"${self:provider.region}" == "ap-southeast-2"'
 
 provider:
   name: aws
@@ -37,7 +24,7 @@ provider:
     SERVICE_PREFIX: ${self:service}-${self:provider.stage}
     SERVICE_API: ${self:provider.environment.SERVICE_PREFIX}-serverless
     SERVICE_ROLE: ${self:provider.environment.SERVICE_PREFIX}-serverless
-    SERVICE_DEV_URL: https://tz5k7h2e4f.execute-api.us-east-1.amazonaws.com/dev
+    SERVICE_DEV_URL: https://1ainyn2f42.execute-api.us-east-1.amazonaws.com/dev
     SERVICE_PROD_URL: https://1yp22xgyt1.execute-api.us-east-1.amazonaws.com/prod
 
     # Database
@@ -57,22 +44,22 @@ provider:
     BOTS_PERMISSION: arn:aws:iam::514311354050:role/${self:provider.environment.SERVICE_PREFIX}-bots
 
     # Auth0
-    AUTH0_AUDIENCE: ${file(./src/services/auth/secrets.json):AUTH0_AUDIENCE}
-    AUTH0_CLIENT_PUBLIC_KEY: ${file(./src/services/auth/public_key)}
+    AUTH0_AUDIENCE: ${file(./src/assets/partners/auth0/secrets.json):audience}
+    AUTH0_CLIENT_PUBLIC_KEY: ${file(./src/assets/partners/auth0/public_key)}
     
     # Pipedrive
-    PIPEDRIVE_AUTH_URL: https://oauth.pipedrive.com/oauth/token
-    PIPEDRIVE_CLIENT_ID: 0b90044d228f2740
-    PIPEDRIVE_CLIENT_SECRET: 62bb19b0fcf2126926e2f787439a7032e6659cc0
+    PIPEDRIVE_AUTH_URL: ${file(./src/assets/partners/pipedrive/secrets.json):auth_uri}
+    PIPEDRIVE_CLIENT_ID: ${file(./src/assets/partners/pipedrive/secrets.json):client_id}
+    PIPEDRIVE_CLIENT_SECRET: ${file(./src/assets/partners/pipedrive/secrets.json):client_secret}
     
     # Wix
-    WIX_AUTH_URL: https://www.wix.com/oauth/access
-    WIX_CLIENT_ID: 7543e177-c467-445e-87bc-70ee9123626c
-    WIX_CLIENT_SECRET: 4b92e674-36e0-4ccd-950b-b12baf59a3e3
+    WIX_AUTH_URL: ${file(./src/assets/partners/wix/secrets.json):auth_uri}
+    WIX_CLIENT_ID: ${file(./src/assets/partners/wix/secrets.json):client_id}
+    WIX_CLIENT_SECRET: ${file(./src/assets/partners/wix/secrets.json):client_secret}
 
-    GOOGLE_AUTH_URL: https://oauth2.googleapis.com/token
-    GOOGLE_CLIENT_ID: 970765168109-2k6ivlnfq99co3eg0pkje626itppkcvk.apps.googleusercontent.com
-    GOOGLE_CLIENT_SECRET: XC6xE9YNqHEIUvYURrSQcnTA
+    GOOGLE_AUTH_URL: ${file(./src/assets/partners/google/secrets.json):web.auth_uri}
+    GOOGLE_CLIENT_ID: ${file(./src/assets/partners/google/secrets.json):web.client_id}
+    GOOGLE_CLIENT_SECRET: ${file(./src/assets/partners/google/secrets.json):web.client_secret}
 
 functions:
   ### internal services ### 
@@ -126,46 +113,6 @@ functions:
           # authorizer:
           #   name: auth
   
-  ### app connectors ### 
-  connectors-pipedrive:
-    handler: src/connectors/pipedrive/pipedrive.handler
-    events:
-      - http:
-          path: connectors/pipedrive
-          method: get
-  connectors-google:
-    handler: src/connectors/google/google.handler
-    events:
-      - http:
-          path: connectors/google
-          method: get
-  connectors-wix:
-    handler: src/connectors/wix/wix.handler
-    events:
-      - http:
-          path: connectors/wix
-          method: get
-
-  ### app webhooks ### 
-  webhooks-pipedrive:
-    handler: src/webhooks/pipedrive/pipedrive.handler
-    events:
-      - http:
-          path: webhooks/pipedrive
-          method: get
-  webhooks-google:
-    handler: src/webhooks/google/google.handler
-    events:
-      - http:
-          path: webhooks/google
-          method: get
-  webhooks-wix:
-    handler: src/webhooks/wix/wix.handler
-    events:
-      - http:
-          path: webhooks/wix
-          method: get
-
   ### bot endpoints ### 
   bot-create:
     handler: src/endpoints/bot-create/bot-create.handler
@@ -231,6 +178,47 @@ functions:
           # authorizer:
           #   name: auth
 
+    ### connectors ### 
+  
+  connectors-pipedrive:
+    handler: src/connectors/pipedrive/pipedrive.handler
+    events:
+      - http:
+          path: connectors/pipedrive
+          method: get
+  connectors-google:
+    handler: src/connectors/google/google.handler
+    events:
+      - http:
+          path: connectors/google
+          method: get
+  connectors-wix:
+    handler: src/connectors/wix/wix.handler
+    events:
+      - http:
+          path: connectors/wix
+          method: get
+
+  ### webhooks ### 
+  webhooks-pipedrive:
+    handler: src/webhooks/pipedrive/pipedrive.handler
+    events:
+      - http:
+          path: webhooks/pipedrive
+          method: get
+  webhooks-google:
+    handler: src/webhooks/google/google.handler
+    events:
+      - http:
+          path: webhooks/google
+          method: get
+  webhooks-wix:
+    handler: src/webhooks/wix/wix.handler
+    events:
+      - http:
+          path: webhooks/wix
+          method: get
+
 resources:
   Conditions:
       IsProd:
@@ -242,7 +230,7 @@ resources:
     appsTable:
       Condition: IsProd
       Type: AWS::DynamoDB::Table
-      # DeletionPolicy: Retain
+      DeletionPolicy: Retain
       Properties:
         TableName: ${self:provider.environment.APPS_TABLE}
         AttributeDefinitions:
@@ -257,7 +245,7 @@ resources:
     botsTable:
       Condition: IsProd
       Type: AWS::DynamoDB::Table
-      # DeletionPolicy: Retain
+      DeletionPolicy: Retain
       Properties:
         TableName: ${self:provider.environment.BOTS_TABLE}
         AttributeDefinitions:
@@ -276,7 +264,7 @@ resources:
     logsTable:
       Condition: IsProd
       Type: AWS::DynamoDB::Table
-      # DeletionPolicy: Retain
+      DeletionPolicy: Retain
       Properties:
         TableName: ${self:provider.environment.LOGS_TABLE}
         AttributeDefinitions:
@@ -295,7 +283,7 @@ resources:
     usersTable:
       Condition: IsProd
       Type: AWS::DynamoDB::Table
-      # DeletionPolicy: Retain
+      DeletionPolicy: Retain
       Properties:
         TableName: ${self:provider.environment.USERS_TABLE}
         AttributeDefinitions:
@@ -310,7 +298,7 @@ resources:
     connectionsTable:
       Condition: IsProd
       Type: AWS::DynamoDB::Table
-      # DeletionPolicy: Retain
+      DeletionPolicy: Retain
       Properties:
         TableName: ${self:provider.environment.CONNECTIONS_TABLE}
         AttributeDefinitions:
@@ -326,7 +314,7 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-    
+
     # Butckets
     botsBucket:
       Type: AWS::S3::Bucket
@@ -359,8 +347,7 @@ resources:
                     - 'dynamodb:*'
                     - 'apigateway:*'
                     - 'iam:PassRole'
-                  Resource: '*'
-         
+                  Resource: '*' 
     botsRole:
       Type: AWS::IAM::Role
       Properties:
@@ -384,10 +371,3 @@ resources:
                   Action:
                     - lambda:InvokeFunction
                   Resource: '*'
-  Outputs:
-    botsRoleArn:
-      Description: The ID of the VPC
-      Value: soi
-      Export:
-        Name: ${self:provider.environment.SERVICE_PREFIX}-botsRoleArn
-
