@@ -194,10 +194,20 @@ ${active ? `
 
         if (event.body)
             try {
-                task0_output_data = JSON.parse(event.body);
+                if (event.headers['Content-type'] && event.isBase64Encoded && event.headers['Content-type'] === 'application/x-www-form-urlencoded') {
+                    const buff = new Buffer(event.body, 'base64');
+                    const bodyString = buff.toString('ascii');
+                    const jsonBody = JSON.parse('{\"' + decodeURI(bodyString.replace(/&/g, ",").replace(/=/g, ":")) + '\"}');
+            
+                    task0_output_data = jsonBody;
+                }
+                else
+                    task0_output_data = JSON.parse(event.body);
+
             } catch (error) {
                 task0_output_data = event.body;
             }
+
 ${active ? `   
         const task0_name = '${tasks[0].service.name}';
 

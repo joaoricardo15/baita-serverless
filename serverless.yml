@@ -12,6 +12,7 @@ custom:
 provider:
   name: aws
   timeout: 10
+  memorySize: 512
   role: serviceRole
   runtime: nodejs12.x
   versionFunctions: false
@@ -57,6 +58,12 @@ provider:
     WIX_CLIENT_ID: ${file(./src/assets/partners/wix/secrets.json):client_id}
     WIX_CLIENT_SECRET: ${file(./src/assets/partners/wix/secrets.json):client_secret}
 
+    # RD Station
+    RDSTATION_AUTH_URL: ${file(./src/assets/partners/rdstation/secrets.json):auth_uri}
+    RDSTATION_CLIENT_ID: ${file(./src/assets/partners/rdstation/secrets.json):client_id}
+    RDSTATION_CLIENT_SECRET: ${file(./src/assets/partners/rdstation/secrets.json):client_secret}
+
+    # Google
     GOOGLE_AUTH_URL: ${file(./src/assets/partners/google/secrets.json):web.auth_uri}
     GOOGLE_CLIENT_ID: ${file(./src/assets/partners/google/secrets.json):web.client_id}
     GOOGLE_CLIENT_SECRET: ${file(./src/assets/partners/google/secrets.json):web.client_secret}
@@ -170,6 +177,7 @@ functions:
           #   name: auth
   bot-usage:
     handler: src/endpoints/bot-usage/bot-usage.handler
+    memorySize: 3000
     events:
       - http:
           path: bot/{bot_id}/usage
@@ -191,6 +199,12 @@ functions:
     events:
       - http:
           path: connectors/google
+          method: get
+  connectors-rdstation:
+    handler: src/connectors/rdstation/rdstation.handler
+    events:
+      - http:
+          path: connectors/rdstation
           method: get
   connectors-wix:
     handler: src/connectors/wix/wix.handler

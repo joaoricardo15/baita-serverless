@@ -73,6 +73,8 @@ module.exports.handler = (event, context, callback) => {
                                     return callback(null, callback_payload);
                                 else if (user_result.data) {
 
+                                    const connection_id = instanceId.toString();
+
                                     const bot_params = {
                                         TableName: BOTS_TABLE,
                                         Key:{
@@ -93,8 +95,6 @@ module.exports.handler = (event, context, callback) => {
                                         .then(() => {
                                             const { appName: name } = user_result.data.instance;
 
-                                            const connection_id = instanceId.toString();
-                                            
                                             const connection_params = {
                                                 TableName: CONNECTIONS_TABLE,
                                                 Item: {

@@ -1,4 +1,5 @@
 const Axios = require('axios');
+const xml2js = require('xml2js');
 
 exports.handler = (event, context, callback) => {
 
@@ -55,28 +56,37 @@ exports.handler = (event, context, callback) => {
 
     Axios({ url, method, headers, data })
         .then(response => {
+
             if (!response.data)
                 return callback(null, { 
                     success: true, 
                     message: response.message || response.errorMessage || 'nothing for you this time : (' 
                 });
             else {
-                let output_data = response.data
 
-                if (output_path) {
-                    const paths = output_path.split('.');
-
-                    for (let i = 0; i < paths.length; i++) {
-                        const type = paths[i].split(':')[0];
-                        const value = paths[i].split(':')[1];
-                        output_data = output_data[type === 'number' ? parseInt(value) : value]                
+                xml2js.parseString(response.data, { mergeAttrs: true }, (err, result) => {
+                    if (err) {
+                        throw err;
                     }
-                }
+                
+                    let output_data = result
 
-                callback(null, {
-                    success: true,
-                    data: output_data
-                });
+                    if (output_path) {
+                        const paths = output_path.split('.');
+
+                        for (let i = 0; i < paths.length; i++) {
+                            const type = paths[i].split(':')[0];
+                            const value = paths[i].split(':')[1];
+                            output_data = output_data[type === 'number' ? parseInt(value) : value]                
+                        }
+                    }
+
+                    callback(null, {
+                        success: true,
+                        data: output_data
+                    });
+                })
+
             }
         }).catch(error => callback(null, {
             success: false,
