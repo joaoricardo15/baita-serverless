@@ -27,6 +27,5 @@ module.exports.handler = (event, context, callback) => {
                     message: 'user created successfully'
                 })
             });
-        })
-        .catch(error => callback(error));
+        }).catch(callback);
 };

@@ -14,9 +14,9 @@ module.exports.handler = (event, context, callback) => {
             ":id": user_id
         },
     };
-    
+
     ddb.query(params).promise()
-        .then(data => {
+        .then(query_result => {
             callback(null, {
                 statusCode: 200,
                 headers: {
@@ -25,11 +25,8 @@ module.exports.handler = (event, context, callback) => {
                 },
                 body: JSON.stringify({
                     success: true,
-                    data: data.Items
+                    data: query_result.Items
                 })
             })
-        })
-        .catch(error => {
-            callback(JSON.stringify(error));
-        });
+        }).catch(callback);
 };

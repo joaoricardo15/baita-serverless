@@ -49,5 +49,5 @@ module.exports.handler = (event, context, callback) => {
                     data: data.Attributes
                 })
             }); 
-    }).catch(error => callback(error));
+    }).catch(callback);
 };

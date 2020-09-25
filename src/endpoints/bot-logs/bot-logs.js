@@ -30,5 +30,5 @@ module.exports.handler = (event, context, callback) => {
                     data: log.Items
                 })
             })
-        }).catch(error => callback(error));
+        }).catch(callback);
 };

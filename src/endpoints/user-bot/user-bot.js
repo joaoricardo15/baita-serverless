@@ -17,7 +17,6 @@ module.exports.handler = (event, context, callback) => {
 
     ddb.get(getParams).promise()
         .then(get_result => {
-
             callback(null, {
                 statusCode: 200,
                 headers: {
@@ -29,5 +28,5 @@ module.exports.handler = (event, context, callback) => {
                     data: get_result.Item
                 })
             })
-        }).catch(error => callback(error));
+        }).catch(callback);
 };

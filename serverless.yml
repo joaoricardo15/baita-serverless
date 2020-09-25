@@ -8,11 +8,13 @@ plugins:
 custom:
   webpack:
     config: ./webpack.config.js
+  serverless-offline:
+    useChildProcesses: true
 
 provider:
   name: aws
   timeout: 10
-  memorySize: 512
+  # memorySize: 512
   role: serviceRole
   runtime: nodejs12.x
   versionFunctions: false

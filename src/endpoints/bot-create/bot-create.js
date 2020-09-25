@@ -138,9 +138,9 @@ module.exports.handler = async (event, context, callback) => {
                                                     data: dbParams.Item
                                                 })
                                             }); 
-                                        }).catch(error => callback(error));
-                                }).catch(error => callback(error));    
-                        }).catch(error => callback(error));
-                }).catch(error => callback(error));
-        }).catch(error => callback(error));
+                                        }).catch(callback);
+                                }).catch(callback);    
+                        }).catch(callback);
+                }).catch(callback);
+        }).catch(callback);
 };

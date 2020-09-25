@@ -312,9 +312,9 @@ ${active ? `
                                                 data: data.Attributes
                                             })
                                         });
-                                    }).catch(error => callback(error));    
-                            }).catch(error => callback(error));
-                    }).catch(error => callback(error));
-            }).catch(error => callback(error));
+                                    }).catch(callback);    
+                            }).catch(callback);
+                    }).catch(callback);
+            }).catch(callback);
     }
 };

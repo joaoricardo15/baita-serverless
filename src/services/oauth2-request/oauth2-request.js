@@ -154,6 +154,6 @@ exports.handler = (event, context, callback) => {
                         success: false,
                         message: 'nothing for you this time : ('
                     }));
-                }).catch(error => callback(error));
-        }).catch(error => callback(error));
+                }).catch(callback);
+        }).catch(callback);
 };

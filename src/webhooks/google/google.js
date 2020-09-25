@@ -79,7 +79,7 @@ module.exports.handler = (event, context, callback) => {
                                     data: update_result.data
                                 })
                             });
-                        }).catch(error => callback(error));
-                }).catch(error => callback(error));
-        }).catch(error => callback(error));
+                        }).catch(callback);
+                }).catch(callback);
+        }).catch(callback);
 };

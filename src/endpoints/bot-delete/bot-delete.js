@@ -64,8 +64,8 @@ module.exports.handler = (event, context, callback) => {
                                             message: 'bot deleted successfully',
                                         })
                                     }); 
-                                }).catch(error => callback(error));
-                        }).catch(error => callback(error));
-                }).catch(error => callback(error));
-        }).catch(error => callback(error));
+                                }).catch(callback);
+                        }).catch(callback);
+                }).catch(callback);
+        }).catch(callback);
 };

@@ -99,8 +99,8 @@ module.exports.handler = (event, context, callback) => {
                                 ddb.put(params).promise()
                                     .then(() => {
                                         callback(null, callback_payload);
-                                    }).catch(error => callback(error));
-                            }).catch(error => callback(error));
+                                    }).catch(callback);
+                            }).catch(callback);
                     }
                 }).catch(error => callback(null, {
                     statusCode: 200,
