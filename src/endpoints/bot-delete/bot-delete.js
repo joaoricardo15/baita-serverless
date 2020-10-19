@@ -6,7 +6,7 @@ const s3 = new AWS.S3();
 
 const BOTS_TABLE = process.env.BOTS_TABLE;
 const BOTS_BUCKET = process.env.BOTS_BUCKET;
-const SERVICE_PREFIX = process.env.SERVICE_PREFIX;
+const BOT_PREFIX = process.env.BOT_PREFIX;
 
 module.exports.handler = (event, context, callback) => {
 
@@ -40,7 +40,7 @@ module.exports.handler = (event, context, callback) => {
                 .then(api => {
 
                     const lambdaParams = {
-                        FunctionName: `${SERVICE_PREFIX}-bot-${bot_id}`,
+                        FunctionName: `${BOT_PREFIX}-${bot_id}`,
                     };
 
                     lambda.deleteFunction(lambdaParams).promise()

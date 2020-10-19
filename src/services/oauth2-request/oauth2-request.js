@@ -6,7 +6,15 @@ const CONNECTIONS_TABLE = process.env.CONNECTIONS_TABLE;
 
 exports.handler = (event, context, callback) => {
 
-    const { connection, config, input_data, output_path } = event;
+    let input;
+
+    try {
+        input = JSON.parse(event);
+    } catch (error) {
+        input = event
+    }
+
+    const { connection, config, input_data, output_path } = input;
 
     const getParams = { 
         TableName: CONNECTIONS_TABLE,
@@ -126,7 +134,7 @@ exports.handler = (event, context, callback) => {
 
                 Axios({ url: request_url, method: request_method, headers: request_headers, data: request_data })
                     .then(response => {
-    
+                        console.log(response)
                         if (!response.data)
                             return callback(null, { 
                                 success: true, 

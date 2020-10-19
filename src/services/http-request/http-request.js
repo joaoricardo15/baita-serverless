@@ -3,6 +3,8 @@ const xml2js = require('xml2js');
 
 exports.handler = (event, context, callback) => {
 
+    
+
     const { connection, config, input_data, output_path } = event;
     const { path, method, headers, auth, body_params, url_params, query_params } = config;
     
@@ -54,8 +56,11 @@ exports.handler = (event, context, callback) => {
         }
     }
 
+console.log({ url, method, headers, data })
     Axios({ url, method, headers, data })
         .then(response => {
+
+            console.log(response.data)
 
             if (!response.data)
                 return callback(null, { 
@@ -64,12 +69,12 @@ exports.handler = (event, context, callback) => {
                 });
             else {
 
-                xml2js.parseString(response.data, { mergeAttrs: true }, (err, result) => {
-                    if (err) {
-                        throw err;
-                    }
+                // xml2js.parseString(response.data, { mergeAttrs: true }, (err, result) => {
+                //     if (err) {
+                //         throw err;
+                //     }
                 
-                    let output_data = result
+                    let output_data = response.data // result
 
                     if (output_path) {
                         const paths = output_path.split('.');
@@ -85,7 +90,8 @@ exports.handler = (event, context, callback) => {
                         success: true,
                         data: output_data
                     });
-                })
+                    
+                // })
 
             }
         }).catch(error => callback(null, {

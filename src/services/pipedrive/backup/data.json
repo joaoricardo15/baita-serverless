@@ -19,17 +19,10 @@
         }
     },
     "config": {
-        "path": "/persons/search",
+        "path": "/deals",
         "method": "get",
         "query_params": [
-            { "value": 0, "var_name": "start" },
-            { "var_name": "term", "input_field": "search_term" },
-            { "var_name": "fields", "input_field": "field_name" }
+            { "value": 1, "var_name": "limit" }
         ]
-    },
-    "input_data": {
-        "search_term": "26814675862",
-        "field_name": "custom_fields"
-    },
-    "output_path": "string:data.string:items.number:0.string:item"
+    }
 }

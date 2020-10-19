@@ -10,6 +10,7 @@ var zip = new JSZip();
 const BOTS_PERMISSION = process.env.BOTS_PERMISSION;
 const BOTS_TABLE = process.env.BOTS_TABLE;
 const BOTS_BUCKET = process.env.BOTS_BUCKET;
+const BOT_PREFIX = process.env.BOT_PREFIX;
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX;
 
 module.exports.handler = (event, context, callback) => {
@@ -86,7 +87,7 @@ module.exports.handler = async (event, context, callback) => {
                 .then(() => {
                     
                     const lambdaParams = {
-                        FunctionName: `${SERVICE_PREFIX}-bot-${bot_id}`,
+                        FunctionName: `${BOT_PREFIX}-${bot_id}`,
                         Handler: 'index.handler',
                         Runtime: 'nodejs12.x',
                         Role: BOTS_PERMISSION,
@@ -100,7 +101,7 @@ module.exports.handler = async (event, context, callback) => {
                         .then(lambda => {
     
                             const apiParams = {
-                                Name: `${SERVICE_PREFIX}-bot-${bot_id}`,
+                                Name: `${BOT_PREFIX}-${bot_id}`,
                                 ProtocolType: 'HTTP',
                                 CredentialsArn: BOTS_PERMISSION,
                                 RouteKey: 'ANY /bot',

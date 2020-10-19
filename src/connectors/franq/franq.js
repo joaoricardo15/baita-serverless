@@ -12,7 +12,9 @@ const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 
 module.exports.handler = (event, context, callback) => {
 
-    const { code, state, error } = event.queryStringParameters;
+    console.log(event)
+
+    const { code, state, error } = event.queryStringParameters; 
 
     const callback_payload = {
         statusCode: 200,
@@ -20,7 +22,7 @@ module.exports.handler = (event, context, callback) => {
         body: '<script>window.close()</script>'
     }
 
-    if (error)
+    // if (error)
         return callback(null, callback_payload);
 
     const app_id = state.split(':')[0];

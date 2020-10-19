@@ -14,7 +14,8 @@ custom:
 provider:
   name: aws
   timeout: 10
-  # memorySize: 512
+  region: us-east-1
+  memorySize: 512
   role: serviceRole
   runtime: nodejs12.x
   versionFunctions: false
@@ -30,6 +31,9 @@ provider:
     SERVICE_DEV_URL: https://1ainyn2f42.execute-api.us-east-1.amazonaws.com/dev
     SERVICE_PROD_URL: https://1yp22xgyt1.execute-api.us-east-1.amazonaws.com/prod
 
+    # Bot
+    BOT_PREFIX: ${self:service}-prod-bot
+
     # Database
     APPS_TABLE: ${self:service}-prod-apps
     BOTS_TABLE: ${self:service}-prod-bots
@@ -42,9 +46,9 @@ provider:
     SERVICE_BUCKET: ${self:provider.environment.SERVICE_PREFIX}-serverless
 
     # Iam
-    BOTS_ROLE: ${self:provider.environment.SERVICE_PREFIX}-bots
-    BOTS_POLICY: ${self:provider.environment.SERVICE_PREFIX}-bots
-    BOTS_PERMISSION: arn:aws:iam::514311354050:role/${self:provider.environment.SERVICE_PREFIX}-bots
+    BOTS_ROLE: ${self:provider.environment.BOT_PREFIX}
+    BOTS_POLICY: ${self:provider.environment.BOT_PREFIX}
+    BOTS_PERMISSION: arn:aws:iam::514311354050:role/${self:provider.environment.BOT_PREFIX}
 
     # Auth0
     AUTH0_AUDIENCE: ${file(./src/assets/partners/auth0/secrets.json):audience}
@@ -66,9 +70,14 @@ provider:
     RDSTATION_CLIENT_SECRET: ${file(./src/assets/partners/rdstation/secrets.json):client_secret}
 
     # Google
-    GOOGLE_AUTH_URL: ${file(./src/assets/partners/google/secrets.json):web.auth_uri}
+    GOOGLE_AUTH_URL: ${file(./src/assets/partners/google/secrets.json):web.token_uri}
     GOOGLE_CLIENT_ID: ${file(./src/assets/partners/google/secrets.json):web.client_id}
     GOOGLE_CLIENT_SECRET: ${file(./src/assets/partners/google/secrets.json):web.client_secret}
+
+    # Franq
+    FRANQ_AUTH_URL: ${file(./src/assets/partners/franq/secrets.json):auth_uri}
+    FRANQ_CLIENT_ID: ${file(./src/assets/partners/franq/secrets.json):client_id}
+    FRANQ_CLIENT_SECRET: ${file(./src/assets/partners/franq/secrets.json):client_secret}
 
 functions:
   ### internal services ### 
@@ -86,6 +95,8 @@ functions:
     handler: src/services/oauth2-request/oauth2-request.handler
   code-execute:
     handler: src/services/code-execute/code-execute.handler
+  pipedrive-backup:
+    handler: src/services/pipedrive/backup/backup.handler
 
   ### user endpoints ### 
   user-create:
@@ -214,25 +225,37 @@ functions:
       - http:
           path: connectors/wix
           method: get
+  connectors-franq:
+    handler: src/connectors/franq/franq.handler
+    events:
+      - http:
+          path: connectors/franq
+          method: get
 
   ### webhooks ### 
-  webhooks-pipedrive:
-    handler: src/webhooks/pipedrive/pipedrive.handler
+  triggers-baitahelp:
+    handler: src/triggers/baitahelp/baitahelp.handler
     events:
       - http:
-          path: webhooks/pipedrive
+          path: triggers/baitahelp
           method: get
-  webhooks-google:
-    handler: src/webhooks/google/google.handler
+  triggers-pipedrive:
+    handler: src/triggers/pipedrive/pipedrive.handler
     events:
       - http:
-          path: webhooks/google
+          path: triggers/pipedrive
           method: get
-  webhooks-wix:
-    handler: src/webhooks/wix/wix.handler
+  triggers-google:
+    handler: src/triggers/google/google.handler
     events:
       - http:
-          path: webhooks/wix
+          path: triggers/google
+          method: get
+  triggers-wix:
+    handler: src/triggers/wix/wix.handler
+    events:
+      - http:
+          path: triggers/wix
           method: get
 
 resources:
