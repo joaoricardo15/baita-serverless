@@ -6,13 +6,11 @@ const qs = require('qs');
 const BOTS_TABLE = process.env.BOTS_TABLE;
 const CONNECTIONS_TABLE = process.env.CONNECTIONS_TABLE;
 const SERVICE_PROD_URL = process.env.SERVICE_PROD_URL;
-const GOOGLE_AUTH_URL = process.env.GOOGLE_AUTH_URL;
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const FRANQ_AUTH_URL = process.env.FRANQ_AUTH_URL;
+const FRANQ_CLIENT_ID = process.env.FRANQ_CLIENT_ID;
+const FRANQ_CLIENT_SECRET = process.env.FRANQ_CLIENT_SECRET;
 
 module.exports.handler = (event, context, callback) => {
-
-    console.log(event)
 
     const { code, state, error } = event.queryStringParameters; 
 
@@ -22,7 +20,7 @@ module.exports.handler = (event, context, callback) => {
         body: '<script>window.close()</script>'
     }
 
-    // if (error)
+    if (error)
         return callback(null, callback_payload);
 
     const app_id = state.split(':')[0];
@@ -37,15 +35,14 @@ module.exports.handler = (event, context, callback) => {
     const data = qs.stringify({
         'code': code,
         'grant_type': 'authorization_code',
-        'redirect_uri': `${SERVICE_PROD_URL}/connectors/google`,
-        'client_id': GOOGLE_CLIENT_ID,
-        'client_secret': GOOGLE_CLIENT_SECRET,
-        'access_type': 'offline'
+        'redirect_uri': `${SERVICE_PROD_URL}/connectors/franq`,
+        'client_id': FRANQ_CLIENT_ID,
+        'client_secret': FRANQ_CLIENT_SECRET,
     });
 
     Axios({
         method: 'post',
-        url: GOOGLE_AUTH_URL,
+        url: FRANQ_AUTH_URL,
         headers,
         data
     }).then(credentials_result => {
@@ -56,9 +53,14 @@ module.exports.handler = (event, context, callback) => {
             
             const credentials = credentials_result.data;
 
+            const headers = {
+                authorization: `Bearer ${credentials.access_token}`
+            }
+
             Axios({
                 method: 'get',
-                url:`https://www.googleapis.com/oauth2/v1/userinfo?access_token=${credentials.access_token}`
+                headers,
+                url: 'https://oauth.prd.franq.com.br/person/v2/'
             }).then(user_result => {
 
                 if (user_result.message || user_result.errorMessage)
