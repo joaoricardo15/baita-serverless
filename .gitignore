@@ -3,6 +3,7 @@
 .serverless
 node_modules
 package-lock.json
+yarn.lock
 
 # secrets
 src/assets/partners/*
