@@ -250,7 +250,7 @@ ${active ? `
         },
         body: JSON.stringify({
             success: true,
-            ...output_data
+            data: output_data
         })
     }); 
 };
