@@ -128,12 +128,12 @@ module.exports.handler = (event, context, callback) => {
                 }).catch(error => callback(null, {
                     statusCode: 200,
                     headers: { 'Content-type': 'text/html' },
-                    body: JSON.stringify(error.response.data)
+                    body: JSON.stringify(!error || !error.response ? error : error.response.data)
                 })); 
             }   
         }).catch(error => callback(null, {
             statusCode: 200,
             headers: { 'Content-type': 'text/html' },
-            body: JSON.stringify(error.response.data)
+            body: JSON.stringify(!error || !error.response ? error : error.response.data)
         })); 
 };
