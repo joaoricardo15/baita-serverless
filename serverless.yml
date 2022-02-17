@@ -77,38 +77,29 @@ provider:
 functions:
   ### internal services ### 
   auth:
-    handler: src/services/auth/auth.handler
+    handler: src/services/auth/index.handler
   log-create:
-    handler: src/services/log-create/log-create.handler
+    handler: src/services/log-create/index.handler
   sample-update:
-    handler: src/services/sample-update/sample-update.handler
+    handler: src/services/sample-update/index.handler
   
   ### bot operations ###
   http-request:
-    handler: src/operations/http-request/http-request.handler
+    handler: src/operations/http-request/index.handler
   oauth2-request:
-    handler: src/operations/oauth2-request/oauth2-request.handler
+    handler: src/operations/oauth2-request/index.handler
   code-execute:
-    handler: src/operations/code-execute/code-execute.handler
+    handler: src/operations/code-execute/index.handler
 
   ### endpoints ### 
   endpoint-user-create:
-    handler: src/endpoints/user-create/user-create.handler
+    handler: src/endpoints/users/create/index.handler
     events:
       - http:
           path: user/create
           method: post
-  endpoint-user-bots:
-    handler: src/endpoints/user-bots/user-bots.handler
-    events:
-      - http:
-          path: user/{user_id}/bots
-          method: get
-          cors: true
-          # authorizer:
-          #   name: auth
   endpoint-user-bot:
-    handler: src/endpoints/user-bot/user-bot.handler
+    handler: src/endpoints/users/bot/index.handler
     events:
       - http:
           path: user/{user_id}/bot/{bot_id}
@@ -116,8 +107,17 @@ functions:
           cors: true
           # authorizer:
           #   name: auth
+  endpoint-user-bots:
+    handler: src/endpoints/users/bots/index.handler
+    events:
+      - http:
+          path: user/{user_id}/bots
+          method: get
+          cors: true
+          # authorizer:
+          #   name: auth
   endpoint-user-connections:
-    handler: src/endpoints/user-connections/user-connections.handler
+    handler: src/endpoints/users/connections/index.handler
     events:
       - http:
           path: user/{user_id}/connections
@@ -126,7 +126,7 @@ functions:
           # authorizer:
           #   name: auth
   endpoint-bot-create:
-    handler: src/endpoints/bot-create/bot-create.handler
+    handler: src/endpoints/bots/create/index.handler
     events:
       - http:
           path: bot/create
@@ -135,7 +135,7 @@ functions:
           # authorizer:
           #   name: auth
   endpoint-bot-update:
-    handler: src/endpoints/bot-update/bot-update.handler
+    handler: src/endpoints/bots/update/index.handler
     events:
       - http:
           path: bot/update
@@ -144,7 +144,7 @@ functions:
           # authorizer:
           #   name: auth
   endpoint-bot-delete:
-    handler: src/endpoints/bot-delete/bot-delete.handler
+    handler: src/endpoints/bots/delete/index.handler
     events:
       - http:
           path: bot/delete
@@ -153,7 +153,7 @@ functions:
           # authorizer:
           #   name: auth
   endpoint-bot-deploy:
-    handler: src/endpoints/bot-deploy/bot-deploy.handler
+    handler: src/endpoints/bots/deploy/index.handler
     events:
       - http:
           path: bot/deploy
@@ -162,7 +162,7 @@ functions:
           # authorizer:
           #   name: auth
   endpoint-bot-test:
-    handler: src/endpoints/bot-test/bot-test.handler
+    handler: src/endpoints/bots/test/index.handler
     events:
       - http:
           path: bot/test
@@ -171,7 +171,7 @@ functions:
           # authorizer:
           #   name: auth
   endpoint-bot-logs:
-    handler: src/endpoints/bot-logs/bot-logs.handler
+    handler: src/endpoints/bots/logs/index.handler
     events:
       - http:
           path: bot/{bot_id}/logs
@@ -180,7 +180,7 @@ functions:
           # authorizer:
           #   name: auth
   endpoint-bot-usage:
-    handler: src/endpoints/bot-usage/bot-usage.handler
+    handler: src/endpoints/bots/usage/index.handler
     memorySize: 3000
     events:
       - http:
@@ -192,31 +192,31 @@ functions:
 
   ### connectors ### 
   connector-pipedrive:
-    handler: src/connectors/pipedrive/pipedrive.handler
+    handler: src/connectors/pipedrive/index.handler
     events:
       - http:
           path: connectors/pipedrive
           method: get
   connector-google:
-    handler: src/connectors/google/google.handler
+    handler: src/connectors/google/index.handler
     events:
       - http:
           path: connectors/google
           method: get
   connector-rdstation:
-    handler: src/connectors/rdstation/rdstation.handler
+    handler: src/connectors/rdstation/index.handler
     events:
       - http:
           path: connectors/rdstation
           method: get
   connector-wix:
-    handler: src/connectors/wix/wix.handler
+    handler: src/connectors/wix/index.handler
     events:
       - http:
           path: connectors/wix
           method: get
   connector-franq:
-    handler: src/connectors/franq/franq.handler
+    handler: src/connectors/franq/index.handler
     events:
       - http:
           path: connectors/franq
@@ -224,7 +224,7 @@ functions:
 
   ### webhooks ### 
   trigger-baitahelp:
-    handler: src/triggers/baitahelp/baitahelp.handler
+    handler: src/triggers/baitahelp/index.handler
     events:
       - http:
           path: triggers/baitahelp
