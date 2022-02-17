@@ -74,10 +74,8 @@ exports.handler = (event, context, callback) => {
     }
   }
 
-  console.log({ url, method, headers, data });
   Axios({ url, method, headers, data })
     .then((response:any) => {
-      console.log(response.data);
 
       if (!response.data)
         return callback(null, {

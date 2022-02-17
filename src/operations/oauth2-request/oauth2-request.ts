@@ -178,7 +178,6 @@ exports.handler = (event, context, callback) => {
             data: request_data,
           })
             .then((response:any) => {
-              console.log(response);
               if (!response.data)
                 return callback(null, {
                   success: true,
