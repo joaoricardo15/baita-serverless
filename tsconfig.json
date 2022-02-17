@@ -1,0 +1,20 @@
+{
+	"compilerOptions": {
+		// Default config from https://www.serverless.com/plugins/serverless-plugin-typescript
+		"preserveConstEnums": true,
+		"strictNullChecks": true,
+		"sourceMap": true,
+		"allowJs": true,
+		"moduleResolution": "node",
+		"outDir": ".build",
+		"lib": ["esnext"],
+		"target": "es6",
+		"rootDir": "./",
+		
+		// Tip from https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/
+		"esModuleInterop": true,
+
+		// Issue https://github.com/dividab/tsconfig-paths-webpack-plugin/issues/32
+		"baseUrl": "."
+	}
+}

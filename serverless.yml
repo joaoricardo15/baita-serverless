@@ -1,13 +1,11 @@
 service: baita-help
 
 plugins:
+  - serverless-bundle
   - serverless-offline
-  - serverless-plugin-webpack
   - serverless-deployment-bucket
 
 custom:
-  webpack:
-    config: ./webpack.config.js
   serverless-offline:
     useChildProcesses: true
 
@@ -31,9 +29,6 @@ provider:
     SERVICE_DEV_URL: https://1ainyn2f42.execute-api.us-east-1.amazonaws.com/dev
     SERVICE_PROD_URL: https://1yp22xgyt1.execute-api.us-east-1.amazonaws.com/prod
 
-    # Bot
-    BOT_PREFIX: ${self:service}-prod-bot
-
     # Database
     APPS_TABLE: ${self:service}-prod-apps
     BOTS_TABLE: ${self:service}-prod-bots
@@ -46,38 +41,38 @@ provider:
     SERVICE_BUCKET: ${self:provider.environment.SERVICE_PREFIX}-serverless
 
     # Iam
-    BOTS_ROLE: ${self:provider.environment.BOT_PREFIX}
-    BOTS_POLICY: ${self:provider.environment.BOT_PREFIX}
-    BOTS_PERMISSION: arn:aws:iam::514311354050:role/${self:provider.environment.BOT_PREFIX}
+    BOTS_ROLE: ${self:provider.environment.SERVICE_PREFIX}
+    BOTS_POLICY: ${self:provider.environment.SERVICE_PREFIX}
+    BOTS_PERMISSION: arn:aws:iam::514311354050:role/${self:provider.environment.SERVICE_PREFIX}
 
-    # Auth0
-    AUTH0_AUDIENCE: ${file(./src/assets/partners/auth0/secrets.json):audience}
-    AUTH0_CLIENT_PUBLIC_KEY: ${file(./src/assets/partners/auth0/public_key)}
+    # # Auth0
+    # AUTH0_AUDIENCE: ${file(./src/assets/partners/auth0/secrets.json):audience}
+    # AUTH0_CLIENT_PUBLIC_KEY: ${file(./src/assets/partners/auth0/public_key)}
     
-    # Pipedrive
-    PIPEDRIVE_AUTH_URL: ${file(./src/assets/partners/pipedrive/secrets.json):auth_uri}
-    PIPEDRIVE_CLIENT_ID: ${file(./src/assets/partners/pipedrive/secrets.json):client_id}
-    PIPEDRIVE_CLIENT_SECRET: ${file(./src/assets/partners/pipedrive/secrets.json):client_secret}
+    # # Pipedrive
+    # PIPEDRIVE_AUTH_URL: ${file(./src/assets/partners/pipedrive/secrets.json):auth_uri}
+    # PIPEDRIVE_CLIENT_ID: ${file(./src/assets/partners/pipedrive/secrets.json):client_id}
+    # PIPEDRIVE_CLIENT_SECRET: ${file(./src/assets/partners/pipedrive/secrets.json):client_secret}
     
-    # Wix
-    WIX_AUTH_URL: ${file(./src/assets/partners/wix/secrets.json):auth_uri}
-    WIX_CLIENT_ID: ${file(./src/assets/partners/wix/secrets.json):client_id}
-    WIX_CLIENT_SECRET: ${file(./src/assets/partners/wix/secrets.json):client_secret}
+    # # Wix
+    # WIX_AUTH_URL: ${file(./src/assets/partners/wix/secrets.json):auth_uri}
+    # WIX_CLIENT_ID: ${file(./src/assets/partners/wix/secrets.json):client_id}
+    # WIX_CLIENT_SECRET: ${file(./src/assets/partners/wix/secrets.json):client_secret}
 
-    # RD Station
-    RDSTATION_AUTH_URL: ${file(./src/assets/partners/rdstation/secrets.json):auth_uri}
-    RDSTATION_CLIENT_ID: ${file(./src/assets/partners/rdstation/secrets.json):client_id}
-    RDSTATION_CLIENT_SECRET: ${file(./src/assets/partners/rdstation/secrets.json):client_secret}
+    # # RD Station
+    # RDSTATION_AUTH_URL: ${file(./src/assets/partners/rdstation/secrets.json):auth_uri}
+    # RDSTATION_CLIENT_ID: ${file(./src/assets/partners/rdstation/secrets.json):client_id}
+    # RDSTATION_CLIENT_SECRET: ${file(./src/assets/partners/rdstation/secrets.json):client_secret}
 
-    # Google
-    GOOGLE_AUTH_URL: ${file(./src/assets/partners/google/secrets.json):web.token_uri}
-    GOOGLE_CLIENT_ID: ${file(./src/assets/partners/google/secrets.json):web.client_id}
-    GOOGLE_CLIENT_SECRET: ${file(./src/assets/partners/google/secrets.json):web.client_secret}
+    # # Google
+    # GOOGLE_AUTH_URL: ${file(./src/assets/partners/google/secrets.json):web.token_uri}
+    # GOOGLE_CLIENT_ID: ${file(./src/assets/partners/google/secrets.json):web.client_id}
+    # GOOGLE_CLIENT_SECRET: ${file(./src/assets/partners/google/secrets.json):web.client_secret}
 
-    # Franq
-    FRANQ_AUTH_URL: ${file(./src/assets/partners/franq/secrets.json):auth_uri}
-    FRANQ_CLIENT_ID: ${file(./src/assets/partners/franq/secrets.json):client_id}
-    FRANQ_CLIENT_SECRET: ${file(./src/assets/partners/franq/secrets.json):client_secret}
+    # # Franq
+    # FRANQ_AUTH_URL: ${file(./src/assets/partners/franq/secrets.json):auth_uri}
+    # FRANQ_CLIENT_ID: ${file(./src/assets/partners/franq/secrets.json):client_id}
+    # FRANQ_CLIENT_SECRET: ${file(./src/assets/partners/franq/secrets.json):client_secret}
 
 functions:
   ### internal services ### 
@@ -88,24 +83,22 @@ functions:
   sample-update:
     handler: src/services/sample-update/sample-update.handler
   
-  ### custom bot services ### 
+  ### bot operations ###
   http-request:
-    handler: src/services/http-request/http-request.handler
+    handler: src/operations/http-request/http-request.handler
   oauth2-request:
-    handler: src/services/oauth2-request/oauth2-request.handler
+    handler: src/operations/oauth2-request/oauth2-request.handler
   code-execute:
-    handler: src/services/code-execute/code-execute.handler
-  pipedrive-backup:
-    handler: src/services/pipedrive/backup/backup.handler
+    handler: src/operations/code-execute/code-execute.handler
 
-  ### user endpoints ### 
-  user-create:
+  ### endpoints ### 
+  endpoint-user-create:
     handler: src/endpoints/user-create/user-create.handler
     events:
       - http:
           path: user/create
           method: post
-  user-bots:
+  endpoint-user-bots:
     handler: src/endpoints/user-bots/user-bots.handler
     events:
       - http:
@@ -114,7 +107,7 @@ functions:
           cors: true
           # authorizer:
           #   name: auth
-  user-bot:
+  endpoint-user-bot:
     handler: src/endpoints/user-bot/user-bot.handler
     events:
       - http:
@@ -123,7 +116,7 @@ functions:
           cors: true
           # authorizer:
           #   name: auth
-  user-connections:
+  endpoint-user-connections:
     handler: src/endpoints/user-connections/user-connections.handler
     events:
       - http:
@@ -132,9 +125,7 @@ functions:
           cors: true
           # authorizer:
           #   name: auth
-  
-  ### bot endpoints ### 
-  bot-create:
+  endpoint-bot-create:
     handler: src/endpoints/bot-create/bot-create.handler
     events:
       - http:
@@ -143,7 +134,7 @@ functions:
           cors: true
           # authorizer:
           #   name: auth
-  bot-update:
+  endpoint-bot-update:
     handler: src/endpoints/bot-update/bot-update.handler
     events:
       - http:
@@ -152,7 +143,7 @@ functions:
           cors: true
           # authorizer:
           #   name: auth
-  bot-delete:
+  endpoint-bot-delete:
     handler: src/endpoints/bot-delete/bot-delete.handler
     events:
       - http:
@@ -161,7 +152,7 @@ functions:
           cors: true
           # authorizer:
           #   name: auth
-  bot-deploy:
+  endpoint-bot-deploy:
     handler: src/endpoints/bot-deploy/bot-deploy.handler
     events:
       - http:
@@ -170,7 +161,7 @@ functions:
           cors: true
           # authorizer:
           #   name: auth
-  bot-test:
+  endpoint-bot-test:
     handler: src/endpoints/bot-test/bot-test.handler
     events:
       - http:
@@ -179,7 +170,7 @@ functions:
           cors: true
           # authorizer:
           #   name: auth
-  bot-logs:
+  endpoint-bot-logs:
     handler: src/endpoints/bot-logs/bot-logs.handler
     events:
       - http:
@@ -188,7 +179,7 @@ functions:
           cors: true
           # authorizer:
           #   name: auth
-  bot-usage:
+  endpoint-bot-usage:
     handler: src/endpoints/bot-usage/bot-usage.handler
     memorySize: 3000
     events:
@@ -199,33 +190,32 @@ functions:
           # authorizer:
           #   name: auth
 
-    ### connectors ### 
-  
-  connectors-pipedrive:
+  ### connectors ### 
+  connector-pipedrive:
     handler: src/connectors/pipedrive/pipedrive.handler
     events:
       - http:
           path: connectors/pipedrive
           method: get
-  connectors-google:
+  connector-google:
     handler: src/connectors/google/google.handler
     events:
       - http:
           path: connectors/google
           method: get
-  connectors-rdstation:
+  connector-rdstation:
     handler: src/connectors/rdstation/rdstation.handler
     events:
       - http:
           path: connectors/rdstation
           method: get
-  connectors-wix:
+  connector-wix:
     handler: src/connectors/wix/wix.handler
     events:
       - http:
           path: connectors/wix
           method: get
-  connectors-franq:
+  connector-franq:
     handler: src/connectors/franq/franq.handler
     events:
       - http:
@@ -233,29 +223,11 @@ functions:
           method: get
 
   ### webhooks ### 
-  triggers-baitahelp:
+  trigger-baitahelp:
     handler: src/triggers/baitahelp/baitahelp.handler
     events:
       - http:
           path: triggers/baitahelp
-          method: get
-  triggers-pipedrive:
-    handler: src/triggers/pipedrive/pipedrive.handler
-    events:
-      - http:
-          path: triggers/pipedrive
-          method: get
-  triggers-google:
-    handler: src/triggers/google/google.handler
-    events:
-      - http:
-          path: triggers/google
-          method: get
-  triggers-wix:
-    handler: src/triggers/wix/wix.handler
-    events:
-      - http:
-          path: triggers/wix
           method: get
 
 resources:
