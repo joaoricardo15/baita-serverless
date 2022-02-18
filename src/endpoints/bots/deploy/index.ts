@@ -10,7 +10,6 @@ const zip = new JSZip();
 const BOTS_TABLE = process.env.BOTS_TABLE || "";
 const BOTS_BUCKET = process.env.BOTS_BUCKET || "";
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX || "";
-const BOT_PREFIX = process.env.BOT_PREFIX || "";
 
 const comparationExpressions = {
   equals: "==",
@@ -353,7 +352,7 @@ ${
           .promise()
           .then((bucket) => {
             const lambdaParams = {
-              FunctionName: `${BOT_PREFIX}-${bot_id}`,
+              FunctionName: `${SERVICE_PREFIX}-${bot_id}`,
               S3Bucket: BOTS_BUCKET,
               S3Key: `${bot_id}.zip`,
             };

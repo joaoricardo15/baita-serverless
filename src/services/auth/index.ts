@@ -21,7 +21,7 @@ const generatePolicy = (principalId, effect, resource) => {
   return authResponse;
 };
 
-module.exports.handler = (event, context, callback) => {
+exports.handler = (event, context, callback) => {
   if (!event.authorizationToken) {
     return callback("Unauthorized");
   }

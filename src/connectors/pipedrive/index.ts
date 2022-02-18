@@ -1,4 +1,5 @@
 import AWS from "aws-sdk";
+import { PutItemInput, UpdateItemInput } from "aws-sdk/clients/dynamodb";
 import Axios from "axios";
 import { URLSearchParams } from "url";
 
@@ -14,28 +15,18 @@ const PIPEDRIVE_CLIENT_SECRET = process.env.PIPEDRIVE_CLIENT_SECRET || "";
 exports.handler = (event, context, callback) => {
   const { code, state, error } = event.queryStringParameters;
 
-  const callback_payload = {
+  const callbackPayload = {
     statusCode: 200,
     headers: { "Content-type": "text/html" },
     body: "<script>window.close()</script>",
   };
 
-  const callback_marketplace_payload = {
-    statusCode: 200,
-    headers: { "Content-type": "text/html" },
-    body: '<script>window.location.href = "http://baita.help/successAppInstall"</script>',
-  };
+  if (error) return callback(null, callbackPayload);
 
-  if (error) return callback(null, callback_payload);
-
-  let app_id, user_id, bot_id, task_index;
-
-  if (state) {
-    app_id = state.split(":")[0];
-    user_id = state.split(":")[1];
-    bot_id = state.split(":")[2];
-    task_index = state.split(":")[3];
-  }
+  const app_id = state.split(":")[0];
+  const user_id = state.split(":")[1];
+  const bot_id = state.split(":")[2];
+  const task_index = state.split(":")[3];
 
   const auth = {
     username: PIPEDRIVE_CLIENT_ID,
@@ -61,7 +52,7 @@ exports.handler = (event, context, callback) => {
   })
     .then((credentialsResult:any) => {
       if (credentialsResult.message || credentialsResult.errorMessage)
-        return callback(null, callback_payload);
+        return callback(null, callbackPayload);
       else if (credentialsResult.data) {
         const credentials = credentialsResult.data;
 
@@ -74,12 +65,12 @@ exports.handler = (event, context, callback) => {
         })
           .then((userResult:any) => {
             if (userResult.message || userResult.errorMessage)
-              callback(null, callback_payload);
+              callback(null, callbackPayload);
             else {
               const { id, name, email } = userResult.data.data;
               const connection_id = id.toString();
 
-              const params = {
+              const putParams:PutItemInput = {
                 TableName: CONNECTIONS_TABLE,
                 Item: {
                   name: email,
@@ -92,39 +83,36 @@ exports.handler = (event, context, callback) => {
                 },
               };
 
-              if (state) {
-                ddb
-                  .put(params)
-                  .promise()
-                  .then(() => {
-                    const sample_params = {
-                      TableName: BOTS_TABLE,
-                      Key: {
-                        bot_id: bot_id,
-                        user_id: user_id,
-                      },
-                      UpdateExpression: `set #tks[${task_index}].connection_id = :id`,
-                      ExpressionAttributeNames: {
-                        "#tks": "tasks",
-                      },
-                      ExpressionAttributeValues: {
-                        ":id": connection_id,
-                      },
-                      ReturnValues: "ALL_NEW",
-                    };
+              ddb
+                .put(putParams)
+                .promise()
+                .then(() => {
+                  
+                  const updateParams:UpdateItemInput = {
+                    TableName: BOTS_TABLE,
+                    Key: {
+                      // bot_id: bot_id, TODO error on deploy
+                      user_id: user_id,
+                    },
+                    UpdateExpression: `set #tks[${task_index}].connection_id = :id`,
+                    ExpressionAttributeNames: {
+                      "#tks": "tasks",
+                    },
+                    ExpressionAttributeValues: {
+                      ":id": connection_id,
+                    },
+                    ReturnValues: "ALL_NEW",
+                  };
 
-                    ddb
-                      .update(sample_params)
-                      .promise()
-                      .then(() => {
-                        callback(null, callback_payload);
-                      })
-                      .catch(callback);
-                  })
-                  .catch(callback);
-              } else {
-                callback(null, callback_marketplace_payload);
-              }
+                  ddb
+                    .update(updateParams)
+                    .promise()
+                    .then(() => {
+                      callback(null, callbackPayload);
+                    })
+                    .catch(callback);
+                })
+                .catch(callback);
             }
           })
           .catch((error) =>

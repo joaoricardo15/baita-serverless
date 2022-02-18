@@ -1,4 +1,5 @@
 import AWS from "aws-sdk";
+import { PutItemInput, UpdateItemInput } from "aws-sdk/clients/dynamodb";
 import Axios from "axios";
 import qs from "qs";
 
@@ -14,13 +15,13 @@ const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
 exports.handler = (event, context, callback) => {
   const { code, state, error } = event.queryStringParameters;
 
-  const callback_payload = {
+  const callbackPayload = {
     statusCode: 200,
     headers: { "Content-type": "text/html" },
     body: "<script>window.close()</script>",
   };
 
-  if (error) return callback(null, callback_payload);
+  if (error) return callback(null, callbackPayload);
 
   const app_id = state.split(":")[0];
   const user_id = state.split(":")[1];
@@ -48,7 +49,7 @@ exports.handler = (event, context, callback) => {
   })
     .then((credentialsResult:any) => {
       if (credentialsResult.message || credentialsResult.errorMessage)
-        return callback(null, callback_payload);
+        return callback(null, callbackPayload);
       else if (credentialsResult.data) {
         const credentials = credentialsResult.data;
 
@@ -58,48 +59,48 @@ exports.handler = (event, context, callback) => {
         })
           .then((userResult:any) => {
             if (userResult.message || userResult.errorMessage)
-              callback(null, callback_payload);
+              callback(null, callbackPayload);
             else {
               const { id, email } = userResult.data;
               const connection_id = id;
 
-              const sample_params = {
-                TableName: BOTS_TABLE,
-                Key: {
-                  bot_id: bot_id,
-                  user_id: user_id,
+              const putParams:PutItemInput = {
+                TableName: CONNECTIONS_TABLE,
+                Item: {
+                  name: email,
+                  email,
+                  app_id,
+                  user_id,
+                  credentials,
+                  connection_id,
                 },
-                UpdateExpression: `set #tks[${task_index}].connection_id = :id`,
-                ExpressionAttributeNames: {
-                  "#tks": "tasks",
-                },
-                ExpressionAttributeValues: {
-                  ":id": connection_id,
-                },
-                ReturnValues: "ALL_NEW",
               };
 
               ddb
-                .update(sample_params)
+                .put(putParams)
                 .promise()
                 .then(() => {
-                  const params = {
-                    TableName: CONNECTIONS_TABLE,
-                    Item: {
-                      name: email,
-                      email,
-                      app_id,
-                      user_id,
-                      credentials,
-                      connection_id,
+                  const updateParams:UpdateItemInput = {
+                    TableName: BOTS_TABLE,
+                    Key: {
+                      // bot_id: bot_id,  TODO error on deploy
+                      user_id: user_id,
                     },
+                    UpdateExpression: `set #tks[${task_index}].connection_id = :id`,
+                    ExpressionAttributeNames: {
+                      "#tks": "tasks",
+                    },
+                    ExpressionAttributeValues: {
+                      ":id": connection_id,
+                    },
+                    ReturnValues: "ALL_NEW",
                   };
-
+    
                   ddb
-                    .put(params)
+                    .update(updateParams)
                     .promise()
                     .then(() => {
-                      callback(null, callback_payload);
+                      callback(null, callbackPayload);
                     })
                     .catch(callback);
                 })

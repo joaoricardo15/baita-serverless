@@ -3,7 +3,6 @@ import AWS from "aws-sdk";
 const lambda = new AWS.Lambda();
 
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX || "";
-const BOT_PREFIX = process.env.BOT_PREFIX || "";
 
 exports.handler = (event, context, callback) => {
   let test_input_data;
@@ -18,7 +17,7 @@ exports.handler = (event, context, callback) => {
 
   lambda
     .invoke({
-      FunctionName: `${BOT_PREFIX}-${bot_id}`,
+      FunctionName: `${SERVICE_PREFIX}-${bot_id}`,
       Payload: JSON.stringify({ test_task_index: task_index }),
     })
     .promise()

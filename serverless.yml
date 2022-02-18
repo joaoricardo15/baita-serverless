@@ -26,7 +26,6 @@ provider:
     SERVICE_PREFIX: ${self:service}-${self:provider.stage}
     SERVICE_API: ${self:provider.environment.SERVICE_PREFIX}-serverless
     SERVICE_ROLE: ${self:provider.environment.SERVICE_PREFIX}-serverless
-    SERVICE_DEV_URL: https://1ainyn2f42.execute-api.us-east-1.amazonaws.com/dev
     SERVICE_PROD_URL: https://1yp22xgyt1.execute-api.us-east-1.amazonaws.com/prod
 
     # Database
@@ -45,34 +44,19 @@ provider:
     BOTS_POLICY: ${self:provider.environment.SERVICE_PREFIX}
     BOTS_PERMISSION: arn:aws:iam::514311354050:role/${self:provider.environment.SERVICE_PREFIX}
 
-    # # Auth0
-    # AUTH0_AUDIENCE: ${file(./src/assets/partners/auth0/secrets.json):audience}
-    # AUTH0_CLIENT_PUBLIC_KEY: ${file(./src/assets/partners/auth0/public_key)}
+    # Auth0
+    AUTH0_AUDIENCE: ${file(./src/assets/partners/auth0/secrets.json):audience}
+    AUTH0_CLIENT_PUBLIC_KEY: ${file(./src/assets/partners/auth0/public_key)}
     
-    # # Pipedrive
-    # PIPEDRIVE_AUTH_URL: ${file(./src/assets/partners/pipedrive/secrets.json):auth_uri}
-    # PIPEDRIVE_CLIENT_ID: ${file(./src/assets/partners/pipedrive/secrets.json):client_id}
-    # PIPEDRIVE_CLIENT_SECRET: ${file(./src/assets/partners/pipedrive/secrets.json):client_secret}
-    
-    # # Wix
-    # WIX_AUTH_URL: ${file(./src/assets/partners/wix/secrets.json):auth_uri}
-    # WIX_CLIENT_ID: ${file(./src/assets/partners/wix/secrets.json):client_id}
-    # WIX_CLIENT_SECRET: ${file(./src/assets/partners/wix/secrets.json):client_secret}
+    # Pipedrive
+    PIPEDRIVE_AUTH_URL: ${file(./src/assets/partners/pipedrive/secrets.json):auth_uri}
+    PIPEDRIVE_CLIENT_ID: ${file(./src/assets/partners/pipedrive/secrets.json):client_id}
+    PIPEDRIVE_CLIENT_SECRET: ${file(./src/assets/partners/pipedrive/secrets.json):client_secret}
 
-    # # RD Station
-    # RDSTATION_AUTH_URL: ${file(./src/assets/partners/rdstation/secrets.json):auth_uri}
-    # RDSTATION_CLIENT_ID: ${file(./src/assets/partners/rdstation/secrets.json):client_id}
-    # RDSTATION_CLIENT_SECRET: ${file(./src/assets/partners/rdstation/secrets.json):client_secret}
-
-    # # Google
-    # GOOGLE_AUTH_URL: ${file(./src/assets/partners/google/secrets.json):web.token_uri}
-    # GOOGLE_CLIENT_ID: ${file(./src/assets/partners/google/secrets.json):web.client_id}
-    # GOOGLE_CLIENT_SECRET: ${file(./src/assets/partners/google/secrets.json):web.client_secret}
-
-    # # Franq
-    # FRANQ_AUTH_URL: ${file(./src/assets/partners/franq/secrets.json):auth_uri}
-    # FRANQ_CLIENT_ID: ${file(./src/assets/partners/franq/secrets.json):client_id}
-    # FRANQ_CLIENT_SECRET: ${file(./src/assets/partners/franq/secrets.json):client_secret}
+    # Google
+    GOOGLE_AUTH_URL: ${file(./src/assets/partners/google/secrets.json):web.token_uri}
+    GOOGLE_CLIENT_ID: ${file(./src/assets/partners/google/secrets.json):web.client_id}
+    GOOGLE_CLIENT_SECRET: ${file(./src/assets/partners/google/secrets.json):web.client_secret}
 
 functions:
   ### internal services ### 
@@ -181,7 +165,7 @@ functions:
           #   name: auth
   endpoint-bot-usage:
     handler: src/endpoints/bots/usage/index.handler
-    memorySize: 3000
+    memorySize: 4096
     events:
       - http:
           path: bot/{bot_id}/usage
@@ -202,24 +186,6 @@ functions:
     events:
       - http:
           path: connectors/google
-          method: get
-  connector-rdstation:
-    handler: src/connectors/rdstation/index.handler
-    events:
-      - http:
-          path: connectors/rdstation
-          method: get
-  connector-wix:
-    handler: src/connectors/wix/index.handler
-    events:
-      - http:
-          path: connectors/wix
-          method: get
-  connector-franq:
-    handler: src/connectors/franq/index.handler
-    events:
-      - http:
-          path: connectors/franq
           method: get
 
   ### webhooks ### 
