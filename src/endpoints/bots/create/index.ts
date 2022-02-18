@@ -79,7 +79,6 @@ module.exports.handler = async (event, context, callback) => {
   zip
     .generateAsync({ type: "base64" })
     .then((archive) => {
-      /*eslint new-cap: ["error", { "newIsCap": false }]*/
       const buffer = Buffer.from(archive, "base64");
       
       const bucketParams:PutObjectRequest = {

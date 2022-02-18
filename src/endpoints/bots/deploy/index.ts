@@ -1,6 +1,6 @@
 import AWS from "aws-sdk";
+import { PutObjectRequest } from "aws-sdk/clients/s3";
 import JSZip from "jszip";
-import Buffer from "Buffer";
 
 const ddb = new AWS.DynamoDB.DocumentClient();
 const lambda = new AWS.Lambda();
@@ -341,8 +341,9 @@ ${
     zip
       .generateAsync({ type: "base64" })
       .then((archive) => {
-        const buffer = new Buffer.from(archive, "base64");
-        const bucketParams = {
+        const buffer = Buffer.from(archive, "base64");
+        
+        const bucketParams:PutObjectRequest = {
           Bucket: BOTS_BUCKET,
           Key: `${bot_id}.zip`,
           Body: buffer,
