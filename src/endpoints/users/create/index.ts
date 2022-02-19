@@ -1,34 +1,31 @@
-import AWS from "aws-sdk";
-import { PutItemInput } from "aws-sdk/clients/dynamodb";
-const ddb = new AWS.DynamoDB.DocumentClient();
+import { Api } from "src/utils/api";
+import { User } from "src/controllers/user";
+import { IUser } from "src/controllers/user/interface";
 
-const USERS_TABLE = process.env.USERS_TABLE || "";
+exports.handler = async (event, context, callback) => {
+  const api = new Api(event, context);
+  const user = new User();
 
-exports.handler = (event, context, callback) => {
-  const input_data = JSON.parse(event.body);
+  try {
+    const body = JSON.parse(event.body);
 
-  const { user_id, email, name } = input_data;
-
-  const params:PutItemInput = {
-    TableName: USERS_TABLE,
-    Item: {
-      user_id: user_id.split("|")[1],
+    // Necessary to extract only the native properties from user
+    const { user_id, name, email, given_name, family_name, picture, phone } =
+      body;
+    const formatedUser: IUser = {
+      user_id,
       name,
       email,
-    },
-  };
+      given_name,
+      family_name,
+      picture,
+      phone,
+    };
 
-  ddb
-    .put(params)
-    .promise()
-    .then(() => {
-      callback(null, {
-        statusCode: 200,
-        body: JSON.stringify({
-          success: true,
-          message: "user created successfully",
-        }),
-      });
-    })
-    .catch(callback);
+    const data = await user.create(formatedUser);
+
+    api.httpResponse(callback, "success", undefined, data);
+  } catch (err) {
+    api.httpResponse(callback, "fail", err);
+  }
 };

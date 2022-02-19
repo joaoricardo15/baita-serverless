@@ -1,35 +1,17 @@
-import AWS from "aws-sdk";
+import { Api } from "src/utils/api";
+import { Bot } from "src/controllers/bot";
 
-const ddb = new AWS.DynamoDB.DocumentClient();
+exports.handler = async (event, context, callback) => {
+  const api = new Api(event, context);
+  const bot = new Bot();
 
-const BOTS_TABLE = process.env.BOTS_TABLE || "";
+  try {
+    const { user_id, bot_id } = event.pathParameters;
 
-exports.handler = (event, context, callback) => {
-  const { user_id, bot_id } = event.pathParameters;
+    const data = await bot.getBot(user_id, bot_id);
 
-  const getParams = {
-    TableName: BOTS_TABLE,
-    Key: {
-      user_id: user_id,
-      bot_id: bot_id,
-    },
-  };
-
-  ddb
-    .get(getParams)
-    .promise()
-    .then((get_result) => {
-      callback(null, {
-        statusCode: 200,
-        headers: {
-          "Content-type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-        body: JSON.stringify({
-          success: true,
-          data: get_result.Item,
-        }),
-      });
-    })
-    .catch(callback);
+    api.httpResponse(callback, "success", undefined, data);
+  } catch (err) {
+    api.httpResponse(callback, "fail", err);
+  }
 };

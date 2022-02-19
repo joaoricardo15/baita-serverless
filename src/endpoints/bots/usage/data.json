@@ -1,5 +1,5 @@
 {
-    "queryStringParameters": {
-        "bot_id": "eb34c523-eadb-454b-928f-c3abb7385709"
+    "pathParameters": {
+        "bot_id": "d1f86eed-ec98-479b-88cb-4ec7413b3b7e"
     }
 }
