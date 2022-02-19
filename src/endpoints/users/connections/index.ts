@@ -1,3 +1,5 @@
+"use strict";
+
 import { Api } from "src/utils/api";
 import { Connection } from "src/controllers/connection";
 

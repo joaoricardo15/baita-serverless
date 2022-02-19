@@ -1,3 +1,5 @@
+"use strict";
+
 import { Api } from "src/utils/api";
 import { Bot } from "src/controllers/bot";
 

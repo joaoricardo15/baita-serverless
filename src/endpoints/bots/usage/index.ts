@@ -1,3 +1,5 @@
+"use strict";
+
 import { Api } from "src/utils/api";
 import { Log } from "src/controllers/log";
 

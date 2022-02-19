@@ -9,7 +9,7 @@ addFormats(ajv);
 export interface IConnection {
   user_id: string;
   connection_id: string;
-  api_id: string;
+  app_id: string;
   credentials: object;
   name: string;
   email: string;
@@ -25,7 +25,7 @@ export const connectionSchema: JSONSchemaType<IConnection> = {
     connection_id: {
       type: "string",
     },
-    api_id: {
+    app_id: {
       type: "string",
     },
     credentials: {
@@ -42,7 +42,7 @@ export const connectionSchema: JSONSchemaType<IConnection> = {
       type: "string",
     },
   },
-  required: ["user_id", "connection_id", "api_id", "credentials", "name", "email", "user_name"],
+  required: ["user_id", "connection_id", "app_id", "credentials", "name", "email", "user_name"],
 };
 
 export function validateConnection(connection: IConnection): void {

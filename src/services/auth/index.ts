@@ -1,10 +1,12 @@
+"use strict";
+
 import jwt from "jsonwebtoken";
 
 const AUTH0_AUDIENCE = process.env.AUTH0_AUDIENCE;
 const AUTH0_CLIENT_PUBLIC_KEY = process.env.AUTH0_CLIENT_PUBLIC_KEY;
 
 const generatePolicy = (principalId, effect, resource) => {
-  const authResponse = { 
+  const authResponse = {
     principalId,
     policyDocument: {
       Version: "2012-10-17",
@@ -12,10 +14,10 @@ const generatePolicy = (principalId, effect, resource) => {
         {
           Action: "execute-api:Invoke",
           Effect: effect,
-          Resource: resource
-        }
-      ]
-    }
+          Resource: resource,
+        },
+      ],
+    },
   };
 
   return authResponse;

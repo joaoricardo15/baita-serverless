@@ -323,4 +323,35 @@ export class Bot {
       throw err.code;
     }
   }
+
+  async addConnection(
+    user_id: string,
+    bot_id: string,
+    connection_id: string,
+    task_index: number
+  ) {
+    const ddb = new AWS.DynamoDB.DocumentClient();
+
+    try {
+      await ddb
+        .update({
+          TableName: BOTS_TABLE,
+          Key: {
+            bot_id: bot_id,
+            user_id: user_id,
+          },
+          UpdateExpression: `set #tks[${task_index}].connection_id = :id`,
+          ExpressionAttributeNames: {
+            "#tks": "tasks",
+          },
+          ExpressionAttributeValues: {
+            ":id": connection_id,
+          },
+          ReturnValues: "ALL_NEW",
+        })
+        .promise();
+    } catch (err) {
+      throw err.code;
+    }
+  }
 }

@@ -1,6 +1,7 @@
 "use strict";
 
 import AWS from "aws-sdk";
+import { IConnection } from "./interface";
 
 const CONNECTIONS_TABLE = process.env.CONNECTIONS_TABLE || "";
 
@@ -28,6 +29,23 @@ export class Connection {
         .promise();
 
       return result.Items;
+    } catch (err) {
+      throw err.code;
+    }
+  }
+
+  async createConnection(connection: IConnection): Promise<any> {
+    const ddb = new AWS.DynamoDB.DocumentClient();
+
+    try {
+      const result = await ddb
+        .put({
+          TableName: CONNECTIONS_TABLE,
+          Item: connection,
+        })
+        .promise();
+
+      return connection;
     } catch (err) {
       throw err.code;
     }

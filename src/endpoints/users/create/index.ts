@@ -1,3 +1,5 @@
+"use strict";
+
 import { Api } from "src/utils/api";
 import { User } from "src/controllers/user";
 import { IUser } from "src/controllers/user/interface";

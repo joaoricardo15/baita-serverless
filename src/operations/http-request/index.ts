@@ -1,3 +1,5 @@
+"use strict";
+
 import Axios from "axios";
 
 exports.handler = (event, context, callback) => {
@@ -75,8 +77,7 @@ exports.handler = (event, context, callback) => {
   }
 
   Axios({ url, method, headers, data })
-    .then((response:any) => {
-
+    .then((response: any) => {
       if (!response.data)
         return callback(null, {
           success: true,
@@ -86,7 +87,6 @@ exports.handler = (event, context, callback) => {
             "nothing for you this time : (",
         });
       else {
-
         let output_data = response.data;
 
         if (output_path) {

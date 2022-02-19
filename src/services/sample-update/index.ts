@@ -1,3 +1,5 @@
+"use strict";
+
 import AWS from "aws-sdk";
 import { UpdateItemInput } from "aws-sdk/clients/dynamodb";
 
@@ -18,7 +20,9 @@ exports.handler = (event, context, callback) => {
     timestamp,
   };
 
-  let UpdateExpression:any, ExpressionAttributeNames:any, ExpressionAttributeValues:any;
+  let UpdateExpression: any,
+    ExpressionAttributeNames: any,
+    ExpressionAttributeValues: any;
 
   if (task_index == 0) {
     UpdateExpression = `set #tks[${task_index}].sample_result = :sample, #tg = list_append(if_not_exists(#tg, :empty_list), :sample_list)`;
@@ -41,7 +45,7 @@ exports.handler = (event, context, callback) => {
     };
   }
 
-  const sampleParams:UpdateItemInput = {
+  const sampleParams: UpdateItemInput = {
     TableName: BOTS_TABLE,
     Key: {
       bot_id: bot_id,
@@ -50,7 +54,7 @@ exports.handler = (event, context, callback) => {
     ReturnValues: "ALL_NEW",
     UpdateExpression,
     ExpressionAttributeNames,
-    ExpressionAttributeValues
+    ExpressionAttributeValues,
   };
 
   ddb

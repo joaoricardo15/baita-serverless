@@ -188,14 +188,6 @@ functions:
           path: connectors/google
           method: get
 
-  ### webhooks ### 
-  trigger-baitahelp:
-    handler: src/triggers/baitahelp/index.handler
-    events:
-      - http:
-          path: triggers/baitahelp
-          method: get
-
 resources:
   Conditions:
       IsProd:

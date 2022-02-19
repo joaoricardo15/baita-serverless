@@ -1,6 +1,8 @@
+"use strict";
+
 import AWS from "aws-sdk";
 import Axios from "axios";
-import { URLSearchParams } from 'url';
+import { URLSearchParams } from "url";
 
 const ddb = new AWS.DynamoDB.DocumentClient();
 
@@ -28,7 +30,7 @@ exports.handler = (event, context, callback) => {
   ddb
     .get(getParams)
     .promise()
-    .then((result:any) => {
+    .then((result: any) => {
       const credentials = result.Item.credentials;
 
       const oauth2_url = connection.app_config.auth_url;
@@ -40,7 +42,7 @@ exports.handler = (event, context, callback) => {
       const oauth2_refresh_token =
         credentials.refresh_token || credentials.access_token;
 
-      let oauth2_data:any;
+      let oauth2_data: any;
       if (
         oauth2_headers["Content-type"] &&
         oauth2_headers["Content-type"] === "application/x-www-form-urlencoded"
@@ -86,7 +88,7 @@ exports.handler = (event, context, callback) => {
         headers: oauth2_headers,
         data: oauth2_data,
       })
-        .then((response:any) => {
+        .then((response: any) => {
           const access_token = response.data.access_token;
 
           const {
@@ -177,7 +179,7 @@ exports.handler = (event, context, callback) => {
             headers: request_headers,
             data: request_data,
           })
-            .then((response:any) => {
+            .then((response: any) => {
               if (!response.data)
                 return callback(null, {
                   success: true,

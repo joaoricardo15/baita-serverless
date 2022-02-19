@@ -1,4 +1,5 @@
 "use strict";
+
 import JSZip from "jszip";
 
 const zip = new JSZip();

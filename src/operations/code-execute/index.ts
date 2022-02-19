@@ -1,3 +1,5 @@
+"use strict";
+
 import vm from "vm";
 
 exports.handler = (event, context, callback) => {
@@ -5,7 +7,7 @@ exports.handler = (event, context, callback) => {
 
   const code = `${inputData.code}`;
 
-  const codeInput:any = {};
+  const codeInput: any = {};
 
   for (const varName in inputData)
     if (varName !== "code") codeInput[varName] = inputData[varName];

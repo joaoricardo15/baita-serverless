@@ -1,138 +1,47 @@
-import AWS from "aws-sdk";
-import { PutItemInput, UpdateItemInput } from "aws-sdk/clients/dynamodb";
-import Axios from "axios";
-import { URLSearchParams } from "url";
+"use strict";
 
-const ddb = new AWS.DynamoDB.DocumentClient();
+import { Api } from "src/utils/api";
+import { Bot } from "src/controllers/bot";
+import { Connection } from "src/controllers/connection";
+import { Pipedrive } from "./pipedrive";
 
-const BOTS_TABLE = process.env.BOTS_TABLE || "";
-const CONNECTIONS_TABLE = process.env.CONNECTIONS_TABLE || "";
-const SERVICE_PROD_URL = process.env.SERVICE_PROD_URL || "";
-const PIPEDRIVE_AUTH_URL = process.env.PIPEDRIVE_AUTH_URL || "";
-const PIPEDRIVE_CLIENT_ID = process.env.PIPEDRIVE_CLIENT_ID || "";
-const PIPEDRIVE_CLIENT_SECRET = process.env.PIPEDRIVE_CLIENT_SECRET || "";
+const pipedrive = new Pipedrive();
 
-exports.handler = (event, context, callback) => {
-  const { code, state, error } = event.queryStringParameters;
+exports.handler = async (event, context, callback) => {
+  const api = new Api(event, context);
+  const bot = new Bot();
+  const connection = new Connection();
 
-  const callbackPayload = {
-    statusCode: 200,
-    headers: { "Content-type": "text/html" },
-    body: "<script>window.close()</script>",
-  };
+  try {
+    const { code, state, error } = event.queryStringParameters;
 
-  if (error) return callback(null, callbackPayload);
+    if (error) return api.httpConnectorResponse(callback, "fail");
 
-  const app_id = state.split(":")[0];
-  const user_id = state.split(":")[1];
-  const bot_id = state.split(":")[2];
-  const task_index = state.split(":")[3];
+    const { app_id, user_id, bot_id, task_index } =
+      pipedrive.desconstructAuthState(state);
 
-  const auth = {
-    username: PIPEDRIVE_CLIENT_ID,
-    password: PIPEDRIVE_CLIENT_SECRET,
-  };
+    const credentials = await pipedrive.getCredentials(code);
 
-  const headers = {
-    "Content-Type": "application/x-www-form-urlencoded",
-  };
+    const { api_domain, access_token } = credentials
 
-  const data = new URLSearchParams({
-    code,
-    grant_type: "authorization_code",
-    redirect_uri: `${SERVICE_PROD_URL}/connectors/pipedrive`,
-  });
+    const { connection_id, name, email } = await pipedrive.getConnectionInfo(api_domain, access_token);
 
-  Axios({
-    auth,
-    method: "post",
-    url: PIPEDRIVE_AUTH_URL,
-    headers,
-    data,
-  })
-    .then((credentialsResult:any) => {
-      if (credentialsResult.message || credentialsResult.errorMessage)
-        return callback(null, callbackPayload);
-      else if (credentialsResult.data) {
-        const credentials = credentialsResult.data;
+    const newConnection = {
+      name: email,
+      user_name: name,
+      email,
+      app_id,
+      user_id,
+      credentials,
+      connection_id,
+    };
 
-        Axios({
-          method: "get",
-          url: `${credentials.api_domain}/users/me`,
-          headers: {
-            Authorization: `Bearer ${credentials.access_token}`,
-          },
-        })
-          .then((userResult:any) => {
-            if (userResult.message || userResult.errorMessage)
-              callback(null, callbackPayload);
-            else {
-              const { id, name, email } = userResult.data.data;
-              const connection_id = id.toString();
+    await connection.createConnection(newConnection);
 
-              const putParams:PutItemInput = {
-                TableName: CONNECTIONS_TABLE,
-                Item: {
-                  name: email,
-                  user_name: name,
-                  email,
-                  app_id,
-                  user_id,
-                  credentials,
-                  connection_id,
-                },
-              };
+    await bot.addConnection(user_id, bot_id, connection_id, task_index);
 
-              ddb
-                .put(putParams)
-                .promise()
-                .then(() => {
-                  
-                  const updateParams:UpdateItemInput = {
-                    TableName: BOTS_TABLE,
-                    Key: {
-                      // bot_id: bot_id, TODO error on deploy
-                      user_id: user_id,
-                    },
-                    UpdateExpression: `set #tks[${task_index}].connection_id = :id`,
-                    ExpressionAttributeNames: {
-                      "#tks": "tasks",
-                    },
-                    ExpressionAttributeValues: {
-                      ":id": connection_id,
-                    },
-                    ReturnValues: "ALL_NEW",
-                  };
-
-                  ddb
-                    .update(updateParams)
-                    .promise()
-                    .then(() => {
-                      callback(null, callbackPayload);
-                    })
-                    .catch(callback);
-                })
-                .catch(callback);
-            }
-          })
-          .catch((error) =>
-            callback(null, {
-              statusCode: 200,
-              headers: { "Content-type": "text/html" },
-              body: JSON.stringify(
-                !error || !error.response ? error : error.response.data
-              ),
-            })
-          );
-      }
-    })
-    .catch((error) =>
-      callback(null, {
-        statusCode: 200,
-        headers: { "Content-type": "text/html" },
-        body: JSON.stringify(
-          !error || !error.response ? error : error.response.data
-        ),
-      })
-    );
+    api.httpConnectorResponse(callback, "success");
+  } catch (err) {
+    api.httpConnectorResponse(callback, "fail");
+  }
 };

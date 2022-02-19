@@ -1,3 +1,5 @@
+"use strict";
+
 import AWS from "aws-sdk";
 import { PutItemInput, UpdateItemInput } from "aws-sdk/clients/dynamodb";
 import Axios from "axios";
@@ -47,7 +49,7 @@ exports.handler = (event, context, callback) => {
     headers,
     data,
   })
-    .then((credentialsResult:any) => {
+    .then((credentialsResult: any) => {
       if (credentialsResult.message || credentialsResult.errorMessage)
         return callback(null, callbackPayload);
       else if (credentialsResult.data) {
@@ -57,14 +59,14 @@ exports.handler = (event, context, callback) => {
           method: "get",
           url: `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${credentials.access_token}`,
         })
-          .then((userResult:any) => {
+          .then((userResult: any) => {
             if (userResult.message || userResult.errorMessage)
               callback(null, callbackPayload);
             else {
               const { id, email } = userResult.data;
               const connection_id = id;
 
-              const putParams:PutItemInput = {
+              const putParams: PutItemInput = {
                 TableName: CONNECTIONS_TABLE,
                 Item: {
                   name: email,
@@ -80,7 +82,7 @@ exports.handler = (event, context, callback) => {
                 .put(putParams)
                 .promise()
                 .then(() => {
-                  const updateParams:UpdateItemInput = {
+                  const updateParams: UpdateItemInput = {
                     TableName: BOTS_TABLE,
                     Key: {
                       // bot_id: bot_id,  TODO error on deploy
@@ -95,7 +97,7 @@ exports.handler = (event, context, callback) => {
                     },
                     ReturnValues: "ALL_NEW",
                   };
-    
+
                   ddb
                     .update(updateParams)
                     .promise()
