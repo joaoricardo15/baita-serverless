@@ -19,9 +19,9 @@ exports.handler = async (event, context, callback) => {
       logs,
     };
 
-    await log.createLog(logSet);
+    const data = await log.createLog(logSet);
 
-    api.httpResponse(callback, 'success')
+    api.httpResponse(callback, 'success', undefined, data)
   } catch (err) {
     api.httpResponse(callback, 'fail', err)
   }

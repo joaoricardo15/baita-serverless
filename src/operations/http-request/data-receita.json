@@ -1,9 +1,4 @@
 {
-    "connection": {
-        "app_config": {
-            "api_url": "https://www.receitaws.com.br/v1"
-        }
-    },
     "config": { 
         "method": "get",
         "path": "/cnpj",
@@ -14,6 +9,11 @@
                 "var_name": "cnpj" 
             }
         ]
+    },
+    "connection": {
+        "app_config": {
+            "api_url": "https://www.receitaws.com.br/v1"
+        }
     },
     "input_data": {}
 }

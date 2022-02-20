@@ -5,11 +5,10 @@ import { Bot } from "src/controllers/bot";
 import { Connection } from "src/controllers/connection";
 import { Google } from "./google";
 
-const google = new Google();
-
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context);
   const bot = new Bot();
+  const google = new Google();
   const connection = new Connection();
 
   try {

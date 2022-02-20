@@ -45,9 +45,9 @@ export class Api {
         "Access-Control-Allow-Origin": "*",
       },
       body: JSON.stringify({
-        success: this.logObject["status"] === "success",
-        message: this.logObject["message"],
-        data: this.logObject["data"],
+        success: status === "success",
+        message,
+        data,
       }),
     });
   }
@@ -59,6 +59,15 @@ export class Api {
       statusCode: 200,
       headers: { "Content-type": "text/html" },
       body: "<script>window.close()</script>",
+    });
+  }
+
+  httpOperationResponse(callback: any, status: string, data?: any): void {
+    this.log(status, undefined, data);
+
+    callback(null, {
+      success: status === "success",
+      data,
     });
   }
 }

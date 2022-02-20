@@ -5,11 +5,10 @@ import { Bot } from "src/controllers/bot";
 import { Connection } from "src/controllers/connection";
 import { Pipedrive } from "./pipedrive";
 
-const pipedrive = new Pipedrive();
-
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context);
   const bot = new Bot();
+  const pipedrive = new Pipedrive();
   const connection = new Connection();
 
   try {

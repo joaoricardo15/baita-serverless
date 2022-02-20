@@ -1,32 +1,31 @@
 "use strict";
 
 import vm from "vm";
+import { Api } from "src/utils/api";
 
-exports.handler = (event, context, callback) => {
-  const { input_data: inputData } = event;
-
-  const code = `${inputData.code}`;
-
-  const codeInput: any = {};
-
-  for (const varName in inputData)
-    if (varName !== "code") codeInput[varName] = inputData[varName];
-
-  const script = new vm.Script(code);
-
-  vm.createContext(codeInput);
+exports.handler = async (event, context, callback) => {
+  const api = new Api(event, context);
 
   try {
+    const { input_data } = event;
+
+    const code = `${input_data.code}`;
+
+    const codeInput: any = {};
+
+    for (const varName in input_data)
+      if (varName !== "code") codeInput[varName] = input_data[varName];
+
+    const script = new vm.Script(code);
+
+    vm.createContext(codeInput);
+
     script.runInContext(codeInput, { displayErrors: true, timeout: 5000 });
 
-    callback(null, {
-      success: true,
-      data: codeInput.output,
-    });
-  } catch (error) {
-    callback(null, {
-      success: false,
-      ...error,
-    });
+    const { output: data } = codeInput
+
+    api.httpOperationResponse(callback, "success", data);
+  } catch (err) {
+    api.httpOperationResponse(callback, "fail", err);
   }
 };

@@ -6,11 +6,16 @@ import addFormats from "ajv-formats";
 const ajv = new Ajv();
 addFormats(ajv);
 
+export interface ICredential {
+  refresh_token?: string;
+  access_token?: string;
+}
+
 export interface IConnection {
   user_id: string;
   connection_id: string;
   app_id: string;
-  credentials: object;
+  credentials: ICredential;
   name: string;
   email?: string;
   user_name?: string;
@@ -30,6 +35,17 @@ export const connectionSchema: JSONSchemaType<IConnection> = {
     },
     credentials: {
       type: "object",
+      properties: {
+        refresh_token: {
+          type: "string",
+          nullable: true,
+        },
+        access_token: {
+          type: "string",
+          nullable: true,
+        },
+      },
+      required: [],
     },
     name: {
       type: "string",
