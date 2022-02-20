@@ -1,11 +1,12 @@
 "use strict";
 
 import AWS from "aws-sdk";
+import { ILog } from "./interface";
 
 const LOGS_TABLE = process.env.LOGS_TABLE || "";
 
 export class Log {
-  async getBotLogs(bot_id: string): Promise<any> {
+  async getBotLogs(bot_id: string) {
     const ddb = new AWS.DynamoDB.DocumentClient();
     
     try {
@@ -27,7 +28,7 @@ export class Log {
     }
   }
 
-  async getBotUsage(bot_id: string): Promise<any> {
+  async getBotUsage(bot_id: string) {
     const ddb = new AWS.DynamoDB.DocumentClient();
     
     try {
@@ -67,6 +68,21 @@ export class Log {
       }
 
       return queryBotUsage(queryParams)
+    } catch (err) {
+      throw err.code;
+    }
+  }
+
+  async createLog(log: ILog) {
+    const ddb = new AWS.DynamoDB.DocumentClient();
+
+    try {
+      await ddb
+        .put({
+          TableName: LOGS_TABLE,
+          Item: log,
+        })
+        .promise()
     } catch (err) {
       throw err.code;
     }

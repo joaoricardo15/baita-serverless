@@ -24,16 +24,15 @@ exports.handler = async (event, context, callback) => {
 
     const { api_domain, access_token } = credentials
 
-    const { connection_id, name, email } = await pipedrive.getConnectionInfo(api_domain, access_token);
+    const { connection_id, email } = await pipedrive.getConnectionInfo(api_domain, access_token);
 
     const newConnection = {
-      name: email,
-      user_name: name,
-      email,
-      app_id,
       user_id,
-      credentials,
+      app_id,
       connection_id,
+      credentials,
+      name: email,
+      email
     };
 
     await connection.createConnection(newConnection);

@@ -1,16 +1,15 @@
 "use strict";
 
-interface ILog {
-  inputData: any;
-  status?: string;
-  message?: string;
-  data?: any;
-}
-
 export class Api {
-  logObject: ILog;
+
   functionName: string;
   timeoutLogger: ReturnType<typeof setTimeout>;
+  logObject: {
+    inputData: any;
+    status?: string;
+    message?: string;
+    data?: any;
+  };
 
   constructor(inputData, functionContext) {
     this.logObject = { inputData };

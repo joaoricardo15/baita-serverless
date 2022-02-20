@@ -10,7 +10,7 @@ const BOTS_BUCKET = process.env.BOTS_BUCKET || "";
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX || "";
 
 export class Bot {
-  async getBot(user_id: string, bot_id: string): Promise<any> {
+  async getBot(user_id: string, bot_id: string) {
     const ddb = new AWS.DynamoDB.DocumentClient();
 
     try {
@@ -30,7 +30,7 @@ export class Bot {
     }
   }
 
-  async getBotsByUser(user_id: string): Promise<any> {
+  async getBotsByUser(user_id: string) {
     const ddb = new AWS.DynamoDB.DocumentClient();
 
     try {
@@ -50,7 +50,7 @@ export class Bot {
     }
   }
 
-  async createBot(user_id: string): Promise<any> {
+  async createBot(user_id: string) {
     const ddb = new AWS.DynamoDB.DocumentClient();
     const apigateway = new AWS.ApiGatewayV2();
     const lambda = new AWS.Lambda();
@@ -133,7 +133,7 @@ export class Bot {
     user_id: string,
     bot_id: string,
     api_id: string
-  ): Promise<any> {
+  ) {
     const ddb = new AWS.DynamoDB.DocumentClient();
     const apigateway = new AWS.ApiGatewayV2();
     const lambda = new AWS.Lambda();
@@ -217,7 +217,7 @@ export class Bot {
     name: string,
     active: boolean,
     tasks: object
-  ): Promise<any> {
+  ) {
     const ddb = new AWS.DynamoDB.DocumentClient();
     const lambda = new AWS.Lambda();
     const s3 = new AWS.S3();
@@ -318,7 +318,9 @@ export class Bot {
         updateLambdaResult.Payload as string
       );
 
-      return updateLambdaParsedPayload.data;
+      const updateLambdaParsedResult = JSON.parse(updateLambdaParsedPayload.body);
+
+      return updateLambdaParsedResult.data;
     } catch (err) {
       throw err.code;
     }
@@ -350,6 +352,56 @@ export class Bot {
           ReturnValues: "ALL_NEW",
         })
         .promise();
+    } catch (err) {
+      throw err.code;
+    }
+  }
+
+  async addSampleResult(user_id:string, bot_id:string, task_index: number, sample: object) {
+    const ddb = new AWS.DynamoDB.DocumentClient();
+
+    try {
+
+      let UpdateExpression: any,
+      ExpressionAttributeNames: any,
+      ExpressionAttributeValues: any;
+
+      if (task_index == 0) {
+        UpdateExpression = `set #tks[${task_index}].sample_result = :sample, #tg = list_append(if_not_exists(#tg, :empty_list), :sample_list)`;
+        ExpressionAttributeNames = {
+          "#tks": "tasks",
+          "#tg": "trigger_samples",
+        };
+        ExpressionAttributeValues = {
+          ":sample": sample,
+          ":empty_list": [],
+          ":sample_list": [sample],
+        };
+      } else {
+        UpdateExpression = `set #tks[${task_index}].sample_result = :sample`;
+        ExpressionAttributeNames = {
+          "#tks": "tasks",
+        };
+        ExpressionAttributeValues = {
+          ":sample": sample,
+        };
+      }
+
+      const result = await ddb
+        .update({
+          TableName: BOTS_TABLE,
+          Key: {
+            bot_id: bot_id,
+            user_id: user_id,
+          },
+          ReturnValues: "ALL_NEW",
+          UpdateExpression,
+          ExpressionAttributeNames,
+          ExpressionAttributeValues,
+        })
+        .promise()
+
+      return result.Attributes;
     } catch (err) {
       throw err.code;
     }

@@ -1,35 +1,31 @@
 "use strict";
 
 import Axios from "axios";
+import qs from "qs";
 
 const SERVICE_PROD_URL = process.env.SERVICE_PROD_URL || "";
-const PIPEDRIVE_AUTH_URL = process.env.PIPEDRIVE_AUTH_URL || "";
-const PIPEDRIVE_CLIENT_ID = process.env.PIPEDRIVE_CLIENT_ID || "";
-const PIPEDRIVE_CLIENT_SECRET = process.env.PIPEDRIVE_CLIENT_SECRET || "";
+const GOOGLE_AUTH_URL = process.env.GOOGLE_AUTH_URL || "";
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
 
-export class Pipedrive {
-  async getCredentials(
-    code: string
-  ): Promise<{ api_domain: string; access_token: string; any }> {
-    const auth = {
-      username: PIPEDRIVE_CLIENT_ID,
-      password: PIPEDRIVE_CLIENT_SECRET,
-    };
-
+export class Google {
+  async getCredentials(code: string): Promise<{ access_token:string, any}> {
     const headers = {
       "Content-Type": "application/x-www-form-urlencoded",
     };
 
-    const data = new URLSearchParams({
-      code,
+    const data = qs.stringify({
+      code: code,
       grant_type: "authorization_code",
-      redirect_uri: `${SERVICE_PROD_URL}/connectors/pipedrive`,
+      redirect_uri: `${SERVICE_PROD_URL}/connectors/google`,
+      client_id: GOOGLE_CLIENT_ID,
+      client_secret: GOOGLE_CLIENT_SECRET,
+      access_type: "offline",
     });
 
     const credentialsResult = await Axios({
-      auth,
       method: "post",
-      url: PIPEDRIVE_AUTH_URL,
+      url: GOOGLE_AUTH_URL,
       headers,
       data,
     });
@@ -40,20 +36,16 @@ export class Pipedrive {
   }
 
   async getConnectionInfo(
-    api_domain: string,
     access_token: string
   ): Promise<{ connection_id: string; email: string }> {
     const tokenResult = await Axios({
       method: "get",
-      url: `${api_domain}/users/me`,
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-      },
+      url: `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${access_token}`,
     });
 
     if (tokenResult.status !== 200) throw tokenResult.data;
 
-    const { id, email } = tokenResult.data.data;
+    const { id, email } = tokenResult.data;
 
     return { connection_id: id.toString(), email };
   }

@@ -6,7 +6,7 @@ import { IUser, validateUser } from "./interface";
 const USERS_TABLE = process.env.USERS_TABLE || "";
 
 export class User {
-  async create(user: IUser): Promise<IUser> {
+  async create(user: IUser) {
     const ddb = new AWS.DynamoDB.DocumentClient();
     
     validateUser(user);

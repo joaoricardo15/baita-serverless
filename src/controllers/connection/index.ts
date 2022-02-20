@@ -6,7 +6,7 @@ import { IConnection } from "./interface";
 const CONNECTIONS_TABLE = process.env.CONNECTIONS_TABLE || "";
 
 export class Connection {
-  async getUserConnections(user_id: string): Promise<any> {
+  async getUserConnections(user_id: string) {
     const ddb = new AWS.DynamoDB.DocumentClient();
     
     try {
@@ -28,17 +28,17 @@ export class Connection {
         })
         .promise();
 
-      return result.Items;
+      return result.Items as Array<IConnection>;
     } catch (err) {
       throw err.code;
     }
   }
 
-  async createConnection(connection: IConnection): Promise<any> {
+  async createConnection(connection: IConnection) {
     const ddb = new AWS.DynamoDB.DocumentClient();
 
     try {
-      const result = await ddb
+       await ddb
         .put({
           TableName: CONNECTIONS_TABLE,
           Item: connection,

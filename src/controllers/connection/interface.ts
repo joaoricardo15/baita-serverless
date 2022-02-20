@@ -12,8 +12,8 @@ export interface IConnection {
   app_id: string;
   credentials: object;
   name: string;
-  email: string;
-  user_name: string;
+  email?: string;
+  user_name?: string;
 }
 
 export const connectionSchema: JSONSchemaType<IConnection> = {
@@ -37,12 +37,14 @@ export const connectionSchema: JSONSchemaType<IConnection> = {
     email: {
       type: "string",
       format: "email",
+      nullable: true,
     },
     user_name: {
       type: "string",
+      nullable: true,
     },
   },
-  required: ["user_id", "connection_id", "app_id", "credentials", "name", "email", "user_name"],
+  required: ["user_id", "connection_id", "app_id", "credentials", "name"],
 };
 
 export function validateConnection(connection: IConnection): void {

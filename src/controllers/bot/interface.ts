@@ -19,7 +19,7 @@ export const botSchema: JSONSchemaType<IBot> = {
     },
     user_id: {
       type: "string",
-    }
+    },
   },
   required: ["bot_id", "user_id"],
 };

@@ -1,33 +1,28 @@
 "use strict";
 
-import AWS from "aws-sdk";
+import { Api } from "src/utils/api";
+import { Log } from "src/controllers/log";
 
-const ddb = new AWS.DynamoDB.DocumentClient();
+exports.handler = async (event, context, callback) => {
+  const api = new Api(event, context);
+  const log = new Log();
 
-const LOGS_TABLE = process.env.LOGS_TABLE || "";
+  try {
+    const { user_id, bot_id, usage, logs, error } = event;
 
-exports.handler = (event, context, callback) => {
-  const { user_id, bot_id, usage, logs, error } = event;
+    const logSet = {
+      bot_id,
+      user_id,
+      error,
+      timestamp: Date.now(),
+      usage,
+      logs,
+    };
 
-  const timestamp = Date.now();
+    await log.createLog(logSet);
 
-  const log_set = {
-    bot_id,
-    user_id,
-    error,
-    timestamp,
-    usage,
-    logs,
-  };
-
-  const logParams = {
-    TableName: LOGS_TABLE,
-    Item: log_set,
-  };
-
-  ddb
-    .put(logParams)
-    .promise()
-    .then(() => callback(null, { success: true }))
-    .catch((error) => callback({ success: false, ...error }));
+    api.httpResponse(callback, 'success')
+  } catch (err) {
+    api.httpResponse(callback, 'fail', err)
+  }
 };
