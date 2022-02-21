@@ -1,7 +1,7 @@
 "use strict";
 
 import AWS from "aws-sdk";
-import { IConnection } from "./interface";
+import { IConnection, validateConnection } from "./interface";
 
 const CONNECTIONS_TABLE = process.env.CONNECTIONS_TABLE || "";
 
@@ -22,7 +22,7 @@ export class Connection {
 
       return result.Item as IConnection
     } catch (err) {
-      throw err.code;
+      throw err.message;
     }
   }
   
@@ -50,12 +50,14 @@ export class Connection {
 
       return result.Items as Array<IConnection>;
     } catch (err) {
-      throw err.code;
+      throw err.message;
     }
   }
 
   async createConnection(connection: IConnection) {
     const ddb = new AWS.DynamoDB.DocumentClient();
+
+    validateConnection(connection)
 
     try {
        await ddb
@@ -67,7 +69,7 @@ export class Connection {
 
       return connection;
     } catch (err) {
-      throw err.code;
+      throw err.message;
     }
   }
 }

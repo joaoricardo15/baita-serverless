@@ -20,12 +20,33 @@ export class Api {
     }, functionContext.getRemainingTimeInMillis() - 200);
   }
 
-  log(status: string, message?: string, data?: any): void {
+  parseError(err: any): string {
+    let errorMessage;
+
+    if (err) {
+      if (typeof err === 'string' || typeof err === 'number') {
+        errorMessage = err
+      }
+      else if (err instanceof Error) {
+        errorMessage = err.message
+      }
+      else if (typeof err === 'object') {
+        errorMessage = JSON.stringify(err)
+      }
+      else {
+        errorMessage = 'Unknow error'
+      }
+    }
+
+    return errorMessage
+  }
+
+  log(status: string, error?: string, data?: any): void {
     // prevents timeout logging if another log has already started
     clearTimeout(this.timeoutLogger);
 
     this.logObject["status"] = status;
-    this.logObject["message"] = message;
+    this.logObject["message"] = error;
     this.logObject["data"] = data;
     console.log(JSON.stringify(this.logObject));
   }
@@ -33,10 +54,12 @@ export class Api {
   httpResponse(
     callback: any,
     status: string,
-    message?: string,
+    error?: string,
     data?: any
   ): void {
-    this.log(status, message, data);
+    const errorMessage = this.parseError(error)
+
+    this.log(status, errorMessage, data);
 
     callback(null, {
       statusCode: 200,
@@ -46,14 +69,16 @@ export class Api {
       },
       body: JSON.stringify({
         success: status === "success",
-        message,
+        message: errorMessage,
         data,
       }),
     });
   }
 
-  httpConnectorResponse(callback: any, status: string): void {
-    this.log(status);
+  httpConnectorResponse(callback: any, status: string, error?:any): void {
+    const errorMessage = this.parseError(error)
+
+    this.log(status, errorMessage);
 
     callback(null, {
       statusCode: 200,
@@ -62,11 +87,14 @@ export class Api {
     });
   }
 
-  httpOperationResponse(callback: any, status: string, data?: any): void {
-    this.log(status, undefined, data);
+  httpOperationResponse(callback: any, status: string, error?:any, data?: any): void {
+    const errorMessage = this.parseError(error)
+
+    this.log(status, errorMessage, data);
 
     callback(null, {
       success: status === "success",
+      message: errorMessage,
       data,
     });
   }

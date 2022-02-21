@@ -1,7 +1,7 @@
 "use strict";
 
 import AWS from "aws-sdk";
-import { ILog } from "./interface";
+import { ILog, ILogUsage, validateLog } from "./interface";
 
 const LOGS_TABLE = process.env.LOGS_TABLE || "";
 
@@ -22,9 +22,9 @@ export class Log {
         })
         .promise();
 
-      return result.Items;
+      return result.Items as Array<ILog>;
     } catch (err) {
-      throw err.code;
+      throw err.message;
     }
   }
 
@@ -33,7 +33,7 @@ export class Log {
     
     try {
 
-      const usage = { total: 0 };
+      let total = 0;
 
       const queryParams = {
         TableName: LOGS_TABLE,
@@ -55,26 +55,30 @@ export class Log {
         if (result && result.Items) {
 
           result.Items.forEach((item) => {
-            usage.total += item.usage;
+            total += item.usage;
           });
     
           if (typeof result.LastEvaluatedKey != "undefined") {
             queryParams.ExclusiveStartKey = result.LastEvaluatedKey;
             return await queryBotUsage(queryParams);
           } else {
-            return usage
+            return total
           }
         }
       }
 
-      return queryBotUsage(queryParams)
+      await queryBotUsage(queryParams)
+
+      return { total } as ILogUsage
     } catch (err) {
-      throw err.code;
+      throw err.message;
     }
   }
 
   async createLog(log: ILog) {
     const ddb = new AWS.DynamoDB.DocumentClient();
+
+    validateLog(log)
 
     try {
       await ddb
@@ -83,8 +87,10 @@ export class Log {
           Item: log,
         })
         .promise()
+      
+      return log
     } catch (err) {
-      throw err.code;
+      throw err.message;
     }
   }
 }

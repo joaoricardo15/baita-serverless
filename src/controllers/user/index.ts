@@ -21,7 +21,7 @@ export class User {
 
       return user;
     } catch (err) {
-      throw err.code;
+      throw err.message;
     }
   }
 }

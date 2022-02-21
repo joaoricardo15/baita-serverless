@@ -24,7 +24,7 @@ exports.handler = async (event, context, callback) => {
 
     const { output: data } = codeInput
 
-    api.httpOperationResponse(callback, "success", data);
+    api.httpOperationResponse(callback, "success", undefined, data);
   } catch (err) {
     api.httpOperationResponse(callback, "fail", err);
   }

@@ -22,6 +22,10 @@ export interface ILog {
   logs: Array<ITaskLog>;
 }
 
+export interface ILogUsage {
+  total: number;
+}
+
 export const logSchema: JSONSchemaType<ILog> = {
   type: "object",
   properties: {

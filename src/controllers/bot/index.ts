@@ -5,8 +5,8 @@ import { v4 as uuidv4 } from "uuid";
 import { Code } from "../../utils/code";
 
 const BOTS_TABLE = process.env.BOTS_TABLE || "";
-const BOTS_PERMISSION = process.env.BOTS_PERMISSION || "";
 const BOTS_BUCKET = process.env.BOTS_BUCKET || "";
+const BOTS_PERMISSION = process.env.BOTS_PERMISSION || "";
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX || "";
 
 export class Bot {
@@ -26,7 +26,7 @@ export class Bot {
 
       return result.Item;
     } catch (err) {
-      throw err.code;
+      throw err.message;
     }
   }
 
@@ -46,7 +46,7 @@ export class Bot {
 
       return result.Items;
     } catch (err) {
-      throw err.code;
+      throw err.message;
     }
   }
 
@@ -125,7 +125,7 @@ export class Bot {
 
       return bot;
     } catch (err) {
-      throw err.code;
+      throw err.message;
     }
   }
 
@@ -144,7 +144,7 @@ export class Bot {
         .delete({
           TableName: BOTS_TABLE,
           Key: {
-            user_id,
+            // user_id,
             bot_id,
           },
         })
@@ -169,7 +169,7 @@ export class Bot {
         })
         .promise();
     } catch (err) {
-      throw err.code;
+      throw err.message;
     }
   }
 
@@ -207,7 +207,7 @@ export class Bot {
 
       return result.Attributes;
     } catch (err) {
-      throw err.code;
+      throw err.message;
     }
   }
 
@@ -267,7 +267,7 @@ export class Bot {
 
       return dbResult.Attributes;
     } catch (err) {
-      throw err.code;
+      throw err.message;
     }
   }
 
@@ -322,7 +322,7 @@ export class Bot {
 
       return updateLambdaParsedResult.data;
     } catch (err) {
-      throw err.code;
+      throw err.message;
     }
   }
 
@@ -353,7 +353,7 @@ export class Bot {
         })
         .promise();
     } catch (err) {
-      throw err.code;
+      throw err.message;
     }
   }
 
@@ -403,7 +403,7 @@ export class Bot {
 
       return result.Attributes;
     } catch (err) {
-      throw err.code;
+      throw err.message;
     }
   }
 }

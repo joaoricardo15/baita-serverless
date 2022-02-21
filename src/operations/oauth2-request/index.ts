@@ -65,7 +65,7 @@ exports.handler = async (event, context, callback) => {
 
     const data = http.getOutputData(response.data, output_path);
 
-    api.httpOperationResponse(callback, "success", data);
+    api.httpOperationResponse(callback, "success", undefined, data);
   } catch (err) {
     api.httpOperationResponse(callback, "fail", err);
   }
