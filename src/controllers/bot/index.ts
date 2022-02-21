@@ -144,7 +144,7 @@ export class Bot {
         .delete({
           TableName: BOTS_TABLE,
           Key: {
-            // user_id,
+            user_id,
             bot_id,
           },
         })
