@@ -129,7 +129,7 @@ functions:
     handler: src/endpoints/bots/delete/index.handler
     events:
       - http:
-          path: user/{userId}/bot/{botId}
+          path: user/{userId}/bot/{botId}/api/{apiId}
           method: delete
           cors: true
           # authorizer:

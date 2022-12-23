@@ -8,11 +8,7 @@ exports.handler = async (event, context, callback) => {
   const bot = new Bot()
 
   try {
-    const { userId, botId } = event.pathParameters
-
-    const body = JSON.parse(event.body)
-
-    const { apiId } = body
+    const { userId, botId, apiId } = event.pathParameters
 
     const data = await bot.deleteBot(userId, botId, apiId)
 
