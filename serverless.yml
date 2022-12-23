@@ -30,10 +30,7 @@ provider:
 
     # Database
     APPS_TABLE: ${self:service}-prod-apps
-    BOTS_TABLE: ${self:service}-prod-bots
-    LOGS_TABLE: ${self:service}-prod-logs
     USERS_TABLE: ${self:service}-prod-users
-    CONNECTIONS_TABLE: ${self:service}-prod-connections
 
     # Buckets
     BOTS_BUCKET: ${self:provider.environment.SERVICE_PREFIX}-bots
@@ -45,28 +42,28 @@ provider:
     BOTS_PERMISSION: arn:aws:iam::514311354050:role/${self:provider.environment.SERVICE_PREFIX}
 
     # Auth0
-    AUTH0_AUDIENCE: ${file(./src/assets/partners/auth0/secrets.json):audience}
-    AUTH0_CLIENT_PUBLIC_KEY: ${file(./src/assets/partners/auth0/public_key)}
-    
+    AUTH0_AUDIENCE: ${file(./src/partners/auth0/secrets.json):audience}
+    AUTH0_CLIENT_PUBLIC_KEY: ${file(./src/partners/auth0/key.pem)}
+
     # Pipedrive
-    PIPEDRIVE_AUTH_URL: ${file(./src/assets/partners/pipedrive/secrets.json):auth_uri}
-    PIPEDRIVE_CLIENT_ID: ${file(./src/assets/partners/pipedrive/secrets.json):client_id}
-    PIPEDRIVE_CLIENT_SECRET: ${file(./src/assets/partners/pipedrive/secrets.json):client_secret}
+    PIPEDRIVE_AUTH_URL: ${file(./src/partners/pipedrive/secrets.json):auth_uri}
+    PIPEDRIVE_CLIENT_ID: ${file(./src/partners/pipedrive/secrets.json):client_id}
+    PIPEDRIVE_CLIENT_SECRET: ${file(./src/partners/pipedrive/secrets.json):client_secret}
 
     # Google
-    GOOGLE_AUTH_URL: ${file(./src/assets/partners/google/secrets.json):web.token_uri}
-    GOOGLE_CLIENT_ID: ${file(./src/assets/partners/google/secrets.json):web.client_id}
-    GOOGLE_CLIENT_SECRET: ${file(./src/assets/partners/google/secrets.json):web.client_secret}
+    GOOGLE_AUTH_URL: ${file(./src/partners/google/secrets.json):web.token_uri}
+    GOOGLE_CLIENT_ID: ${file(./src/partners/google/secrets.json):web.client_id}
+    GOOGLE_CLIENT_SECRET: ${file(./src/partners/google/secrets.json):web.client_secret}
 
 functions:
-  ### internal services ### 
+  ### internal services ###
   auth:
     handler: src/services/auth/index.handler
   log-create:
     handler: src/services/log-create/index.handler
   sample-update:
     handler: src/services/sample-update/index.handler
-  
+
   ### bot operations ###
   http-request:
     handler: src/operations/http-request/index.handler
@@ -75,36 +72,36 @@ functions:
   code-execute:
     handler: src/operations/code-execute/index.handler
 
-  ### endpoints ### 
+  ### endpoints ###
   endpoint-user-create:
     handler: src/endpoints/users/create/index.handler
     events:
       - http:
-          path: user/create
+          path: user
           method: post
-  endpoint-user-bot:
-    handler: src/endpoints/users/bot/index.handler
+  endpoint-user-connections:
+    handler: src/endpoints/users/connections/index.handler
     events:
       - http:
-          path: user/{user_id}/bot/{bot_id}
+          path: user/{userId}/connections
           method: get
           cors: true
           # authorizer:
           #   name: auth
   endpoint-user-bots:
-    handler: src/endpoints/users/bots/index.handler
+    handler: src/endpoints/bots/list/index.handler
     events:
       - http:
-          path: user/{user_id}/bots
+          path: user/{userId}/bots
           method: get
           cors: true
           # authorizer:
           #   name: auth
-  endpoint-user-connections:
-    handler: src/endpoints/users/connections/index.handler
+  endpoint-user-bot:
+    handler: src/endpoints/bots/get/index.handler
     events:
       - http:
-          path: user/{user_id}/connections
+          path: user/{userId}/bot/{botId}
           method: get
           cors: true
           # authorizer:
@@ -113,7 +110,7 @@ functions:
     handler: src/endpoints/bots/create/index.handler
     events:
       - http:
-          path: bot/create
+          path: user/{userId}/bot
           method: post
           cors: true
           # authorizer:
@@ -122,8 +119,8 @@ functions:
     handler: src/endpoints/bots/update/index.handler
     events:
       - http:
-          path: bot/update
-          method: post
+          path: user/{userId}/bot/{botId}
+          method: put
           cors: true
           # authorizer:
           #   name: auth
@@ -131,8 +128,8 @@ functions:
     handler: src/endpoints/bots/delete/index.handler
     events:
       - http:
-          path: bot/delete
-          method: post
+          path: user/{userId}/bot/{botId}
+          method: delete
           cors: true
           # authorizer:
           #   name: auth
@@ -140,7 +137,7 @@ functions:
     handler: src/endpoints/bots/deploy/index.handler
     events:
       - http:
-          path: bot/deploy
+          path: user/{userId}/bot/{botId}/deploy
           method: post
           cors: true
           # authorizer:
@@ -149,7 +146,7 @@ functions:
     handler: src/endpoints/bots/test/index.handler
     events:
       - http:
-          path: bot/test
+          path: user/{userId}/bot/{botId}/test
           method: post
           cors: true
           # authorizer:
@@ -158,7 +155,7 @@ functions:
     handler: src/endpoints/bots/logs/index.handler
     events:
       - http:
-          path: bot/{bot_id}/logs
+          path: user/{userId}/bot/{botId}/logs
           method: get
           cors: true
           # authorizer:
@@ -168,13 +165,13 @@ functions:
     memorySize: 4096
     events:
       - http:
-          path: bot/{bot_id}/usage
+          path: user/{userId}/bot/{botId}/usage
           method: get
           cors: true
           # authorizer:
           #   name: auth
 
-  ### connectors ### 
+  ### connectors ###
   connector-pipedrive:
     handler: src/connectors/pipedrive/index.handler
     events:
@@ -190,96 +187,43 @@ functions:
 
 resources:
   Conditions:
-      IsProd:
-        Fn::Equals:
-          - ${self:provider.stage}
-          - prod 
+    IsProd:
+      Fn::Equals:
+        - ${self:provider.stage}
+        - prod
   Resources:
-    # Database 
+    # Database
     appsTable:
       Condition: IsProd
       Type: AWS::DynamoDB::Table
-      DeletionPolicy: Retain
+      # DeletionPolicy: Retain
       Properties:
         TableName: ${self:provider.environment.APPS_TABLE}
-        AttributeDefinitions:
-          - AttributeName: app_id
-            AttributeType: S
         KeySchema:
-          - AttributeName: app_id
+          - AttributeName: appId
             KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
-    botsTable:
-      Condition: IsProd
-      Type: AWS::DynamoDB::Table
-      DeletionPolicy: Retain
-      Properties:
-        TableName: ${self:provider.environment.BOTS_TABLE}
         AttributeDefinitions:
-          - AttributeName: user_id
+          - AttributeName: appId
             AttributeType: S
-          - AttributeName: bot_id
-            AttributeType: S
-        KeySchema:
-          - AttributeName: user_id
-            KeyType: HASH
-          - AttributeName: bot_id
-            KeyType: RANGE
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
-    logsTable:
-      Condition: IsProd
-      Type: AWS::DynamoDB::Table
-      DeletionPolicy: Retain
-      Properties:
-        TableName: ${self:provider.environment.LOGS_TABLE}
-        AttributeDefinitions:
-          - AttributeName: bot_id
-            AttributeType: S
-          - AttributeName: timestamp
-            AttributeType: N
-        KeySchema:
-          - AttributeName: bot_id
-            KeyType: HASH
-          - AttributeName: timestamp
-            KeyType: RANGE
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
     usersTable:
       Condition: IsProd
       Type: AWS::DynamoDB::Table
-      DeletionPolicy: Retain
+      # DeletionPolicy: Retain
       Properties:
         TableName: ${self:provider.environment.USERS_TABLE}
-        AttributeDefinitions:
-          - AttributeName: user_id
-            AttributeType: S
         KeySchema:
-          - AttributeName: user_id
+          - AttributeName: userId
             KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
-    connectionsTable:
-      Condition: IsProd
-      Type: AWS::DynamoDB::Table
-      DeletionPolicy: Retain
-      Properties:
-        TableName: ${self:provider.environment.CONNECTIONS_TABLE}
+          - AttributeName: sortKey
+            KeyType: 'RANGE'
         AttributeDefinitions:
-          - AttributeName: user_id
+          - AttributeName: userId
             AttributeType: S
-          - AttributeName: connection_id
+          - AttributeName: sortKey
             AttributeType: S
-        KeySchema:
-          - AttributeName: user_id
-            KeyType: HASH
-          - AttributeName: connection_id
-            KeyType: RANGE
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
@@ -289,7 +233,7 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:provider.environment.BOTS_BUCKET}
-    
+
     # Iam
     serviceRole:
       Type: AWS::IAM::Role
@@ -316,7 +260,7 @@ resources:
                     - 'dynamodb:*'
                     - 'apigateway:*'
                     - 'iam:PassRole'
-                  Resource: '*' 
+                  Resource: '*'
     botsRole:
       Type: AWS::IAM::Role
       Properties:

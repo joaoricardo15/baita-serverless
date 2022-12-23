@@ -1,119 +1,119 @@
 {
-  "user_id": "110121804349224987489",
-  "bot_id": "b1f5efb6-3c76-4eb3-9ba9-a7f4a23c2875",
-  "task_index": 1,
-  "status": "success",
-  "input_data": {
-      "cnpj": "32709829000154"
-  },
-  "output_data": {
-      "atividade_principal": [
-          {
-              "text": "Desenvolvimento e licenciamento de programas de computador não-customizáveis",
-              "code": "62.03-1-00"
-          }
-      ],
-      "data_situacao": "07/02/2019",
-      "complemento": "PISO TERREO 1 ANDAR E ATICO",
-      "tipo": "MATRIZ",
-      "nome": "FRANQ TECNOLOGIA SA",
-      "uf": "SC",
-      "telefone": "(48) 3205-3801",
-      "email": "financeiro@franq.com.br",
-      "atividades_secundarias": [
-          {
-              "text": "Desenvolvimento e licenciamento de programas de computador customizáveis",
-              "code": "62.02-3-00"
-          },
-          {
-              "text": "Outras sociedades de participação, exceto holdings",
-              "code": "64.63-8-00"
-          },
-          {
-              "text": "Correspondentes de instituições financeiras",
-              "code": "66.19-3-02"
-          },
-          {
-              "text": "Atividades de consultoria em gestão empresarial, exceto consultoria técnica específica",
-              "code": "70.20-4-00"
-          },
-          {
-              "text": "Promoção de vendas",
-              "code": "73.19-0-02"
-          },
-          {
-              "text": "Consultoria em publicidade",
-              "code": "73.19-0-04"
-          },
-          {
-              "text": "Outras atividades de publicidade não especificadas anteriormente",
-              "code": "73.19-0-99"
-          },
-          {
-              "text": "Atividades de intermediação e agenciamento de serviços e negócios em geral, exceto imobiliários",
-              "code": "74.90-1-04"
-          },
-          {
-              "text": "Outras atividades profissionais, científicas e técnicas não especificadas anteriormente",
-              "code": "74.90-1-99"
-          }
-      ],
-      "qsa": [
-          {
-              "qual": "10-Diretor",
-              "nome": "FELIPE GIROLETI MELATTE"
-          },
-          {
-              "qual": "16-Presidente",
-              "nome": "PAULO ROGERIO SOUZA SILVA"
-          },
-          {
-              "qual": "10-Diretor",
-              "nome": "DANIEL FUCHS FERRETTI"
-          },
-          {
-              "qual": "10-Diretor",
-              "nome": "JOAO RODRIGO BOOS E SILVA"
-          },
-          {
-              "qual": "10-Diretor",
-              "nome": "AUGUSTO CESAR CANASSA"
-          },
-          {
-              "qual": "10-Diretor",
-              "nome": "GUSTAVO ESPIRITO SANTO HARTMANN"
-          },
-          {
-              "qual": "10-Diretor",
-              "nome": "EDUARDO ARAUJO CALUMBY"
-          },
-          {
-              "qual": "10-Diretor",
-              "nome": "DANIELA GUIMARAES LOPES MARTINS"
-          }
-      ],
-      "situacao": "ATIVA",
-      "bairro": "SANTA MONICA",
-      "logradouro": "AV MADRE BENVENUTA",
-      "numero": "1313",
-      "cep": "88.035-000",
-      "municipio": "FLORIANOPOLIS",
-      "porte": "DEMAIS",
-      "abertura": "07/02/2019",
-      "natureza_juridica": "205-4 - Sociedade Anônima Fechada",
-      "fantasia": "FRANQ",
-      "cnpj": "32.709.829/0001-54",
-      "ultima_atualizacao": "2022-02-17T20:23:35.949Z",
-      "status": "OK",
-      "efr": "",
-      "motivo_situacao": "",
-      "situacao_especial": "",
-      "data_situacao_especial": "",
-      "capital_social": "17730900.00",
-      "extra": {},
-      "billing": {
-          "free": true,
-          "database": true
-      }
-  }
+    "userId": "110121804349224987489",
+    "botId": "b1f5efb6-3c76-4eb3-9ba9-a7f4a23c2875",
+    "taskIndex": 1,
+    "status": "success",
+    "inputData": {
+        "cnpj": "32709829000154"
+    },
+    "outputData": {
+        "atividade_principal": [
+            {
+                "text": "Desenvolvimento e licenciamento de programas de computador não-customizáveis",
+                "code": "62.03-1-00"
+            }
+        ],
+        "data_situacao": "07/02/2019",
+        "complemento": "PISO TERREO 1 ANDAR E ATICO",
+        "tipo": "MATRIZ",
+        "nome": "FRANQ TECNOLOGIA SA",
+        "uf": "SC",
+        "telefone": "(48) 3205-3801",
+        "email": "financeiro@franq.com.br",
+        "atividades_secundarias": [
+            {
+                "text": "Desenvolvimento e licenciamento de programas de computador customizáveis",
+                "code": "62.02-3-00"
+            },
+            {
+                "text": "Outras sociedades de participação, exceto holdings",
+                "code": "64.63-8-00"
+            },
+            {
+                "text": "Correspondentes de instituições financeiras",
+                "code": "66.19-3-02"
+            },
+            {
+                "text": "Atividades de consultoria em gestão empresarial, exceto consultoria técnica específica",
+                "code": "70.20-4-00"
+            },
+            {
+                "text": "Promoção de vendas",
+                "code": "73.19-0-02"
+            },
+            {
+                "text": "Consultoria em publicidade",
+                "code": "73.19-0-04"
+            },
+            {
+                "text": "Outras atividades de publicidade não especificadas anteriormente",
+                "code": "73.19-0-99"
+            },
+            {
+                "text": "Atividades de intermediação e agenciamento de serviços e negócios em geral, exceto imobiliários",
+                "code": "74.90-1-04"
+            },
+            {
+                "text": "Outras atividades profissionais, científicas e técnicas não especificadas anteriormente",
+                "code": "74.90-1-99"
+            }
+        ],
+        "qsa": [
+            {
+                "qual": "10-Diretor",
+                "nome": "FELIPE GIROLETI MELATTE"
+            },
+            {
+                "qual": "16-Presidente",
+                "nome": "PAULO ROGERIO SOUZA SILVA"
+            },
+            {
+                "qual": "10-Diretor",
+                "nome": "DANIEL FUCHS FERRETTI"
+            },
+            {
+                "qual": "10-Diretor",
+                "nome": "JOAO RODRIGO BOOS E SILVA"
+            },
+            {
+                "qual": "10-Diretor",
+                "nome": "AUGUSTO CESAR CANASSA"
+            },
+            {
+                "qual": "10-Diretor",
+                "nome": "GUSTAVO ESPIRITO SANTO HARTMANN"
+            },
+            {
+                "qual": "10-Diretor",
+                "nome": "EDUARDO ARAUJO CALUMBY"
+            },
+            {
+                "qual": "10-Diretor",
+                "nome": "DANIELA GUIMARAES LOPES MARTINS"
+            }
+        ],
+        "situacao": "ATIVA",
+        "bairro": "SANTA MONICA",
+        "logradouro": "AV MADRE BENVENUTA",
+        "numero": "1313",
+        "cep": "88.035-000",
+        "municipio": "FLORIANOPOLIS",
+        "porte": "DEMAIS",
+        "abertura": "07/02/2019",
+        "natureza_juridica": "205-4 - Sociedade Anônima Fechada",
+        "fantasia": "FRANQ",
+        "cnpj": "32.709.829/0001-54",
+        "ultima_atualizacao": "2022-02-17T20:23:35.949Z",
+        "status": "OK",
+        "efr": "",
+        "motivo_situacao": "",
+        "situacao_especial": "",
+        "data_situacao_especial": "",
+        "capital_social": "17730900.00",
+        "extra": {},
+        "billing": {
+            "free": true,
+            "database": true
+        }
+    }
 }

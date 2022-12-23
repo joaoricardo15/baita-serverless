@@ -1,22 +1,28 @@
-{ 
+{
     "connection": {
-        "user_id": "110121804349224987489",
-        "connection_id": "4edd4567-8336-4e0f-9864-5155a0eb10f7",
-        "app_config": {
-            "login_url": "https://www.wix.com/app-oauth-installation/consent?appId=7543e177-c467-445e-87bc-70ee9123626c&redirectUrl=https://1yp22xgyt1.execute-api.us-east-1.amazonaws.com/prod/wix/connect&state=",
-            "auth_method": "post",
-            "auth_type": "body",
-            "api_url": "https://www.wixapis.com/apps/v1",
-            "auth_fields": {
-                "username": "WIX_CLIENT_ID",
-                "password": "WIX_CLIENT_SECRET"
-            },
-            "auth_url": "https://www.wix.com/oauth/access",
-            "auth_headers": {
-                "Content-type": "application/json"
+        "userId": "110121804349224987489",
+        "connectionId": "4edd4567-8336-4e0f-9864-5155a0eb10f7",
+        "config": {
+            "apiUrl": "https://www.wixapis.com/apps/v1",
+            "loginUrl": "https://www.wix.com/app-oauth-installation/consent?appId=7543e177-c467-445e-87bc-70ee9123626c&redirectUrl=https://1yp22xgyt1.execute-api.us-east-1.amazonaws.com/prod/wix/connect&state=",
+            "auth": {
+                "type": "body",
+                "method": "post",
+                "url": "https://www.wix.com/oauth/access",
+                "headers": {
+                    "Content-type": "application/json"
+                },
+                "fields": {
+                    "username": "WIX_CLIENT_ID",
+                    "password": "WIX_CLIENT_SECRET"
+                }
             }
         }
     },
-    "config": { "method": "get", "path": "/instance", "output_path": "" },
-    "input_data": {}
+    "config": {
+        "method": "GET",
+        "path": "/instance",
+        "outputPath": ""
+    },
+    "inputData": {}
 }

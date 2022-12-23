@@ -1,35 +1,44 @@
-{ 
+{
     "connection": {
-        "user_id": "100926812718157110734",
-        "connection_id": "11396067",
-        "app_config": {
-            "name": "pipedrive",
-            "app_id": "19c1921c-9a6b-4def-91c8-8bcba8239bf5",
-            "api_url": "https://api.pipedrive.com/v1",
-            "auth_url": "https://oauth.pipedrive.com/oauth/token",
-            "auth_method": "POST",
-            "auth_type": "basic",
-            "auth_headers": {
-                "Content-type": "application/x-www-form-urlencoded"
-            },
-            "auth_fields": {
-                "username": "PIPEDRIVE_CLIENT_ID",
-                "password": "PIPEDRIVE_CLIENT_SECRET"
+        "userId": "100926812718157110734",
+        "connectionId": "11396067",
+        "config": {
+            "apiUrl": "https://api.pipedrive.com/v1",
+            "auth": {
+                "type": "basic",
+                "method": "POST",
+                "url": "https://oauth.pipedrive.com/oauth/token",
+                "headers": {
+                    "Content-type": "application/x-www-form-urlencoded"
+                },
+                "fields": {
+                    "username": "PIPEDRIVE_CLIENT_ID",
+                    "password": "PIPEDRIVE_CLIENT_SECRET"
+                }
             }
         }
     },
     "config": {
+        "method": "GET",
         "path": "/persons/search",
-        "method": "get",
-        "query_params": [
-            { "value": 0, "var_name": "start" },
-            { "var_name": "term", "input_field": "search_term" },
-            { "var_name": "fields", "input_field": "field_name" }
+        "queryParams": [
+            {
+                "value": 0,
+                "name": "start"
+            },
+            {
+                "name": "term",
+                "inputField": "searchTerm"
+            },
+            {
+                "name": "fields",
+                "inputField": "fieldName"
+            }
         ]
     },
-    "input_data": {
-        "search_term": "26814675862",
-        "field_name": "custom_fields"
+    "inputData": {
+        "searchTerm": "26814675862",
+        "fieldName": "customFields"
     },
-    "output_path": "string:data.string:items.number:0.string:item"
+    "outputPath": "string:data.string:items.number:0.string:item"
 }
