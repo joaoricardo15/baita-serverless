@@ -37,6 +37,9 @@ export class Log {
       const queryParams = {
         TableName: LOGS_TABLE,
         ProjectionExpression: '#usage',
+        ExpressionAttributeNames: {
+          '#usage': 'usage',
+        },
         KeyConditionExpression: 'botId = :botId',
         ExpressionAttributeValues: {
           ':botId': botId,
