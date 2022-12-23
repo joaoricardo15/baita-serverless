@@ -4,7 +4,7 @@ import AWS from 'aws-sdk'
 import { v4 as uuidv4 } from 'uuid'
 import { Code } from '../../utils/code'
 
-const BOTS_TABLE = process.env.BOTS_TABLE || ''
+const USERS_TABLE = process.env.USERS_TABLE || ''
 const BOTS_BUCKET = process.env.BOTS_BUCKET || ''
 const BOTS_PERMISSION = process.env.BOTS_PERMISSION || ''
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX || ''
@@ -16,8 +16,8 @@ export class Bot {
     try {
       const result = await ddb
         .get({
-          TableName: BOTS_TABLE,
-          Key: { userId, botId },
+          TableName: USERS_TABLE,
+          Key: { userId, sortKey: `#BOT#${botId}` },
         })
         .promise()
 
@@ -27,16 +27,18 @@ export class Bot {
     }
   }
 
-  async getBotsByUser(userId: string) {
+  async getBots(userId: string) {
     const ddb = new AWS.DynamoDB.DocumentClient()
 
     try {
       const result = await ddb
         .query({
-          TableName: BOTS_TABLE,
-          KeyConditionExpression: 'userId = :id',
+          TableName: USERS_TABLE,
+          KeyConditionExpression:
+            'userId = :userId and begins_with(sortKey, :sortKey)',
           ExpressionAttributeValues: {
-            ':id': userId,
+            ':userId': userId,
+            ':sortKey': '#BOT',
           },
         })
         .promise()
@@ -115,8 +117,11 @@ export class Bot {
 
       await ddb
         .put({
-          TableName: BOTS_TABLE,
-          Item: bot,
+          TableName: USERS_TABLE,
+          Item: {
+            ...bot,
+            sortKey: `#BOT#${bot.botId}`,
+          },
         })
         .promise()
 
@@ -134,7 +139,10 @@ export class Bot {
 
     try {
       await ddb
-        .delete({ TableName: BOTS_TABLE, Key: { userId, botId } })
+        .delete({
+          TableName: USERS_TABLE,
+          Key: { userId, sortKey: `#BOT#${botId}` },
+        })
         .promise()
 
       await apigateway.deleteApi({ ApiId: apiId }).promise()
@@ -163,8 +171,8 @@ export class Bot {
     try {
       const result = await ddb
         .update({
-          TableName: BOTS_TABLE,
-          Key: { botId, userId },
+          TableName: USERS_TABLE,
+          Key: { userId, sortKey: `#BOT#${botId}` },
           UpdateExpression: 'set #tk = :tk, #nm = :nm, #act = :act',
           ExpressionAttributeNames: {
             '#tk': 'tasks',
@@ -220,8 +228,8 @@ export class Bot {
 
       const dbResult = await ddb
         .update({
-          TableName: BOTS_TABLE,
-          Key: { botId, userId },
+          TableName: USERS_TABLE,
+          Key: { userId, sortKey: `#BOT#${botId}` },
           UpdateExpression: 'set #tk = :tk, #act = :act, #nm = :nm',
           ExpressionAttributeNames: {
             '#tk': 'tasks',
@@ -311,8 +319,8 @@ export class Bot {
     try {
       await ddb
         .update({
-          TableName: BOTS_TABLE,
-          Key: { botId, userId },
+          TableName: USERS_TABLE,
+          Key: { userId, sortKey: `#BOT#${botId}` },
           UpdateExpression: `set #tks[${taskIndex}].connectionId = :id`,
           ExpressionAttributeNames: {
             '#tks': 'tasks',
@@ -364,8 +372,8 @@ export class Bot {
 
       const result = await ddb
         .update({
-          TableName: BOTS_TABLE,
-          Key: { botId, userId },
+          TableName: USERS_TABLE,
+          Key: { userId, sortKey: `#BOT#${botId}` },
           ReturnValues: 'ALL_NEW',
           UpdateExpression,
           ExpressionAttributeNames,

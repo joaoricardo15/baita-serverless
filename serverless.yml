@@ -31,6 +31,7 @@ provider:
     # Database
     APPS_TABLE: ${self:service}-prod-apps
     USERS_TABLE: ${self:service}-prod-users
+    LOGS_TABLE: ${self:service}-prod-logs
 
     # Buckets
     BOTS_BUCKET: ${self:provider.environment.SERVICE_PREFIX}-bots
@@ -224,6 +225,25 @@ resources:
             AttributeType: S
           - AttributeName: sortKey
             AttributeType: S
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    logsTable:
+      Condition: IsProd
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      Properties:
+        TableName: ${self:provider.environment.LOGS_TABLE}
+        KeySchema:
+          - AttributeName: botId
+            KeyType: HASH
+          - AttributeName: timestamp
+            KeyType: RANGE
+        AttributeDefinitions:
+          - AttributeName: botId
+            AttributeType: S
+          - AttributeName: timestamp
+            AttributeType: N
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1

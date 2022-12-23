@@ -14,9 +14,9 @@ export class Log {
         .query({
           TableName: LOGS_TABLE,
           Limit: 20,
-          KeyConditionExpression: 'botId = :id',
+          KeyConditionExpression: 'botId = :botId',
           ExpressionAttributeValues: {
-            ':id': botId,
+            ':botId': botId,
           },
           ScanIndexForward: false,
         })
@@ -36,14 +36,10 @@ export class Log {
 
       const queryParams = {
         TableName: LOGS_TABLE,
-        ProjectionExpression: '#usg',
-        KeyConditionExpression: '#id = :id',
-        ExpressionAttributeNames: {
-          '#id': 'botId',
-          '#usg': 'usage',
-        },
+        ProjectionExpression: '#usage',
+        KeyConditionExpression: 'botId = :botId',
         ExpressionAttributeValues: {
-          ':id': botId,
+          ':botId': botId,
         },
       }
 

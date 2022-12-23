@@ -11,21 +11,9 @@ exports.handler = async (event, context, callback) => {
   try {
     const body = JSON.parse(event.body)
 
-    // Necessary to extract only the native properties from user
-    const { user_id, name, email, given_name, family_name, picture, phone } =
-      body
+    const newUser: IUser = { userId: body.user_id, ...body }
 
-    const formatedUser: IUser = {
-      name,
-      email,
-      phone,
-      picture,
-      userId: user_id,
-      givenName: given_name,
-      familyName: family_name,
-    }
-
-    const data = await user.create(formatedUser)
+    const data = await user.create(newUser)
 
     api.httpResponse(callback, 'success', undefined, data)
   } catch (err) {
