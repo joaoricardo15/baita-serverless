@@ -1,96 +1,94 @@
-"use strict";
+'use strict'
 
 export class Http {
   getOutputData(data: any, path: string) {
-    if (!path) return data;
+    if (!path) return data
 
-    const paths = path.split(".");
+    const paths = path.split('.')
 
     for (let i = 0; i < paths.length; i++) {
-      const type = paths[i].split(":")[0];
-      const value = paths[i].split(":")[1];
-      data = data[type === "number" ? parseInt(value) : value];
+      const type = paths[i].split(':')[0]
+      const value = paths[i].split(':')[1]
+      data = data[type === 'number' ? parseInt(value) : value]
     }
 
-    return data;
+    return data
   }
 
-  getUrlFromParameters(baseUrl: string, config, input_data) {
-    
-    const { path, url_params, query_params, auth } = config
-    
-    let url = baseUrl;
+  getUrlFromParameters(baseUrl: string, config, inputData) {
+    const { path, urlParams, queryParams, auth } = config
 
-    url += path;
+    let url = baseUrl
 
-    if (url_params && url_params.length) {
-      url += "/";
-      for (let i = 0; i < url_params.length; i++) {
+    url += path
+
+    if (urlParams && urlParams.length) {
+      url += '/'
+      for (let i = 0; i < urlParams.length; i++) {
         const source =
-          url_params[i].value !== undefined
-            ? url_params[i].value
-            : url_params[i].service_config
-            ? config[url_params[i].service_config]
-            : url_params[i].service_auth
-            ? auth[url_params[i].service_auth]
-            : url_params[i].input_field
-            ? input_data[url_params[i].input_field]
-            : "";
+          urlParams[i].value !== undefined
+            ? urlParams[i].value
+            : urlParams[i].config
+            ? config[urlParams[i].config]
+            : urlParams[i].serviceAuth
+            ? auth[urlParams[i].serviceAuth]
+            : urlParams[i].inputField
+            ? inputData[urlParams[i].inputField]
+            : ''
 
-        const encoded_source = encodeURIComponent(source).replace(
+        const encodedSource = encodeURIComponent(source).replace(
           /[!'()*]/g,
-          (c) => "%" + c.charCodeAt(0).toString(16)
-        );
+          (c) => '%' + c.charCodeAt(0).toString(16)
+        )
 
-        url += `${encoded_source}/`;
+        url += `${encodedSource}/`
       }
     }
 
-    if (query_params && query_params.length) {
-      url += "?";
-      for (let i = 0; i < query_params.length; i++) {
+    if (queryParams && queryParams.length) {
+      url += '?'
+      for (let i = 0; i < queryParams.length; i++) {
         const source =
-          query_params[i].value !== undefined
-            ? query_params[i].value
-            : query_params[i].service_config
-            ? config[query_params[i].service_config]
-            : query_params[i].service_auth
-            ? auth[query_params[i].service_auth]
-            : query_params[i].input_field
-            ? input_data[query_params[i].input_field]
-            : "";
+          queryParams[i].value !== undefined
+            ? queryParams[i].value
+            : queryParams[i].config
+            ? config[queryParams[i].config]
+            : queryParams[i].serviceAuth
+            ? auth[queryParams[i].serviceAuth]
+            : queryParams[i].inputField
+            ? inputData[queryParams[i].inputField]
+            : ''
 
-        const encoded_source = encodeURIComponent(source).replace(
+        const encodedSource = encodeURIComponent(source).replace(
           /[!'()*]/g,
-          (c) => "%" + c.charCodeAt(0).toString(16)
-        );
+          (c) => '%' + c.charCodeAt(0).toString(16)
+        )
 
-        url += `${query_params[i].var_name}=${encoded_source}&`;
+        url += `${queryParams[i].name}=${encodedSource}&`
       }
     }
 
     return url
   }
 
-  getDataFromParameters(config, input_data) {
+  getDataFromParameters(config, inputData) {
+    const { auth, bodyParams } = config
 
-    const { auth, body_params } = config
-
-    const data = {};
-    if (body_params && body_params.length) {
-      for (let i = 0; i < body_params.length; i++) {
+    const data = {}
+    if (bodyParams && bodyParams.length) {
+      for (let i = 0; i < bodyParams.length; i++) {
         const source =
-          body_params[i].value !== undefined
-            ? body_params[i].value
-            : body_params[i].service_config
-            ? config[body_params[i].service_config]
-            : body_params[i].service_auth
-            ? auth[body_params[i].service_auth]
-            : body_params[i].input_field
-            ? input_data[body_params[i].input_field]
-            : "";
+          bodyParams[i].value !== undefined
+            ? bodyParams[i].value
+            : bodyParams[i].config
+            ? config[bodyParams[i].config]
+            : bodyParams[i].serviceAuth
+            ? auth[bodyParams[i].serviceAuth]
+            : bodyParams[i].inputField
+            ? inputData[bodyParams[i].inputField]
+            : ''
 
-        data[body_params[i].var_name] = source;
+        data[bodyParams[i].name] = source
       }
     }
 

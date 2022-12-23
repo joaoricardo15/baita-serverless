@@ -196,7 +196,7 @@ resources:
     appsTable:
       Condition: IsProd
       Type: AWS::DynamoDB::Table
-      # DeletionPolicy: Retain
+      DeletionPolicy: Retain
       Properties:
         TableName: ${self:provider.environment.APPS_TABLE}
         KeySchema:
@@ -211,7 +211,7 @@ resources:
     usersTable:
       Condition: IsProd
       Type: AWS::DynamoDB::Table
-      # DeletionPolicy: Retain
+      DeletionPolicy: Retain
       Properties:
         TableName: ${self:provider.environment.USERS_TABLE}
         KeySchema:

@@ -1,31 +1,31 @@
-"use strict";
+'use strict'
 
-import Ajv, { JSONSchemaType } from "ajv";
-import addFormats from "ajv-formats";
+import Ajv, { JSONSchemaType } from 'ajv'
+import addFormats from 'ajv-formats'
 
-const ajv = new Ajv();
-addFormats(ajv);
+const ajv = new Ajv()
+addFormats(ajv)
 
 export interface IBot {
-  bot_id: string;
-  user_id: string;
+  userId: string
+  botId: string
 }
 
 export const botSchema: JSONSchemaType<IBot> = {
-  type: "object",
+  type: 'object',
   properties: {
-    bot_id: {
-      type: "string",
+    botId: {
+      type: 'string',
     },
-    user_id: {
-      type: "string",
+    userId: {
+      type: 'string',
     },
   },
-  required: ["bot_id", "user_id"],
-};
+  required: ['botId', 'userId'],
+}
 
 export function validateConnection(connection: IBot): void {
-  const validate = ajv.compile(botSchema);
+  const validate = ajv.compile(botSchema)
 
-  if (!validate(connection)) throw ajv.errorsText(validate.errors);
+  if (!validate(connection)) throw ajv.errorsText(validate.errors)
 }

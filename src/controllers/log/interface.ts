@@ -1,78 +1,78 @@
-"use strict";
+'use strict'
 
-import Ajv, { JSONSchemaType } from "ajv";
-import addFormats from "ajv-formats";
+import Ajv, { JSONSchemaType } from 'ajv'
+import addFormats from 'ajv-formats'
 
-const ajv = new Ajv();
-addFormats(ajv);
+const ajv = new Ajv()
+addFormats(ajv)
 
 export interface ITaskLog {
-  name: string;
-  status: string;
-  timestamp: number;
-  output_data?: any;
+  name: string
+  status: string
+  timestamp: number
+  outputData?: any
 }
 
 export interface ILog {
-  bot_id: string;
-  user_id: string;
-  error?: any;
-  timestamp: number;
-  usage: number;
-  logs: Array<ITaskLog>;
+  userId: string
+  botId: string
+  error?: any
+  timestamp: number
+  usage: number
+  logs: Array<ITaskLog>
 }
 
 export interface ILogUsage {
-  total: number;
+  total: number
 }
 
 export const logSchema: JSONSchemaType<ILog> = {
-  type: "object",
+  type: 'object',
   properties: {
-    bot_id: {
-      type: "string",
+    botId: {
+      type: 'string',
     },
-    user_id: {
-      type: "string",
+    userId: {
+      type: 'string',
     },
     error: {
-      type: "null",
-      nullable: true
+      type: 'null',
+      nullable: true,
     },
     timestamp: {
-      type: "number",
+      type: 'number',
     },
     usage: {
-      type: "number",
+      type: 'number',
     },
     logs: {
-      type: "array",
+      type: 'array',
       items: {
-        type: "object",
+        type: 'object',
         properties: {
           name: {
-            type: "string",
+            type: 'string',
           },
           status: {
-            type: "string",
+            type: 'string',
           },
           timestamp: {
-            type: "number",
+            type: 'number',
           },
-          output_data: {
-            type: "null",
-            nullable: true
+          outputData: {
+            type: 'null',
+            nullable: true,
           },
         },
-        required: ["name", "status", "timestamp"],
-      }
+        required: ['name', 'status', 'timestamp'],
+      },
     },
   },
-  required: ["bot_id", "user_id", "timestamp", "usage", "logs"],
-};
+  required: ['botId', 'userId', 'timestamp', 'usage', 'logs'],
+}
 
 export function validateLog(connection: ILog): void {
-  const validate = ajv.compile(logSchema);
+  const validate = ajv.compile(logSchema)
 
-  if (!validate(connection)) throw ajv.errorsText(validate.errors);
+  if (!validate(connection)) throw ajv.errorsText(validate.errors)
 }

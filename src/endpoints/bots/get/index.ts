@@ -10,11 +10,7 @@ exports.handler = async (event, context, callback) => {
   try {
     const { userId, botId } = event.pathParameters
 
-    const body = JSON.parse(event.body)
-
-    const { taskIndex } = body
-
-    const data = await bot.testBot(userId, botId, taskIndex)
+    const data = await bot.getBot(userId, botId)
 
     api.httpResponse(callback, 'success', undefined, data)
   } catch (err) {

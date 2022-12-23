@@ -1,45 +1,45 @@
-"use strict";
+'use strict'
 
-import { Api } from "src/utils/api";
-import { Bot } from "src/controllers/bot";
-import { Connection } from "src/controllers/connection";
-import { Google } from "./google";
+import { Api } from 'src/utils/api'
+import { Bot } from 'src/controllers/bot'
+import { Connection } from 'src/controllers/connection'
+import { Google } from './google'
 
 exports.handler = async (event, context, callback) => {
-  const api = new Api(event, context);
-  const bot = new Bot();
-  const google = new Google();
-  const connection = new Connection();
+  const api = new Api(event, context)
+  const bot = new Bot()
+  const google = new Google()
+  const connection = new Connection()
 
   try {
-    const { code, state, error } = event.queryStringParameters;
+    const { code, state, error } = event.queryStringParameters
 
-    if (error) return api.httpConnectorResponse(callback, "fail");
+    if (error) return api.httpConnectorResponse(callback, 'fail')
 
-    const { app_id, user_id, bot_id, task_index } =
-      google.desconstructAuthState(state);
+    const { userId, appId, botId, taskIndex } =
+      google.desconstructAuthState(state)
 
-    const credentials = await google.getCredentials(code);
+    const credentials = await google.getCredentials(code)
 
     const { access_token } = credentials
-      
-    const { connection_id, email } = await google.getConnectionInfo(access_token);
+
+    const { connectionId, email } = await google.getConnectionInfo(access_token)
 
     const newConnection = {
-      user_id,
-      app_id,
-      connection_id,
+      userId,
+      appId,
+      connectionId,
       credentials,
       name: email,
-      email
-    };
+      email,
+    }
 
-    await connection.createConnection(newConnection);
+    await connection.createConnection(newConnection)
 
-    await bot.addConnection(user_id, bot_id, connection_id, task_index);
+    await bot.addConnection(userId, botId, connectionId, taskIndex)
 
-    api.httpConnectorResponse(callback, "success");
+    api.httpConnectorResponse(callback, 'success')
   } catch (err) {
-    api.httpConnectorResponse(callback, "fail");
+    api.httpConnectorResponse(callback, 'fail')
   }
-};
+}

@@ -1,34 +1,34 @@
-"use strict";
+'use strict'
 
-import Axios from "axios";
-import { Api } from "src/utils/api";
-import { Http } from "src/utils/http";
+import Axios from 'axios'
+import { Api } from 'src/utils/api'
+import { Http } from 'src/utils/http'
 
 exports.handler = async (event, context, callback) => {
-  const api = new Api(event, context);
-  const http = new Http();
+  const api = new Api(event, context)
+  const http = new Http()
 
   try {
     const {
       config,
-      input_data,
-      output_path,
+      inputData,
+      outputPath,
       connection: {
-        app_config: { api_url },
+        config: { apiUrl },
       },
-    } = event;
+    } = event
 
     const response = await Axios({
       method: config.method,
       headers: config.headers,
-      url: http.getUrlFromParameters(api_url, config, input_data),
-      data: http.getDataFromParameters(config, input_data),
-    });
+      url: http.getUrlFromParameters(apiUrl, config, inputData),
+      data: http.getDataFromParameters(config, inputData),
+    })
 
-    const data = http.getOutputData(response.data, output_path);
+    const data = http.getOutputData(response.data, outputPath)
 
-    api.httpOperationResponse(callback, "success", undefined, data);
+    api.httpOperationResponse(callback, 'success', undefined, data)
   } catch (err) {
-    api.httpOperationResponse(callback, "fail", err);
+    api.httpOperationResponse(callback, 'fail', err)
   }
-};
+}

@@ -1,49 +1,49 @@
-"use strict";
+'use strict'
 
-import JSZip from "jszip";
+import JSZip from 'jszip'
 
-const zip = new JSZip();
+const zip = new JSZip()
 
-const SERVICE_PREFIX = process.env.SERVICE_PREFIX || "";
+const SERVICE_PREFIX = process.env.SERVICE_PREFIX || ''
 
 const comparationExpressions = {
-  equals: "==",
-  diferent: "!=",
-  exists: "",
-  donotexists: "",
-};
+  equals: '==',
+  diferent: '!=',
+  exists: '',
+  donotexists: '',
+}
 
 export class Code {
   async getCodeFile(code) {
-    zip.file("index.js", code);
+    zip.file('index.js', code)
 
-    const archive = await zip.generateAsync({ type: "base64" });
+    const archive = await zip.generateAsync({ type: 'base64' })
 
-    return Buffer.from(archive, "base64");
+    return Buffer.from(archive, 'base64')
   }
 
-  getSampleCode(user_id: string, bot_id: string): string {
+  getSampleCode(userId: string, botId: string): string {
     return `
         const AWS = require('aws-sdk');
         const lambda = new AWS.Lambda({ region: "us-east-1" });
         
-        const user_id = '${user_id}';
-        const bot_id = '${bot_id}';
+        const userId = '${userId}';
+        const botId = '${botId}';
         
         module.exports.handler = async (event, context, callback) => {
         
-            let task0_output_data;
+            let task0_outputData;
             
             if (event.body)
                 try {
-                    task0_output_data = JSON.parse(event.body);
+                    task0_outputData = JSON.parse(event.body);
                 } catch (error) {
-                    task0_output_data = event.body;
+                    task0_outputData = event.body;
                 }
             
             await lambda.invoke({
                 FunctionName: '${SERVICE_PREFIX}-sample-update',
-                Payload: JSON.stringify({ user_id, bot_id, task_index: 0, status: 'success', output_data: task0_output_data })
+                Payload: JSON.stringify({ userId, botId, taskIndex: 0, status: 'success', outputData: task0_outputData })
             }).promise();
         
             callback(null, {
@@ -57,193 +57,185 @@ export class Code {
                 })
             }); 
         };
-    `;
+    `
   }
 
-  getBotCode(user_id: string, bot_id: string, active: boolean, tasks) {
+  getBotCode(userId: string, botId: string, active: boolean, tasks) {
     if (
       !tasks ||
       !tasks.length ||
       tasks.length < 2 ||
-      tasks[0].type !== "trigger"
+      tasks[0].type !== 'trigger'
     )
-      throw "invalid bot config";
+      throw 'invalid bot config'
 
-    let innerCode = "";
+    let innerCode = ''
 
     for (let i = 1; i < tasks.length; i++) {
-      const app = tasks[i].app;
-      const service = tasks[i].service;
+      const app = tasks[i].app
+      const service = tasks[i].service
 
-      let input_fields = "";
-      if (service.service_config.input_source === "service_fields")
-        for (let j = 0; j < service.service_config.input_fields.length; j++) {
-          const var_name = service.service_config.input_fields[j].var_name;
+      let inputFields = ''
+      if (service.config.inputSource === 'serviceFields')
+        for (let j = 0; j < service.config.inputFields.length; j++) {
+          const name = service.config.inputFields[j].name
 
-          const input_field = tasks[i].input_data.find(
-            (x) => x.var_name === var_name
-          );
+          const inputField = tasks[i].inputData.find((x) => x.name === name)
 
           if (
-            !service.service_name ||
-            !service.service_config ||
-            !tasks[i].input_data ||
-            !input_field
+            !service.name ||
+            !service.config ||
+            !tasks[i].inputData ||
+            !inputField
           )
-            throw "invalid bot config";
+            throw 'invalid bot config'
 
           if (
-            var_name &&
-            ((!active && input_field.sample_value) ||
-              input_field.value ||
-              (input_field.output_index !== undefined &&
-                input_field.output_name))
+            name &&
+            ((!active && inputField.sampleValue) ||
+              inputField.value ||
+              (inputField.outputIndex !== undefined && inputField.outputName))
           )
-            input_fields += `'${var_name}': ${
+            inputFields += `'${name}': ${
               !active
-                ? `\`${input_field.sample_value}\``
-                : input_field.value
-                ? `\`${input_field.value}\``
-                : `task${input_field.output_index}_output_data['${input_field.output_name}']`
-            },`;
+                ? `\`${inputField.sampleValue}\``
+                : inputField.value
+                ? `\`${inputField.value}\``
+                : `task${inputField.outputIndex}_outputData['${inputField.outputName}']`
+            },`
         }
-      else if (service.service_config.input_source === "input_fields")
-        for (let j = 0; j < tasks[i].input_data.length; j++) {
-          const input_field = tasks[i].input_data[j];
+      else if (service.config.inputSource === 'inputFields')
+        for (let j = 0; j < tasks[i].inputData.length; j++) {
+          const inputField = tasks[i].inputData[j]
 
           if (
-            input_field.var_name &&
-            ((!active && input_field.sample_value) ||
-              input_field.value ||
-              (input_field.output_index !== undefined &&
-                input_field.output_name))
+            inputField.name &&
+            ((!active && inputField.sampleValue) ||
+              inputField.value ||
+              (inputField.outputIndex !== undefined && inputField.outputName))
           )
-            input_fields += `'${input_field.var_name}': ${
+            inputFields += `'${inputField.name}': ${
               !active
-                ? `\`${input_field.sample_value}\``
-                : input_field.value
-                ? `\`${input_field.value}\``
-                : `task${input_field.output_index}_output_data['${input_field.output_name}']`
-            },`;
+                ? `\`${inputField.sampleValue}\``
+                : inputField.value
+                ? `\`${inputField.value}\``
+                : `task${inputField.outputIndex}_outputData['${inputField.outputName}']`
+            },`
         }
 
-      let conditions = "";
+      let conditions = ''
       if (tasks[i].conditions)
         for (let j = 0; j < tasks[i].conditions.length; j++) {
-          let andConditions = "";
+          let andConditions = ''
 
           for (
             let k = 0;
             k < tasks[i].conditions[j].andConditions.length;
             k++
           ) {
-            const andCondition = tasks[i].conditions[j].andConditions[k];
+            const andCondition = tasks[i].conditions[j].andConditions[k]
 
-            const condition_value = !active
-              ? `\`${andCondition.sample_value}\``
+            const conditionValue = !active
+              ? `\`${andCondition.sampleValue}\``
               : andCondition.value
               ? `\`${andCondition.value}\``
-              : `task${andCondition.output_index}_output_data['${andCondition.output_name}']`;
+              : `task${andCondition.outputIndex}_outputData['${andCondition.outputName}']`
 
-            const condition_expression =
-              comparationExpressions[andCondition.comparation_type];
+            const conditionExpression =
+              comparationExpressions[andCondition.type]
 
-            const comparation_value = andCondition.comparation_value;
+            const comparationValue = andCondition.type
 
-            if (condition_value && andCondition.comparation_type)
-              andConditions += `${k === 0 ? "" : " && "}${
-                andCondition.comparation_type === "donotexists"
-                  ? `!${condition_value}`
-                  : andCondition.comparation_type === "exists"
-                  ? `${condition_value}`
-                  : `${condition_value} ${condition_expression} ${comparation_value}`
-              }`;
+            if (conditionValue && andCondition.type)
+              andConditions += `${k === 0 ? '' : ' && '}${
+                andCondition.type === 'donotexists'
+                  ? `!${conditionValue}`
+                  : andCondition.type === 'exists'
+                  ? `${conditionValue}`
+                  : `${conditionValue} ${conditionExpression} ${comparationValue}`
+              }`
           }
           if (andConditions)
-            conditions += `${j === 0 ? "" : " || "}(${andConditions})`;
+            conditions += `${j === 0 ? '' : ' || '}(${andConditions})`
         }
 
       innerCode += `
                 const task${i}_name = '${tasks[i].service.name}';
         
-                const task${i}_input_data = { ${input_fields} };
+                const task${i}_inputData = { ${inputFields} };
         
-                let task${i}_output_data = {};
+                let task${i}_outputData = {};
                 
-                let task${i}_output_log = {
+                let task${i}_outputLog = {
                     name: task${i}_name,
-                    input_data: task${i}_input_data
+                    inputData: task${i}_inputData
                 };
         
-                if (${active ? true : `test_task_index === ${i}`} && ${
+                if (${active ? true : `testTaskIndex === ${i}`} && ${
         conditions || true
       }) {
                 
                     const task${i}_connection = ${JSON.stringify({
-        user_id,
-        connection_id: tasks[i].connection_id,
-        app_config: app.app_config,
+        userId,
+        connectionId: tasks[i].connectionId,
+        config: app.config,
       })};
             
-                    const task${i}_config = ${JSON.stringify(
-        service.service_config
-      )};
+                    const task${i}_config = ${JSON.stringify(service.config)};
                     
-                    const task${i}_output_path = ${
-        service.service_config.output_path
-          ? `'${service.service_config.output_path}'`
-          : "undefined"
+                    const task${i}_outputPath = ${
+        service.config.outputPath
+          ? `'${service.config.outputPath}'`
+          : 'undefined'
       };
                     
                     const task${i}_response = await lambda.invoke({
-                        FunctionName: '${SERVICE_PREFIX}-${
-        service.service_name
-      }',
-                        Payload: JSON.stringify({ connection: task${i}_connection, config: task${i}_config, input_data: task${i}_input_data, output_path: task${i}_output_path }),
+                        FunctionName: '${SERVICE_PREFIX}-${service.name}',
+                        Payload: JSON.stringify({ connection: task${i}_connection, config: task${i}_config, inputData: task${i}_inputData, outputPath: task${i}_outputPath }),
                     }).promise();
                 
                     const task${i}_result = JSON.parse(task${i}_response.Payload);
         
                     const task${i}_success = task${i}_result.success;
                     
-                    task${i}_output_data = task${i}_success && task${i}_result.data ? task${i}_result.data : { message: task${i}_result.message || task${i}_result.errorMessage || 'nothing for you this time : (' };
+                    task${i}_outputData = task${i}_success && task${i}_result.data ? task${i}_result.data : { message: task${i}_result.message || task${i}_result.errorMessage || 'nothing for you this time : (' };
         
-                    task${i}_output_log['output_data'] = task${i}_output_data;
+                    task${i}_outputLog['outputData'] = task${i}_outputData;
                     
                     const task${i}_timestamp = Date.now();
                     
-                    task${i}_output_log['timestamp'] = task${i}_timestamp;
+                    task${i}_outputLog['timestamp'] = task${i}_timestamp;
                     
-                    task${i}_output_log['status'] = task${i}_success ? 'success' : 'fail';
+                    task${i}_outputLog['status'] = task${i}_success ? 'success' : 'fail';
         ${
           active
             ? `
                     if (task${i}_success) usage += 1;
         `
-            : ""
+            : ''
         }
         ${
-          active && tasks[i].bot_output
+          active && tasks[i].botOutput
             ? `
-                    if (task${i}_success) output_data = task${i}_output_data;
+                    if (task${i}_success) outputData = task${i}_outputData;
         `
-            : ""
+            : ''
         }
                 } else {
         
                     const task${i}_timestamp = Date.now();
         
-                    task${i}_output_log['timestamp'] = task${i}_timestamp;
+                    task${i}_outputLog['timestamp'] = task${i}_timestamp;
                     
-                    task${i}_output_log['status'] = 'filtered';
+                    task${i}_outputLog['status'] = 'filtered';
                 }        
         ${
           active
             ? `
-                logs.push(task${i}_output_log);
+                logs.push(task${i}_outputLog);
         `
             : `
-                if (test_task_index === ${i})
+                if (testTaskIndex === ${i})
                     return callback(null, {
                         statusCode: 200,
                         headers: {
@@ -252,11 +244,11 @@ export class Code {
                         },
                         body: JSON.stringify({
                             success: true,
-                            data: task${i}_output_log
+                            data: task${i}_outputLog
                         })
                     });
         `
-        }`;
+        }`
     }
 
     return `
@@ -265,22 +257,22 @@ export class Code {
         
         module.exports.handler = async (event, context, callback) => {
         
-            const user_id = '${user_id}';
-            const bot_id = '${bot_id}';
+            const userId = '${userId}';
+            const botId = '${botId}';
         ${
           active
             ? `
             let usage = 0;
             const logs = [];
-            let error_result;
+            let errorResult;
         `
-            : ""
+            : ''
         }
-            let output_data;
+            let outputData;
         
             try {
         
-                let task0_output_data;
+                let task0_outputData;
         
                 if (event.body)
                     try {
@@ -289,13 +281,13 @@ export class Code {
                             const bodyString = buffer.toString('ascii').replace(/&/g, ",").replace(/=/g, ":");
                             const jsonBody = JSON.parse('{"' + decodeURI(bodyString) + '"}');
                     
-                            task0_output_data = jsonBody;
+                            task0_outputData = jsonBody;
                         }
                         else
-                            task0_output_data = JSON.parse(event.body);
+                            task0_outputData = JSON.parse(event.body);
         
                     } catch (error) {
-                        task0_output_data = event.body;
+                        task0_outputData = event.body;
                     }
         
         ${
@@ -307,7 +299,7 @@ export class Code {
         
                 logs.push({
                     name: task0_name,
-                    output_data: task0_output_data,
+                    outputData: task0_outputData,
                     timestamp: task0_timestamp,
                     status: 'success'
                 });
@@ -315,12 +307,12 @@ export class Code {
                 usage += 1;
         `
             : `
-                const { test_task_index } = event;
+                const { testTaskIndex } = event;
         
-                if (${active ? false : "!test_task_index"})
+                if (${active ? false : '!testTaskIndex'})
                     await lambda.invoke({
                         FunctionName: '${SERVICE_PREFIX}-sample-update',
-                        Payload: JSON.stringify({ user_id, bot_id, task_index: 0, status: 'success', output_data: task0_output_data })
+                        Payload: JSON.stringify({ userId, botId, taskIndex: 0, status: 'success', outputData: task0_outputData })
                     }).promise();
         `
         }${innerCode}
@@ -328,9 +320,9 @@ export class Code {
         ${
           active
             ? `
-                error_result = error;
+                errorResult = error;
         `
-            : ""
+            : ''
         }
             }
         ${
@@ -338,10 +330,10 @@ export class Code {
             ? `
             await lambda.invoke({
                 FunctionName: '${SERVICE_PREFIX}-log-create',
-                Payload: JSON.stringify({ user_id, bot_id, usage, logs, error: error_result })
+                Payload: JSON.stringify({ userId, botId, usage, logs, error: errorResult })
             }).promise();
         `
-            : ""
+            : ''
         }
             callback(null, {
                 statusCode: 200,
@@ -351,10 +343,10 @@ export class Code {
                 },
                 body: JSON.stringify({
                     success: true,
-                    data: output_data
+                    data: outputData
                 })
             }); 
         };
-        `;
+        `
   }
 }

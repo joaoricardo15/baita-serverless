@@ -1,19 +1,19 @@
-"use strict";
+'use strict'
 
-import { Api } from "src/utils/api";
-import { Connection } from "src/controllers/connection";
+import { Api } from 'src/utils/api'
+import { Connection } from 'src/controllers/connection'
 
 exports.handler = async (event, context, callback) => {
-  const api = new Api(event, context);
-  const connection = new Connection();
+  const api = new Api(event, context)
+  const connection = new Connection()
 
   try {
-    const { user_id } = event.pathParameters;
+    const { userId } = event.pathParameters
 
-    const data = await connection.getUserConnections(user_id);
+    const data = await connection.getUserConnections(userId)
 
-    api.httpResponse(callback, "success", undefined, data);
+    api.httpResponse(callback, 'success', undefined, data)
   } catch (err) {
-    api.httpResponse(callback, "fail", err);
+    api.httpResponse(callback, 'fail', err)
   }
-};
+}

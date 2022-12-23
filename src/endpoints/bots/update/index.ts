@@ -1,21 +1,23 @@
-"use strict";
+'use strict'
 
-import { Api } from "src/utils/api";
-import { Bot } from "src/controllers/bot";
+import { Api } from 'src/utils/api'
+import { Bot } from 'src/controllers/bot'
 
 exports.handler = async (event, context, callback) => {
-  const api = new Api(event, context);
-  const bot = new Bot();
+  const api = new Api(event, context)
+  const bot = new Bot()
 
   try {
-    const body = JSON.parse(event.body);
+    const { userId, botId } = event.pathParameters
 
-    const { user_id, bot_id, name, active, tasks } = body;
+    const body = JSON.parse(event.body)
 
-    const data = await bot.updateBot(user_id, bot_id, name, active, tasks);
+    const { name, active, tasks } = body
 
-    api.httpResponse(callback, "success", undefined, data);
+    const data = await bot.updateBot(userId, botId, name, active, tasks)
+
+    api.httpResponse(callback, 'success', undefined, data)
   } catch (err) {
-    api.httpResponse(callback, "fail", err);
+    api.httpResponse(callback, 'fail', err)
   }
-};
+}
