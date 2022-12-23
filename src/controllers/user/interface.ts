@@ -10,10 +10,6 @@ export interface IUser {
   userId: string
   name: string
   email: string
-  givenName: string
-  familyName: string
-  picture: string
-  phone: string
 }
 
 export const userSchema: JSONSchemaType<IUser> = {
@@ -28,18 +24,6 @@ export const userSchema: JSONSchemaType<IUser> = {
     email: {
       type: 'string',
       format: 'email',
-    },
-    givenName: {
-      type: 'string',
-    },
-    familyName: {
-      type: 'string',
-    },
-    picture: {
-      type: 'string',
-    },
-    phone: {
-      type: 'string',
     },
   },
   required: ['userId', 'name', 'email'],
