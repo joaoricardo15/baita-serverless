@@ -174,7 +174,10 @@ export class Bot {
           TableName: USERS_TABLE,
           Key: { userId, sortKey: `#BOT#${botId}` },
           UpdateExpression:
-            'set name = :name, tasks = :tasks, active = :active',
+            'set #name = :name, tasks = :tasks, active = :active',
+          ExpressionAttributeNames: {
+            '#name': 'name', // Expression used here bacause 'name' is a reserved word
+          },
           ExpressionAttributeValues: {
             ':name': name,
             ':tasks': tasks,
@@ -227,7 +230,10 @@ export class Bot {
           TableName: USERS_TABLE,
           Key: { userId, sortKey: `#BOT#${botId}` },
           UpdateExpression:
-            'set name = :name, tasks = :tasks, active = :active',
+            'set #name = :name, tasks = :tasks, active = :active',
+          ExpressionAttributeNames: {
+            '#name': 'name', // Expression used here bacause 'name' is a reserved word
+          },
           ExpressionAttributeValues: {
             ':name': name,
             ':tasks': tasks,
@@ -321,9 +327,7 @@ export class Bot {
     const ddb = new AWS.DynamoDB.DocumentClient()
 
     try {
-      let UpdateExpression: any,
-        ExpressionAttributeNames: any,
-        ExpressionAttributeValues: any
+      let UpdateExpression: string, ExpressionAttributeValues: object
 
       if (taskIndex == 0) {
         UpdateExpression = `set tasks[${taskIndex}].sampleResult = :sample,
@@ -346,7 +350,6 @@ export class Bot {
           Key: { userId, sortKey: `#BOT#${botId}` },
           ReturnValues: 'ALL_NEW',
           UpdateExpression,
-          ExpressionAttributeNames,
           ExpressionAttributeValues,
         })
         .promise()
