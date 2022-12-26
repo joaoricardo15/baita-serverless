@@ -173,16 +173,12 @@ export class Bot {
         .update({
           TableName: USERS_TABLE,
           Key: { userId, sortKey: `#BOT#${botId}` },
-          UpdateExpression: 'set #tk = :tk, #nm = :nm, #act = :act',
-          ExpressionAttributeNames: {
-            '#tk': 'tasks',
-            '#nm': 'name',
-            '#act': 'active',
-          },
+          UpdateExpression:
+            'set name = :name, tasks = :tasks, active = :active',
           ExpressionAttributeValues: {
-            ':tk': tasks,
-            ':nm': name,
-            ':act': active,
+            ':name': name,
+            ':tasks': tasks,
+            ':active': active,
           },
           ReturnValues: 'ALL_NEW',
         })
@@ -230,16 +226,12 @@ export class Bot {
         .update({
           TableName: USERS_TABLE,
           Key: { userId, sortKey: `#BOT#${botId}` },
-          UpdateExpression: 'set #tk = :tk, #act = :act, #nm = :nm',
-          ExpressionAttributeNames: {
-            '#tk': 'tasks',
-            '#nm': 'name',
-            '#act': 'active',
-          },
+          UpdateExpression:
+            'set name = :name, tasks = :tasks, active = :active',
           ExpressionAttributeValues: {
-            ':tk': tasks,
-            ':nm': name,
-            ':act': active,
+            ':name': name,
+            ':tasks': tasks,
+            ':active': active,
           },
           ReturnValues: 'ALL_NEW',
         })
@@ -280,29 +272,16 @@ export class Bot {
                 'nothing for you this time : (',
             }
 
-      const updateLambdaResult = await lambda
-        .invoke({
-          FunctionName: `${SERVICE_PREFIX}-sample-update`,
-          Payload: JSON.stringify({
-            userId,
-            botId,
-            taskIndex,
-            status: taskOutputData.status,
-            inputData: taskOutputData.inputData,
-            outputData: taskOutputData.outputData,
-          }),
-        })
-        .promise()
+      const sample = {
+        status: taskOutputData.status,
+        inputData: taskOutputData.inputData,
+        outputData: taskOutputData.outputData,
+        timestamp: Date.now(),
+      }
 
-      const updateLambdaParsedPayload = JSON.parse(
-        updateLambdaResult.Payload as string
-      )
+      await this.addSampleResult(userId, botId, taskIndex, sample)
 
-      const updateLambdaParsedResult = JSON.parse(
-        updateLambdaParsedPayload.body
-      )
-
-      return updateLambdaParsedResult.data
+      return sample
     } catch (err) {
       throw err.message
     }
@@ -321,10 +300,7 @@ export class Bot {
         .update({
           TableName: USERS_TABLE,
           Key: { userId, sortKey: `#BOT#${botId}` },
-          UpdateExpression: `set #tks[${taskIndex}].connectionId = :id`,
-          ExpressionAttributeNames: {
-            '#tks': 'tasks',
-          },
+          UpdateExpression: `set tasks[${taskIndex}].connectionId = :id`,
           ExpressionAttributeValues: {
             ':id': connectionId,
           },
@@ -350,21 +326,15 @@ export class Bot {
         ExpressionAttributeValues: any
 
       if (taskIndex == 0) {
-        UpdateExpression = `set #tks[${taskIndex}].sampleResult = :sample, #tg = list_append(if_not_exists(#tg, :emptyList), :sampleList)`
-        ExpressionAttributeNames = {
-          '#tks': 'tasks',
-          '#tg': 'triggerSamples',
-        }
+        UpdateExpression = `set tasks[${taskIndex}].sampleResult = :sample,
+          triggerSamples = list_append(if_not_exists(triggerSamples, :emptyList), :sampleList)`
         ExpressionAttributeValues = {
           ':sample': sample,
-          ':emptyList': [],
           ':sampleList': [sample],
+          ':emptyList': [],
         }
       } else {
-        UpdateExpression = `set #tks[${taskIndex}].sampleResult = :sample`
-        ExpressionAttributeNames = {
-          '#tks': 'tasks',
-        }
+        UpdateExpression = `set tasks[${taskIndex}].sampleResult = :sample`
         ExpressionAttributeValues = {
           ':sample': sample,
         }

@@ -3,11 +3,16 @@ service: baita-help
 plugins:
   - serverless-bundle
   - serverless-offline
+  # - serverless-domain-manager
   - serverless-deployment-bucket
 
 custom:
   serverless-offline:
     useChildProcesses: true
+  # customDomain:
+  #   domainName: api.baita.help
+  #   createRoute53Record: true
+  #   stage: prod
 
 provider:
   name: aws

@@ -31,7 +31,7 @@ export class Connection {
         .query({
           TableName: USERS_TABLE,
           KeyConditionExpression:
-            '#user = :user userId = :userId and begins_with(sortKey, :sortKey)',
+            'userId = :userId and begins_with(sortKey, :sortKey)',
           ExpressionAttributeValues: {
             ':userId': userId,
             ':sortKey': '#CONNECTION',
