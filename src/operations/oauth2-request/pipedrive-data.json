@@ -1,30 +1,66 @@
 {
     "connection": {
-        "userId": "100926812718157110734",
-        "connectionId": "11396067",
+        "userId": "google-oauth2|110121804349224987489",
+        "connectionId": "11696187",
         "config": {
             "apiUrl": "https://api.pipedrive.com/v1",
             "auth": {
-                "type": "basic",
-                "method": "POST",
-                "url": "https://oauth.pipedrive.com/oauth/token",
                 "headers": {
                     "Content-type": "application/x-www-form-urlencoded"
                 },
+                "method": "post",
+                "type": "basic",
                 "fields": {
-                    "username": "PIPEDRIVE_CLIENT_ID",
-                    "password": "PIPEDRIVE_CLIENT_SECRET"
-                }
-            }
+                    "password": "PIPEDRIVE_CLIENT_SECRET",
+                    "username": "PIPEDRIVE_CLIENT_ID"
+                },
+                "url": "https://oauth.pipedrive.com/oauth/token"
+            },
+            "authorizeUrl": "https://oauth.pipedrive.com/oauth/authorize?client_id=987a469172b3ac62&redirect_uri=https://mm32a4e7me.execute-api.us-east-1.amazonaws.com/prod/connectors/pipedrive&state="
         }
     },
     "config": {
-        "method": "GET",
+        "inputFields": [
+            {
+                "name": "fieldName",
+                "options": [
+                    {
+                        "value": "name",
+                        "label": "Name"
+                    },
+                    {
+                        "value": "email",
+                        "label": "E-mail"
+                    },
+                    {
+                        "value": "phone",
+                        "label": "Phone"
+                    },
+                    {
+                        "value": "notes",
+                        "label": "Notes"
+                    },
+                    {
+                        "value": "customFields",
+                        "label": "Custom fields"
+                    }
+                ],
+                "label": "search field name",
+                "type": "options"
+            },
+            {
+                "name": "searchTerm",
+                "type": "output",
+                "label": "search term"
+            }
+        ],
         "path": "/persons/search",
+        "inputSource": "serviceFields",
+        "method": "get",
         "queryParams": [
             {
-                "value": 0,
-                "name": "start"
+                "name": "start",
+                "value": 0
             },
             {
                 "name": "term",
@@ -34,11 +70,12 @@
                 "name": "fields",
                 "inputField": "fieldName"
             }
-        ]
+        ],
+        "outputPath": "string:data.string:items.number:0.string:item"
     },
     "inputData": {
-        "searchTerm": "26814675862",
-        "fieldName": "customFields"
+        "fieldName": "notes",
+        "searchTerm": "joao"
     },
     "outputPath": "string:data.string:items.number:0.string:item"
 }

@@ -21,6 +21,7 @@ exports.handler = async (event, context, callback) => {
         userId,
         connectionId,
         config: {
+          apiUrl,
           auth: { url, method, type, fields, headers },
         },
       },
@@ -49,7 +50,7 @@ exports.handler = async (event, context, callback) => {
         ...config.headers,
         Authorization: `Bearer ${access_token}`,
       },
-      url: http.getUrlFromParameters(url, config, inputData),
+      url: http.getUrlFromParameters(apiUrl, config, inputData),
       data: http.getDataFromParameters(config, inputData),
     })
 
