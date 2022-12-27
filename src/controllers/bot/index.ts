@@ -300,15 +300,6 @@ export class Bot {
     taskIndex: number
   ) {
     const ddb = new AWS.DynamoDB.DocumentClient()
-    console.log({
-      TableName: USERS_TABLE,
-      Key: { userId, sortKey: `#BOT#${botId}` },
-      UpdateExpression: `set tasks[${taskIndex}].connectionId = :connectionId`,
-      ExpressionAttributeValues: {
-        ':connectionId': connectionId,
-      },
-      ReturnValues: 'ALL_NEW',
-    })
     try {
       await ddb
         .update({
