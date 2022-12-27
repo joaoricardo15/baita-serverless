@@ -11,51 +11,59 @@ export class Pipedrive {
   async getCredentials(
     code: string
   ): Promise<{ api_domain: string; access_token: string }> {
-    const auth = {
-      username: PIPEDRIVE_CLIENT_ID,
-      password: PIPEDRIVE_CLIENT_SECRET,
+    try {
+      const auth = {
+        username: PIPEDRIVE_CLIENT_ID,
+        password: PIPEDRIVE_CLIENT_SECRET,
+      }
+
+      const headers = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      }
+
+      const data = new URLSearchParams({
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: `${SERVICE_PROD_URL}/connectors/pipedrive`,
+      })
+
+      const credentialsResult = await Axios({
+        auth,
+        method: 'post',
+        url: PIPEDRIVE_AUTH_URL,
+        headers,
+        data,
+      })
+
+      if (credentialsResult.status !== 200) throw credentialsResult.data
+
+      return credentialsResult.data
+    } catch (err) {
+      throw err.response.data
     }
-
-    const headers = {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    }
-
-    const data = new URLSearchParams({
-      code,
-      grant_type: 'authorization_code',
-      redirect_uri: `${SERVICE_PROD_URL}/connectors/pipedrive`,
-    })
-
-    const credentialsResult = await Axios({
-      auth,
-      method: 'post',
-      url: PIPEDRIVE_AUTH_URL,
-      headers,
-      data,
-    })
-
-    if (credentialsResult.status !== 200) throw credentialsResult.data
-
-    return credentialsResult.data
   }
 
   async getConnectionInfo(
     apiDomain: string,
     accessToken: string
   ): Promise<{ connectionId: string; email: string }> {
-    const tokenResult = await Axios({
-      method: 'get',
-      url: `${apiDomain}/users/me`,
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
+    try {
+      const tokenResult = await Axios({
+        method: 'get',
+        url: `${apiDomain}/users/me`,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
 
-    if (tokenResult.status !== 200) throw tokenResult.data
+      if (tokenResult.status !== 200) throw tokenResult.data
 
-    const { id, email } = tokenResult.data.data
+      const { id, email } = tokenResult.data.data
 
-    return { connectionId: id.toString(), email }
+      return { connectionId: id.toString(), email }
+    } catch (err) {
+      throw err.response.data
+    }
   }
 
   desconstructAuthState(state: string): {
