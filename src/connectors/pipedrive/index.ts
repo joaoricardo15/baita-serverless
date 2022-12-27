@@ -43,6 +43,6 @@ exports.handler = async (event, context, callback) => {
 
     api.httpConnectorResponse(callback, BotStatus.success)
   } catch (err) {
-    api.httpConnectorResponse(callback, BotStatus.fail)
+    api.httpConnectorResponse(callback, BotStatus.fail, err)
   }
 }
