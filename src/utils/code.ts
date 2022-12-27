@@ -215,7 +215,7 @@ export class Code {
             : ''
         }
         ${
-          active && tasks[i].botOutput
+          active && tasks[i].returnData
             ? `
                     if (task${i}_success) outputData = task${i}_outputData;
         `

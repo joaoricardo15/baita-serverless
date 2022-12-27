@@ -6,13 +6,15 @@ export class Http {
 
     const paths = path.split('.')
 
-    for (let i = 0; i < paths.length; i++) {
-      const type = paths[i].split(':')[0]
-      const value = paths[i].split(':')[1]
-      data = data[type === 'number' ? parseInt(value) : value]
+    try {
+      for (let i = 0; i < paths.length; i++) {
+        const [type, value] = paths[i].split(':')
+        data = data[type === 'number' ? parseInt(value) : value]
+      }
+      return data
+    } catch (err) {
+      return {}
     }
-
-    return data
   }
 
   getUrlFromParameters(baseUrl: string, config, inputData) {
