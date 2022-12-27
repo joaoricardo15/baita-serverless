@@ -1,6 +1,6 @@
 'use strict'
 
-import { Api } from 'src/utils/api'
+import { Api, BotStatus } from 'src/utils/api'
 import { Bot } from 'src/controllers/bot'
 import { Connection } from 'src/controllers/connection'
 import { Pipedrive } from './pipedrive'
@@ -14,7 +14,7 @@ exports.handler = async (event, context, callback) => {
   try {
     const { code, state, error } = event.queryStringParameters
 
-    if (error) return api.httpConnectorResponse(callback, 'fail')
+    if (error) return api.httpConnectorResponse(callback, BotStatus.fail)
 
     const { userId, appId, botId, taskIndex } =
       pipedrive.desconstructAuthState(state)
@@ -41,8 +41,8 @@ exports.handler = async (event, context, callback) => {
 
     await bot.addConnection(userId, botId, connectionId, taskIndex)
 
-    api.httpConnectorResponse(callback, 'success')
+    api.httpConnectorResponse(callback, BotStatus.success)
   } catch (err) {
-    api.httpConnectorResponse(callback, 'fail')
+    api.httpConnectorResponse(callback, BotStatus.fail)
   }
 }

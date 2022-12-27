@@ -1,7 +1,7 @@
 'use strict'
 
 import Axios from 'axios'
-import { Api } from 'src/utils/api'
+import { Api, BotStatus } from 'src/utils/api'
 import { Http } from 'src/utils/http'
 import { Oauth2 } from 'src/utils/oauth2'
 import { Connection } from 'src/controllers/connection'
@@ -55,8 +55,8 @@ exports.handler = async (event, context, callback) => {
 
     const data = http.getOutputData(response.data, outputPath)
 
-    api.httpOperationResponse(callback, 'success', undefined, data)
+    api.httpOperationResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {
-    api.httpOperationResponse(callback, 'fail', err)
+    api.httpOperationResponse(callback, BotStatus.fail, err)
   }
 }

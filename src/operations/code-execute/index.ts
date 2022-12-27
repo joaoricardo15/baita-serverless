@@ -1,7 +1,7 @@
 'use strict'
 
 import vm from 'vm'
-import { Api } from 'src/utils/api'
+import { Api, BotStatus } from 'src/utils/api'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
@@ -24,8 +24,8 @@ exports.handler = async (event, context, callback) => {
 
     const { output: data } = codeInput
 
-    api.httpOperationResponse(callback, 'success', undefined, data)
+    api.httpOperationResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {
-    api.httpOperationResponse(callback, 'fail', err)
+    api.httpOperationResponse(callback, BotStatus.fail, err)
   }
 }

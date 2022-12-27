@@ -1,6 +1,6 @@
 'use strict'
 
-import { Api } from 'src/utils/api'
+import { Api, BotStatus } from 'src/utils/api'
 import { Bot } from 'src/controllers/bot'
 
 exports.handler = async (event, context, callback) => {
@@ -19,8 +19,8 @@ exports.handler = async (event, context, callback) => {
 
     const data = await bot.addSampleResult(userId, botId, taskIndex, sample)
 
-    api.httpResponse(callback, 'success', undefined, data)
+    api.httpResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {
-    api.httpResponse(callback, 'fail', err)
+    api.httpResponse(callback, BotStatus.fail, err)
   }
 }
