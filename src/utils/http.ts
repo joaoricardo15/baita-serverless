@@ -1,7 +1,7 @@
 'use strict'
 
 export class Http {
-  getOutputData(data: any, path: string) {
+  getDataFromPath(data: any, path: string) {
     if (!path) return data
 
     const paths = path.split('.')
@@ -17,10 +17,10 @@ export class Http {
     }
   }
 
-  getUrlFromParameters(baseUrl: string, config, inputData) {
+  getUrlFromInputs(config, connection, inputData) {
     const { path, urlParams, queryParams, auth } = config
 
-    let url = baseUrl
+    let url = connection.config.apiUrl
 
     url += path
 
@@ -32,8 +32,10 @@ export class Http {
             ? urlParams[i].value
             : urlParams[i].config
             ? config[urlParams[i].config]
-            : urlParams[i].serviceAuth
-            ? auth[urlParams[i].serviceAuth]
+            : urlParams[i].connection
+            ? connection[urlParams[i].connection]
+            : urlParams[i].auth
+            ? auth[urlParams[i].auth]
             : urlParams[i].inputField
             ? inputData[urlParams[i].inputField]
             : ''
@@ -55,8 +57,10 @@ export class Http {
             ? queryParams[i].value
             : queryParams[i].config
             ? config[queryParams[i].config]
-            : queryParams[i].serviceAuth
-            ? auth[queryParams[i].serviceAuth]
+            : queryParams[i].connection
+            ? connection[queryParams[i].connection]
+            : queryParams[i].auth
+            ? auth[queryParams[i].auth]
             : queryParams[i].inputField
             ? inputData[queryParams[i].inputField]
             : ''
@@ -73,7 +77,7 @@ export class Http {
     return url
   }
 
-  getDataFromParameters(config, inputData) {
+  getDataFromInputs(config, connection, inputData) {
     const { auth, bodyParams } = config
 
     const data = {}
@@ -84,8 +88,10 @@ export class Http {
             ? bodyParams[i].value
             : bodyParams[i].config
             ? config[bodyParams[i].config]
-            : bodyParams[i].serviceAuth
-            ? auth[bodyParams[i].serviceAuth]
+            : bodyParams[i].connection
+            ? connection[bodyParams[i].connection]
+            : bodyParams[i].auth
+            ? auth[bodyParams[i].auth]
             : bodyParams[i].inputField
             ? inputData[bodyParams[i].inputField]
             : ''

@@ -9,23 +9,16 @@ exports.handler = async (event, context, callback) => {
   const http = new Http()
 
   try {
-    const {
-      config,
-      inputData,
-      outputPath,
-      connection: {
-        config: { apiUrl },
-      },
-    } = event
+    const { config, connection, inputData, outputPath } = event
 
     const response = await Axios({
       method: config.method,
       headers: config.headers,
-      url: http.getUrlFromParameters(apiUrl, config, inputData),
-      data: http.getDataFromParameters(config, inputData),
+      url: http.getUrlFromInputs(config, connection, inputData),
+      data: http.getDataFromInputs(config, connection, inputData),
     })
 
-    const data = http.getOutputData(response.data, outputPath)
+    const data = http.getDataFromPath(response.data, outputPath)
 
     api.httpOperationResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {

@@ -13,19 +13,15 @@ exports.handler = async (event, context, callback) => {
   const connectionClient = new Connection()
 
   try {
+    const { config, connection, inputData, outputPath } = event
+
     const {
-      config,
-      inputData,
-      outputPath,
-      connection: {
-        userId,
-        connectionId,
-        config: {
-          apiUrl,
-          auth: { url, method, type, fields, headers },
-        },
+      userId,
+      connectionId,
+      config: {
+        auth: { url, type, method, headers, fields },
       },
-    } = event
+    } = connection
 
     // Get credentials from connection database
     const {
@@ -50,11 +46,11 @@ exports.handler = async (event, context, callback) => {
         ...config.headers,
         Authorization: `Bearer ${access_token}`,
       },
-      url: http.getUrlFromParameters(apiUrl, config, inputData),
-      data: http.getDataFromParameters(config, inputData),
+      url: http.getUrlFromInputs(config, connection, inputData),
+      data: http.getDataFromInputs(config, connection, inputData),
     })
 
-    const data = http.getOutputData(response.data, outputPath)
+    const data = http.getDataFromPath(response.data, outputPath)
 
     api.httpOperationResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {

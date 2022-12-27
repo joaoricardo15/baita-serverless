@@ -6,6 +6,7 @@ export class Oauth2 {
   getDataFromParameters(type: string, headers, authFields, refreshToken) {
     let data
     if (
+      headers &&
       headers['Content-type'] &&
       headers['Content-type'] === 'application/x-www-form-urlencoded'
     ) {
