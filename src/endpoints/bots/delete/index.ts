@@ -10,7 +10,7 @@ exports.handler = async (event, context, callback) => {
   try {
     const { userId, botId, apiId } = event.pathParameters
 
-    const data = await bot.deleteBot(userId, botId, apiId)
+    const data = await bot.deleteBot(decodeURI(userId), botId, apiId)
 
     api.httpResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {

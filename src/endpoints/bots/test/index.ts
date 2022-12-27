@@ -14,7 +14,7 @@ exports.handler = async (event, context, callback) => {
 
     const { taskIndex } = body
 
-    const data = await bot.testBot(userId, botId, taskIndex)
+    const data = await bot.testBot(decodeURI(userId), botId, taskIndex)
 
     api.httpResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {

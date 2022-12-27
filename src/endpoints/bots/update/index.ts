@@ -14,7 +14,13 @@ exports.handler = async (event, context, callback) => {
 
     const { name, active, tasks } = body
 
-    const data = await bot.updateBot(userId, botId, name, active, tasks)
+    const data = await bot.updateBot(
+      decodeURI(userId),
+      botId,
+      name,
+      active,
+      tasks
+    )
 
     api.httpResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {

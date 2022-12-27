@@ -55,8 +55,8 @@ export class Pipedrive {
           Authorization: `Bearer ${accessToken}`,
         },
       })
-
-      if (tokenResult.status !== 200) throw tokenResult.data
+      if (tokenResult.status !== 200 || !tokenResult.data.success)
+        throw tokenResult.data
 
       const { id, email } = tokenResult.data.data
 

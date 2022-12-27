@@ -10,7 +10,7 @@ exports.handler = async (event, context, callback) => {
   try {
     const { userId } = event.pathParameters
 
-    const data = await bot.createBot(userId)
+    const data = await bot.createBot(decodeURI(userId))
 
     api.httpResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {

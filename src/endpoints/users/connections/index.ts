@@ -10,7 +10,7 @@ exports.handler = async (event, context, callback) => {
   try {
     const { userId } = event.pathParameters
 
-    const data = await connection.getUserConnections(userId)
+    const data = await connection.getUserConnections(decodeURI(userId))
 
     api.httpResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {
