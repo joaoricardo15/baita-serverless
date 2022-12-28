@@ -78,13 +78,13 @@ export class Code {
 
       if (!isActive && inputField.sampleValue) {
         inputString += `'${name}': \`${inputField.sampleValue}\`,`
-      } else if (inputField.value) {
-        inputString += `'${name}': \`${inputField.value}\`,`
       } else if (
         inputField.outputName &&
         inputField.outputIndex !== undefined
       ) {
         inputString += `'${name}': task${inputField.outputIndex}_outputData['${inputField.outputName}'],`
+      } else if (inputField.value) {
+        inputString += `'${name}': \`${inputField.value}\`,`
       }
     }
 
@@ -99,13 +99,13 @@ export class Code {
 
       if (!isActive && inputField.sampleValue) {
         inputString += `'${inputField.name}': \`${inputField.sampleValue}\`,`
-      } else if (inputField.value) {
-        inputString += `'${inputField.name}': \`${inputField.value}\`,`
       } else if (
         inputField.outputName &&
         inputField.outputIndex !== undefined
       ) {
         inputString += `'${inputField.name}': task${inputField.outputIndex}_outputData['${inputField.outputName}'],`
+      } else if (inputField.value) {
+        inputString += `'${inputField.name}': \`${inputField.value}\`,`
       }
     }
 
@@ -125,10 +125,13 @@ export class Code {
           let conditionValue = ''
           if (!isActive) {
             conditionValue = `\`${andCondition.sampleValue}\``
+          } else if (
+            andCondition.outputName &&
+            andCondition.outputIndex !== undefined
+          ) {
+            conditionValue = `task${andCondition.outputIndex}_outputData['${andCondition.outputName}']`
           } else if (andCondition.value) {
             conditionValue = `\`${andCondition.value}\``
-          } else {
-            conditionValue = `task${andCondition.outputIndex}_outputData['${andCondition.outputName}']`
           }
 
           const conditionExpression = comparationExpressions[andCondition.type]

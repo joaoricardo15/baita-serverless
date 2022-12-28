@@ -18,7 +18,7 @@ export enum ConditionType {
 export interface ITaskResult {
   status: TaskStatus
   timestamp: number
-  inputData?: DataType
+  inputData: DataType
   outputData: DataType
 }
 
