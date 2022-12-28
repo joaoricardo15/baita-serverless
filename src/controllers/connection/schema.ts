@@ -2,36 +2,29 @@
 
 import Ajv, { JSONSchemaType } from 'ajv'
 import addFormats from 'ajv-formats'
+import { IAppConnection } from 'src/models/connection'
 
 const ajv = new Ajv()
 addFormats(ajv)
 
-export interface ICredential {
-  refresh_token?: string
-  access_token?: string
-}
-
-export interface IConnection {
-  userId: string
-  connectionId: string
-  appId: string
-  credentials: ICredential
-  name: string
-  email?: string
-  userName?: string
-}
-
-export const connectionSchema: JSONSchemaType<IConnection> = {
+export const connectionSchema: JSONSchemaType<IAppConnection> = {
   type: 'object',
   properties: {
+    appId: {
+      type: 'string',
+    },
     userId: {
       type: 'string',
     },
     connectionId: {
       type: 'string',
     },
-    appId: {
+    name: {
       type: 'string',
+    },
+    email: {
+      type: 'string',
+      format: 'email',
     },
     credentials: {
       type: 'object',
@@ -47,23 +40,11 @@ export const connectionSchema: JSONSchemaType<IConnection> = {
       },
       required: [],
     },
-    name: {
-      type: 'string',
-    },
-    email: {
-      type: 'string',
-      format: 'email',
-      nullable: true,
-    },
-    userName: {
-      type: 'string',
-      nullable: true,
-    },
   },
-  required: ['userId', 'connectionId', 'appId', 'credentials', 'name'],
+  required: ['appId', 'userId', 'connectionId', 'name', 'credentials'],
 }
 
-export function validateConnection(connection: IConnection): void {
+export function validateConnection(connection: IAppConnection): void {
   const validate = ajv.compile(connectionSchema)
 
   if (!validate(connection)) throw ajv.errorsText(validate.errors)

@@ -1,7 +1,8 @@
 'use strict'
 
 import AWS from 'aws-sdk'
-import { IConnection, validateConnection } from './interface'
+import { IAppConnection } from 'src/models/connection'
+import { validateConnection } from './schema'
 
 const USERS_TABLE = process.env.USERS_TABLE || ''
 
@@ -17,7 +18,7 @@ export class Connection {
         })
         .promise()
 
-      return result.Item as IConnection
+      return result.Item as IAppConnection
     } catch (err) {
       throw err.message
     }
@@ -39,13 +40,13 @@ export class Connection {
         })
         .promise()
 
-      return result.Items as Array<IConnection>
+      return result.Items as Array<IAppConnection>
     } catch (err) {
       throw err.message
     }
   }
 
-  async createConnection(connection: IConnection) {
+  async createConnection(connection: IAppConnection) {
     const ddb = new AWS.DynamoDB.DocumentClient()
 
     validateConnection(connection)

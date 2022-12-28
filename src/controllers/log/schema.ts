@@ -2,31 +2,12 @@
 
 import Ajv, { JSONSchemaType } from 'ajv'
 import addFormats from 'ajv-formats'
+import { IBotLog } from 'src/models/log'
 
 const ajv = new Ajv()
 addFormats(ajv)
 
-export interface ITaskLog {
-  name: string
-  status: string
-  timestamp: number
-  outputData?: any
-}
-
-export interface ILog {
-  userId: string
-  botId: string
-  error?: any
-  timestamp: number
-  usage: number
-  logs: Array<ITaskLog>
-}
-
-export interface ILogUsage {
-  total: number
-}
-
-export const logSchema: JSONSchemaType<ILog> = {
+export const logSchema: JSONSchemaType<IBotLog> = {
   type: 'object',
   properties: {
     botId: {
@@ -34,10 +15,6 @@ export const logSchema: JSONSchemaType<ILog> = {
     },
     userId: {
       type: 'string',
-    },
-    error: {
-      type: 'null',
-      nullable: true,
     },
     timestamp: {
       type: 'number',
@@ -59,6 +36,10 @@ export const logSchema: JSONSchemaType<ILog> = {
           timestamp: {
             type: 'number',
           },
+          inputData: {
+            type: 'null',
+            nullable: true,
+          },
           outputData: {
             type: 'null',
             nullable: true,
@@ -71,8 +52,8 @@ export const logSchema: JSONSchemaType<ILog> = {
   required: ['botId', 'userId', 'timestamp', 'usage', 'logs'],
 }
 
-export function validateLog(connection: ILog): void {
+export function validateLog(log: IBotLog): void {
   const validate = ajv.compile(logSchema)
 
-  if (!validate(connection)) throw ajv.errorsText(validate.errors)
+  if (!validate(log)) throw ajv.errorsText(validate.errors)
 }

@@ -2,7 +2,7 @@
 
 import { Api, BotStatus } from 'src/utils/api'
 import { User } from 'src/controllers/user'
-import { IUser } from 'src/controllers/user/interface'
+import { IUser } from 'src/models/user'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)

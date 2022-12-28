@@ -1,5 +1,7 @@
 'use strict'
 
+import { InputSource } from 'src/models/service'
+
 export class Http {
   getDataFromPath(data: any, path: string) {
     if (!path) return data
@@ -24,23 +26,25 @@ export class Http {
 
     url += path
 
-    if (urlParams && urlParams.length) {
+    if (urlParams) {
       url += '/'
       for (let i = 0; i < urlParams.length; i++) {
-        const source =
-          urlParams[i].value !== undefined
-            ? urlParams[i].value
-            : urlParams[i].config
-            ? config[urlParams[i].config]
-            : urlParams[i].connection
-            ? connection[urlParams[i].connection]
-            : urlParams[i].auth
-            ? auth[urlParams[i].auth]
-            : urlParams[i].inputField
-            ? inputData[urlParams[i].inputField]
+        const { source, fieldName, value } = urlParams[i]
+
+        const fieldValue =
+          source === InputSource.value
+            ? value
+            : source === InputSource.auth
+            ? auth[fieldName]
+            : source === InputSource.service
+            ? config[fieldName]
+            : source === InputSource.connection
+            ? connection[fieldName]
+            : source === InputSource.input
+            ? inputData[fieldName]
             : ''
 
-        const encodedSource = encodeURIComponent(source).replace(
+        const encodedSource = encodeURIComponent(fieldValue).replace(
           /[!'()*]/g,
           (c) => '%' + c.charCodeAt(0).toString(16)
         )
@@ -49,28 +53,30 @@ export class Http {
       }
     }
 
-    if (queryParams && queryParams.length) {
+    if (queryParams) {
       url += '?'
       for (let i = 0; i < queryParams.length; i++) {
-        const source =
-          queryParams[i].value !== undefined
-            ? queryParams[i].value
-            : queryParams[i].config
-            ? config[queryParams[i].config]
-            : queryParams[i].connection
-            ? connection[queryParams[i].connection]
-            : queryParams[i].auth
-            ? auth[queryParams[i].auth]
-            : queryParams[i].inputField
-            ? inputData[queryParams[i].inputField]
+        const { paramName, source, fieldName, value } = queryParams[i]
+
+        const fieldValue =
+          source === InputSource.value
+            ? value
+            : source === InputSource.auth
+            ? auth[fieldName]
+            : source === InputSource.service
+            ? config[fieldName]
+            : source === InputSource.connection
+            ? connection[fieldName]
+            : source === InputSource.input
+            ? inputData[fieldName]
             : ''
 
-        const encodedSource = encodeURIComponent(source).replace(
+        const encodedSource = encodeURIComponent(fieldValue).replace(
           /[!'()*]/g,
           (c) => '%' + c.charCodeAt(0).toString(16)
         )
 
-        url += `${queryParams[i].name}=${encodedSource}&`
+        url += `${paramName}=${encodedSource}&`
       }
     }
 
@@ -81,22 +87,24 @@ export class Http {
     const { auth, bodyParams } = config
 
     const data = {}
-    if (bodyParams && bodyParams.length) {
+    if (bodyParams) {
       for (let i = 0; i < bodyParams.length; i++) {
-        const source =
-          bodyParams[i].value !== undefined
-            ? bodyParams[i].value
-            : bodyParams[i].config
-            ? config[bodyParams[i].config]
-            : bodyParams[i].connection
-            ? connection[bodyParams[i].connection]
-            : bodyParams[i].auth
-            ? auth[bodyParams[i].auth]
-            : bodyParams[i].inputField
-            ? inputData[bodyParams[i].inputField]
+        const { paramName, source, fieldName, value } = bodyParams[i]
+
+        const fieldValue =
+          source === InputSource.value
+            ? value
+            : source === InputSource.auth
+            ? auth[fieldName]
+            : source === InputSource.service
+            ? config[fieldName]
+            : source === InputSource.connection
+            ? connection[fieldName]
+            : source === InputSource.input
+            ? inputData[fieldName]
             : ''
 
-        data[bodyParams[i].name] = source
+        data[paramName] = fieldValue
       }
     }
 

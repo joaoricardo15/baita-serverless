@@ -1,7 +1,8 @@
 'use strict'
 
 import AWS from 'aws-sdk'
-import { ILog, ILogUsage, validateLog } from './interface'
+import { IBotLog, IBotUsage } from 'src/models/log'
+import { validateLog } from './schema'
 
 const LOGS_TABLE = process.env.LOGS_TABLE || ''
 
@@ -22,7 +23,7 @@ export class Log {
         })
         .promise()
 
-      return result.Items as Array<ILog>
+      return result.Items as IBotLog[]
     } catch (err) {
       throw err.message
     }
@@ -62,13 +63,13 @@ export class Log {
 
       await queryBotUsage(queryParams)
 
-      return { total } as ILogUsage
+      return { total } as IBotUsage
     } catch (err) {
       throw err.message
     }
   }
 
-  async createLog(log: ILog) {
+  async createLog(log: IBotLog) {
     const ddb = new AWS.DynamoDB.DocumentClient()
 
     validateLog(log)

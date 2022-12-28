@@ -1,7 +1,8 @@
 'use strict'
 
 import AWS from 'aws-sdk'
-import { IUser, validateUser } from './interface'
+import { IUser } from 'src/models/user'
+import { validateUser } from './schema'
 
 const USERS_TABLE = process.env.USERS_TABLE || ''
 

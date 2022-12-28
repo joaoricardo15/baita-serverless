@@ -2,15 +2,10 @@
 
 import Ajv, { JSONSchemaType } from 'ajv'
 import addFormats from 'ajv-formats'
+import { IUser } from 'src/models/user'
 
 const ajv = new Ajv()
 addFormats(ajv)
-
-export interface IUser {
-  userId: string
-  name: string
-  email: string
-}
 
 export const userSchema: JSONSchemaType<IUser> = {
   type: 'object',
