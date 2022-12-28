@@ -100,11 +100,11 @@ export const variableSchema: JSONSchemaType<IVariable> = {
       type: 'string',
     },
     value: {
-      type: 'null',
+      type: 'object' || 'array' || 'string' || 'number' || 'boolean',
       nullable: true,
     },
     sampleValue: {
-      type: 'null',
+      type: 'object' || 'array' || 'string' || 'number' || 'boolean',
       nullable: true,
     },
     outputIndex: {
@@ -161,7 +161,7 @@ export const conditionSchema: JSONSchemaType<ITaskCondition> = {
       type: 'string',
     },
     value: {
-      type: 'null',
+      type: 'object' || 'array' || 'string' || 'number' || 'boolean',
       nullable: true,
     },
     outputName: {
@@ -312,11 +312,11 @@ export const taskResultSchema: JSONSchemaType<ITaskResult> = {
       type: 'number',
     },
     inputData: {
-      type: 'null',
+      type: 'object' || 'array' || 'string' || 'number' || 'boolean',
       nullable: true,
     },
     outputData: {
-      type: 'null',
+      type: 'object' || 'array' || 'string' || 'number' || 'boolean',
       nullable: true,
     },
   },
