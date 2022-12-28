@@ -14,7 +14,7 @@ import {
   ConditionType,
   IBot,
   ITask,
-  ITaskCondition,
+  ICondition,
   ITaskResult,
   TaskStatus,
 } from 'src/models/bot'
@@ -147,7 +147,7 @@ export const variableSchema: JSONSchemaType<IVariable> = {
   required: ['type', 'name', 'label'],
 }
 
-export const conditionSchema: JSONSchemaType<ITaskCondition> = {
+export const conditionSchema: JSONSchemaType<ICondition> = {
   type: 'object',
   properties: {
     type: {

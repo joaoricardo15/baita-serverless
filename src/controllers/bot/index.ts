@@ -1,6 +1,7 @@
 'use strict'
 
 import AWS from 'aws-sdk'
+import { ITask, ITaskResult } from 'src/models/bot'
 import { v4 as uuidv4 } from 'uuid'
 import { Code } from '../../utils/code'
 
@@ -164,7 +165,7 @@ export class Bot {
     botId: string,
     name: string,
     active: boolean,
-    tasks: object
+    tasks: ITask[]
   ) {
     const ddb = new AWS.DynamoDB.DocumentClient()
 
@@ -198,7 +199,7 @@ export class Bot {
     botId: string,
     name: string,
     active: boolean,
-    tasks: object
+    tasks: ITask[]
   ) {
     const ddb = new AWS.DynamoDB.DocumentClient()
     const lambda = new AWS.Lambda()
@@ -321,7 +322,7 @@ export class Bot {
     userId: string,
     botId: string,
     taskIndex: number,
-    sample: object
+    sample: ITaskResult
   ) {
     const ddb = new AWS.DynamoDB.DocumentClient()
 

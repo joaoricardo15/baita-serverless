@@ -13,15 +13,18 @@ exports.handler = async (event, context, callback) => {
   const connectionClient = new Connection()
 
   try {
-    const { config, connection, inputData, outputPath } = event
-
     const {
       userId,
       connectionId,
-      config: {
-        auth: { url, type, method, headers, fields },
-      },
-    } = connection
+      appConfig,
+      serviceConfig,
+      inputData,
+      outputPath,
+    } = event
+
+    const {
+      auth: { url, type, method, headers, fields },
+    } = appConfig
 
     // Get credentials from connection database
     const {
@@ -41,13 +44,13 @@ exports.handler = async (event, context, callback) => {
 
     // Http request
     const response = await Axios({
-      method: config.method,
+      method: serviceConfig.method,
       headers: {
-        ...config.headers,
+        ...serviceConfig.headers,
         Authorization: `Bearer ${access_token}`,
       },
-      url: http.getUrlFromInputs(config, connection, inputData),
-      data: http.getDataFromInputs(config, connection, inputData),
+      url: http.getUrlFromInputs(appConfig, serviceConfig, inputData),
+      data: http.getDataFromInputs(appConfig, serviceConfig, inputData),
     })
 
     const data = http.getDataFromPath(response.data, outputPath)

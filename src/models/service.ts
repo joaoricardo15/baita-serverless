@@ -17,7 +17,6 @@ export enum InputSource {
   input = 'inputFields',
   value = 'valueFields',
   service = 'serviceFields',
-  connection = 'connectionFields',
 }
 
 export enum VariableType {

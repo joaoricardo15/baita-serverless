@@ -9,13 +9,13 @@ exports.handler = async (event, context, callback) => {
   const http = new Http()
 
   try {
-    const { config, connection, inputData, outputPath } = event
+    const { appConfig, serviceConfig, inputData, outputPath } = event
 
     const response = await Axios({
-      method: config.method,
-      headers: config.headers,
-      url: http.getUrlFromInputs(config, connection, inputData),
-      data: http.getDataFromInputs(config, connection, inputData),
+      method: serviceConfig.method,
+      headers: serviceConfig.headers,
+      url: http.getUrlFromInputs(appConfig, serviceConfig, inputData),
+      data: http.getDataFromInputs(appConfig, serviceConfig, inputData),
     })
 
     const data = http.getDataFromPath(response.data, outputPath)

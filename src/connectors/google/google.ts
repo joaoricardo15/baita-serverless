@@ -9,7 +9,7 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || ''
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || ''
 
 export class Google {
-  async getCredentials(code: string): Promise<{ access_token: string; any }> {
+  async getCredentials(code: string): Promise<{ access_token: string }> {
     try {
       const headers = {
         'Content-Type': 'application/x-www-form-urlencoded',

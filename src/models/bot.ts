@@ -22,7 +22,7 @@ export interface ITaskResult {
   outputData: any
 }
 
-export interface ITaskCondition {
+export interface ICondition {
   type: ConditionType
   name: string
   label: string
@@ -30,6 +30,12 @@ export interface ITaskCondition {
   outputName?: string
   sampleValue?: string
   outputIndex?: number
+}
+
+export interface ITaskCondition {
+  conditionId: number
+  andConditions?: ICondition[]
+  orConditions?: ICondition[]
 }
 
 export interface ITask {
@@ -40,11 +46,7 @@ export interface ITask {
   inputData: IVariable[]
   sampleResult?: ITaskResult
   returnData?: boolean
-  conditions?: {
-    conditionId: number
-    andConditions?: ITaskCondition[]
-    orConditions?: ITaskCondition[]
-  }[]
+  conditions?: ITaskCondition[]
 }
 
 export interface IBot {

@@ -14,9 +14,9 @@ exports.handler = async (event, context, callback) => {
       userId,
       botId,
       error,
-      timestamp: Date.now(),
       usage,
       logs,
+      timestamp: Date.now(),
     }
 
     const data = await log.createLog(logSet)

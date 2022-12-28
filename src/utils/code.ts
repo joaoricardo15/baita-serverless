@@ -1,6 +1,8 @@
 'use strict'
 
 import JSZip from 'jszip'
+import { ConditionType, ITaskCondition } from 'src/models/bot'
+import { IVariable, InputSource } from 'src/models/service'
 
 const zip = new JSZip()
 
@@ -60,109 +62,137 @@ export class Code {
     `
   }
 
-  getBotCode(userId: string, botId: string, active: boolean, tasks) {
-    if (
-      !tasks ||
-      !tasks.length ||
-      tasks.length < 2 ||
-      tasks[0].type !== 'trigger'
-    )
-      throw 'invalid bot config'
+  getInputStringFromService(
+    isActive: boolean,
+    inputFields: IVariable[],
+    inputData: any
+  ) {
+    let inputString = ''
 
+    for (let j = 0; j < inputFields.length; j++) {
+      const name = inputFields[j].name
+
+      const inputField = inputData.find((x) => x.name === name)
+
+      if (!inputField) throw 'invalid bot config'
+
+      if (!isActive && inputField.sampleValue) {
+        inputString += `'${name}': \`${inputField.sampleValue}\`,`
+      } else if (inputField.value) {
+        inputString += `'${name}': \`${inputField.value}\`,`
+      } else if (
+        inputField.outputName &&
+        inputField.outputIndex !== undefined
+      ) {
+        inputString += `'${name}': task${inputField.outputIndex}_outputData['${inputField.outputName}'],`
+      }
+    }
+
+    return inputString
+  }
+
+  getInputStringFromInput(isActive: boolean, inputData: any) {
+    let inputString = ''
+
+    for (let j = 0; j < inputData.length; j++) {
+      const inputField = inputData[j]
+
+      if (!isActive && inputField.sampleValue) {
+        inputString += `'${inputField.name}': \`${inputField.sampleValue}\`,`
+      } else if (inputField.value) {
+        inputString += `'${inputField.name}': \`${inputField.value}\`,`
+      } else if (
+        inputField.outputName &&
+        inputField.outputIndex !== undefined
+      ) {
+        inputString += `'${inputField.name}': task${inputField.outputIndex}_outputData['${inputField.outputName}'],`
+      }
+    }
+
+    return inputString
+  }
+
+  getConditionsString(isActive: boolean, conditions: ITaskCondition[]) {
+    let andConditionsString = ''
+
+    for (let j = 0; j < conditions.length; j++) {
+      const andConditions = conditions[j].andConditions
+
+      if (andConditions) {
+        for (let k = 0; k < andConditions.length; k++) {
+          const andCondition = andConditions[k]
+
+          let conditionValue = ''
+          if (!isActive) {
+            conditionValue = `\`${andCondition.sampleValue}\``
+          } else if (andCondition.value) {
+            conditionValue = `\`${andCondition.value}\``
+          } else {
+            conditionValue = `task${andCondition.outputIndex}_outputData['${andCondition.outputName}']`
+          }
+
+          const conditionExpression = comparationExpressions[andCondition.type]
+
+          const comparationValue = andCondition.type
+
+          if (conditionValue && andCondition.type)
+            andConditionsString += `${k === 0 ? '' : ' && '}${
+              andCondition.type === ConditionType.donotexists
+                ? `!${conditionValue}`
+                : andCondition.type === ConditionType.exists
+                ? `${conditionValue}`
+                : `${conditionValue} ${conditionExpression} ${comparationValue}`
+            }`
+        }
+      }
+
+      if (andConditionsString) {
+        andConditionsString += `${
+          j === 0 ? '' : ' || '
+        }(${andConditionsString})`
+      }
+    }
+
+    return andConditionsString
+  }
+
+  getBotInnerCode(userId, active, tasks) {
     let innerCode = ''
 
     for (let i = 1; i < tasks.length; i++) {
-      const app = tasks[i].app
-      const service = tasks[i].service
+      const task = tasks[i]
+      const app = task.app
+      const service = task.service
+      const conditions = task.conditions
 
-      let inputFields = ''
-      if (service.config.inputSource === 'serviceFields')
-        for (let j = 0; j < service.config.inputFields.length; j++) {
-          const name = service.config.inputFields[j].name
-
-          const inputField = tasks[i].inputData.find((x) => x.name === name)
-
-          if (
-            !service.name ||
-            !service.config ||
-            !tasks[i].inputData ||
-            !inputField
+      let inputDataString = ''
+      if (service) {
+        if (
+          service.config.inputFields &&
+          service.config.inputSource === InputSource.service
+        ) {
+          inputDataString += this.getInputStringFromService(
+            active,
+            service.config.inputFields,
+            task.inputData
           )
-            throw 'invalid bot config'
-
-          if (
-            name &&
-            ((!active && inputField.sampleValue) ||
-              inputField.value ||
-              (inputField.outputIndex !== undefined && inputField.outputName))
+        } else if (service.config.inputSource === InputSource.input) {
+          inputDataString += this.getInputStringFromInput(
+            active,
+            task.inputData
           )
-            inputFields += `'${name}': ${
-              !active
-                ? `\`${inputField.sampleValue}\``
-                : inputField.value
-                ? `\`${inputField.value}\``
-                : `task${inputField.outputIndex}_outputData['${inputField.outputName}']`
-            },`
         }
-      else if (service.config.inputSource === 'inputFields')
-        for (let j = 0; j < tasks[i].inputData.length; j++) {
-          const inputField = tasks[i].inputData[j]
+      }
 
-          if (
-            inputField.name &&
-            ((!active && inputField.sampleValue) ||
-              inputField.value ||
-              (inputField.outputIndex !== undefined && inputField.outputName))
-          )
-            inputFields += `'${inputField.name}': ${
-              !active
-                ? `\`${inputField.sampleValue}\``
-                : inputField.value
-                ? `\`${inputField.value}\``
-                : `task${inputField.outputIndex}_outputData['${inputField.outputName}']`
-            },`
-        }
-
-      let conditions = ''
-      if (tasks[i].conditions)
-        for (let j = 0; j < tasks[i].conditions.length; j++) {
-          let andConditions = ''
-
-          for (
-            let k = 0;
-            k < tasks[i].conditions[j].andConditions.length;
-            k++
-          ) {
-            const andCondition = tasks[i].conditions[j].andConditions[k]
-
-            const conditionValue = !active
-              ? `\`${andCondition.sampleValue}\``
-              : andCondition.value
-              ? `\`${andCondition.value}\``
-              : `task${andCondition.outputIndex}_outputData['${andCondition.outputName}']`
-
-            const conditionExpression =
-              comparationExpressions[andCondition.type]
-
-            const comparationValue = andCondition.type
-
-            if (conditionValue && andCondition.type)
-              andConditions += `${k === 0 ? '' : ' && '}${
-                andCondition.type === 'donotexists'
-                  ? `!${conditionValue}`
-                  : andCondition.type === 'exists'
-                  ? `${conditionValue}`
-                  : `${conditionValue} ${conditionExpression} ${comparationValue}`
-              }`
-          }
-          if (andConditions)
-            conditions += `${j === 0 ? '' : ' || '}(${andConditions})`
-        }
+      let conditionsString = ''
+      if (conditions) {
+        conditionsString += this.getConditionsString(active, conditions)
+      }
 
       innerCode += `
-                const task${i}_name = '${tasks[i].service.name}';
+                const task${i}_name = '${service?.name}';
         
-                const task${i}_inputData = { ${inputFields} };
+                const task${i}_inputData = { ${inputDataString} };
         
                 let task${i}_outputData = {};
                 
@@ -172,26 +202,25 @@ export class Code {
                 };
         
                 if (${active ? true : `testTaskIndex === ${i}`} && ${
-        conditions || true
+        conditionsString || true
       }) {
-                
-                    const task${i}_connection = ${JSON.stringify({
-        userId,
-        connectionId: tasks[i].connectionId,
-        config: app.config,
-      })};
+                    const task${i}_appConfig = ${JSON.stringify(app?.config)};
             
-                    const task${i}_config = ${JSON.stringify(service.config)};
+                    const task${i}_serviceConfig = ${JSON.stringify(
+        service?.config
+      )};
                     
                     const task${i}_outputPath = ${
-        service.config.outputPath
+        service?.config.outputPath
           ? `'${service.config.outputPath}'`
           : 'undefined'
       };
                     
                     const task${i}_response = await lambda.invoke({
-                        FunctionName: '${SERVICE_PREFIX}-${service.name}',
-                        Payload: JSON.stringify({ connection: task${i}_connection, config: task${i}_config, inputData: task${i}_inputData, outputPath: task${i}_outputPath }),
+                        FunctionName: '${SERVICE_PREFIX}-${service?.name}',
+                        Payload: JSON.stringify({ userId: '${userId}', connectionId: '${
+        task.connectionId
+      }', appConfig: task${i}_appConfig, serviceConfig: task${i}_serviceConfig, inputData: task${i}_inputData, outputPath: task${i}_outputPath }),
                     }).promise();
                 
                     const task${i}_result = JSON.parse(task${i}_response.Payload);
@@ -215,7 +244,7 @@ export class Code {
             : ''
         }
         ${
-          active && tasks[i].returnData
+          active && task.returnData
             ? `
                     if (task${i}_success) outputData = task${i}_outputData;
         `
@@ -250,6 +279,12 @@ export class Code {
         `
         }`
     }
+
+    return innerCode
+  }
+
+  getBotCode(userId, botId, active, tasks) {
+    const innerCode = this.getBotInnerCode(userId, active, tasks)
 
     return `
         const AWS = require('aws-sdk');
@@ -293,7 +328,7 @@ export class Code {
         ${
           active
             ? `   
-                const task0_name = '${tasks[0].service.name}';
+                const task0_name = '${tasks[0].service?.name}';
         
                 const task0_timestamp = Date.now();
         

@@ -1,6 +1,7 @@
 'use strict'
 
-import { InputSource } from 'src/models/service'
+import { IAppConfig } from 'src/models/app'
+import { InputSource, ISerivceConfig } from 'src/models/service'
 
 export class Http {
   getDataFromPath(data: any, path: string) {
@@ -19,17 +20,21 @@ export class Http {
     }
   }
 
-  getUrlFromInputs(config, connection, inputData) {
-    const { path, urlParams, queryParams, auth } = config
+  getUrlFromInputs(
+    appConfig: IAppConfig,
+    serviceConfig: ISerivceConfig,
+    inputData: any
+  ) {
+    const { path, urlParams, queryParams } = serviceConfig
 
-    let url = connection.config.apiUrl
+    const { apiUrl, auth = {} } = appConfig
 
-    url += path
+    let url = `${apiUrl}${path}`
 
     if (urlParams) {
       url += '/'
       for (let i = 0; i < urlParams.length; i++) {
-        const { source, fieldName, value } = urlParams[i]
+        const { source, fieldName = '', value } = urlParams[i]
 
         const fieldValue =
           source === InputSource.value
@@ -37,9 +42,7 @@ export class Http {
             : source === InputSource.auth
             ? auth[fieldName]
             : source === InputSource.service
-            ? config[fieldName]
-            : source === InputSource.connection
-            ? connection[fieldName]
+            ? serviceConfig[fieldName]
             : source === InputSource.input
             ? inputData[fieldName]
             : ''
@@ -56,7 +59,7 @@ export class Http {
     if (queryParams) {
       url += '?'
       for (let i = 0; i < queryParams.length; i++) {
-        const { paramName, source, fieldName, value } = queryParams[i]
+        const { paramName, source, fieldName = '', value } = queryParams[i]
 
         const fieldValue =
           source === InputSource.value
@@ -64,9 +67,7 @@ export class Http {
             : source === InputSource.auth
             ? auth[fieldName]
             : source === InputSource.service
-            ? config[fieldName]
-            : source === InputSource.connection
-            ? connection[fieldName]
+            ? serviceConfig[fieldName]
             : source === InputSource.input
             ? inputData[fieldName]
             : ''
@@ -83,13 +84,19 @@ export class Http {
     return url
   }
 
-  getDataFromInputs(config, connection, inputData) {
-    const { auth, bodyParams } = config
+  getDataFromInputs(
+    appConfig: IAppConfig,
+    serviceConfig: ISerivceConfig,
+    inputData: any
+  ) {
+    const { bodyParams } = serviceConfig
+
+    const { auth = {} } = appConfig
 
     const data = {}
     if (bodyParams) {
       for (let i = 0; i < bodyParams.length; i++) {
-        const { paramName, source, fieldName, value } = bodyParams[i]
+        const { paramName, source, fieldName = '', value } = bodyParams[i]
 
         const fieldValue =
           source === InputSource.value
@@ -97,9 +104,7 @@ export class Http {
             : source === InputSource.auth
             ? auth[fieldName]
             : source === InputSource.service
-            ? config[fieldName]
-            : source === InputSource.connection
-            ? connection[fieldName]
+            ? serviceConfig[fieldName]
             : source === InputSource.input
             ? inputData[fieldName]
             : ''
