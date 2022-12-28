@@ -1,5 +1,7 @@
 'use strict'
 
+import { DataType } from 'aws-sdk/clients/frauddetector'
+
 export enum BotStatus {
   fail = 'fail',
   timeout = 'timeout',
@@ -14,7 +16,7 @@ export class Api {
     inputData: any
     status?: BotStatus
     message?: string
-    data?: string | number | boolean | object | null
+    data?: DataType
   }
 
   constructor(inputData, functionContext) {

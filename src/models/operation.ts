@@ -1,5 +1,5 @@
 import { IAppConfig } from './app'
-import { ISerivceConfig } from './service'
+import { DataType, ISerivceConfig } from './service'
 
 export interface IOperationInput {
   userId: string
@@ -7,5 +7,5 @@ export interface IOperationInput {
   appConfig: IAppConfig
   serviceConfig: ISerivceConfig
   outputPath?: string
-  inputData: string | number | boolean | object | null
+  inputData: DataType
 }

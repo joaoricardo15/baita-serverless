@@ -24,12 +24,14 @@ export enum VariableType {
   options = 'options',
 }
 
+export type DataType = string | number | boolean | object | null
+
 export interface IVariable {
   type: VariableType
   name: string
   label: string
-  value: string | number | boolean | object | null
-  sampleValue: string | number | boolean | object | null
+  value: DataType
+  sampleValue: DataType
   outputIndex?: number
   outputName?: string
   customFieldId?: number

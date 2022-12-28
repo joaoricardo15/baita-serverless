@@ -1,11 +1,12 @@
 import { TaskStatus } from './bot'
+import { DataType } from './service'
 
 export interface ILog {
   name: string
   status: TaskStatus
   timestamp: number
-  inputData: string | number | boolean | object | null
-  outputData: string | number | boolean | object | null
+  inputData: DataType
+  outputData: DataType
 }
 
 export interface IBotLog {

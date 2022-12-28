@@ -1,5 +1,5 @@
 import { IApp } from './app'
-import { IService, IVariable } from './service'
+import { DataType, IService, IVariable } from './service'
 
 export enum TaskStatus {
   fail = 'fail',
@@ -18,15 +18,15 @@ export enum ConditionType {
 export interface ITaskResult {
   status: TaskStatus
   timestamp: number
-  inputData: string | number | boolean | object | null
-  outputData: string | number | boolean | object | null
+  inputData?: DataType
+  outputData: DataType
 }
 
 export interface ICondition {
   type: ConditionType
   name: string
   label: string
-  value: string | number | boolean | object | null
+  value: DataType
   outputName?: string
   sampleValue?: string
   outputIndex?: number
