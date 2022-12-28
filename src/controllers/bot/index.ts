@@ -1,9 +1,10 @@
 'use strict'
 
 import AWS from 'aws-sdk'
-import { ITask, ITaskResult } from 'src/models/bot'
+import { IBot, ITask, ITaskResult } from 'src/models/bot'
 import { v4 as uuidv4 } from 'uuid'
 import { Code } from '../../utils/code'
+import { validateTasks } from './schema'
 
 const USERS_TABLE = process.env.USERS_TABLE || ''
 const BOTS_BUCKET = process.env.BOTS_BUCKET || ''
@@ -101,17 +102,18 @@ export class Bot {
         })
         .promise()
 
-      const bot = {
+      const bot: IBot = {
         botId,
         userId,
-        apiId: apiResult.ApiId,
-        triggerUrl: `${apiResult.ApiEndpoint}${botUrl}`,
+        apiId: apiResult.ApiId || '',
         name: '',
+        triggerUrl: `${apiResult.ApiEndpoint}${botUrl}`,
         active: false,
+        triggerSamples: [],
         tasks: [
           {
-            id: Date.now(),
-            type: 'trigger',
+            taskId: Date.now(),
+            inputData: [],
           },
         ],
       }
@@ -169,6 +171,8 @@ export class Bot {
   ) {
     const ddb = new AWS.DynamoDB.DocumentClient()
 
+    validateTasks(tasks)
+
     try {
       const result = await ddb
         .update({
@@ -205,6 +209,8 @@ export class Bot {
     const lambda = new AWS.Lambda()
     const s3 = new AWS.S3()
     const code = new Code()
+
+    validateTasks(tasks)
 
     try {
       const botCode = code.getBotCode(userId, botId, active, tasks)

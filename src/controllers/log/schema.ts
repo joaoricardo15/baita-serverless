@@ -20,12 +20,20 @@ export const logSchema: JSONSchemaType<ILog> = {
       type: 'number',
     },
     inputData: {
-      type: 'object' || 'array' || 'string' || 'number' || 'boolean',
-      nullable: true,
+      anyOf: [
+        { type: 'string' },
+        { type: 'number' },
+        { type: 'boolean' },
+        { type: 'object' },
+      ],
     },
     outputData: {
-      type: 'object' || 'array' || 'string' || 'number' || 'boolean',
-      nullable: true,
+      anyOf: [
+        { type: 'string' },
+        { type: 'number' },
+        { type: 'boolean' },
+        { type: 'object' },
+      ],
     },
   },
   required: ['name', 'status', 'timestamp'],
@@ -54,7 +62,7 @@ export const botLogSchema: JSONSchemaType<IBotLog> = {
   required: ['botId', 'userId', 'timestamp', 'usage', 'logs'],
 }
 
-export function validateLog(log: IBotLog): void {
+export const validateLog = (log: IBotLog) => {
   const validate = ajv.compile(botLogSchema)
 
   if (!validate(log)) throw ajv.errorsText(validate.errors)

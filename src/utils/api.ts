@@ -14,7 +14,7 @@ export class Api {
     inputData: any
     status?: BotStatus
     message?: string
-    data?: any
+    data?: string | number | boolean | object | null
   }
 
   constructor(inputData, functionContext) {

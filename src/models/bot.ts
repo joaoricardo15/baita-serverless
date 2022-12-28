@@ -18,15 +18,15 @@ export enum ConditionType {
 export interface ITaskResult {
   status: TaskStatus
   timestamp: number
-  inputData: any
-  outputData: any
+  inputData: string | number | boolean | object | null
+  outputData: string | number | boolean | object | null
 }
 
 export interface ICondition {
   type: ConditionType
   name: string
   label: string
-  value?: any
+  value: string | number | boolean | object | null
   outputName?: string
   sampleValue?: string
   outputIndex?: number
@@ -42,7 +42,7 @@ export interface ITask {
   app?: IApp
   service?: IService
   connectionId?: string
-  taskId: string
+  taskId: number
   inputData: IVariable[]
   sampleResult?: ITaskResult
   returnData?: boolean

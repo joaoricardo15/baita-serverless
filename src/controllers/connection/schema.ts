@@ -44,7 +44,7 @@ export const connectionSchema: JSONSchemaType<IAppConnection> = {
   required: ['appId', 'userId', 'connectionId', 'name', 'credentials'],
 }
 
-export function validateConnection(connection: IAppConnection): void {
+export const validateConnection = (connection: IAppConnection) => {
   const validate = ajv.compile(connectionSchema)
 
   if (!validate(connection)) throw ajv.errorsText(validate.errors)

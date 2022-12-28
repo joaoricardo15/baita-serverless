@@ -1,7 +1,7 @@
 'use strict'
 
 import JSZip from 'jszip'
-import { ConditionType, ITaskCondition } from 'src/models/bot'
+import { ConditionType, ITask, ITaskCondition } from 'src/models/bot'
 import { IVariable, InputSource } from 'src/models/service'
 
 const zip = new JSZip()
@@ -156,7 +156,7 @@ export class Code {
     return andConditionsString
   }
 
-  getBotInnerCode(userId, active, tasks) {
+  getBotInnerCode(userId: string, active: boolean, tasks: ITask[]) {
     let innerCode = ''
 
     for (let i = 1; i < tasks.length; i++) {
@@ -283,7 +283,7 @@ export class Code {
     return innerCode
   }
 
-  getBotCode(userId, botId, active, tasks) {
+  getBotCode(userId: string, botId: string, active: boolean, tasks: ITask[]) {
     const innerCode = this.getBotInnerCode(userId, active, tasks)
 
     return `

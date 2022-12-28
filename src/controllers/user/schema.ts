@@ -24,7 +24,7 @@ export const userSchema: JSONSchemaType<IUser> = {
   required: ['userId', 'name', 'email'],
 }
 
-export function validateUser(user: IUser): void {
+export const validateUser = (user: IUser) => {
   const validate = ajv.compile(userSchema)
 
   if (!validate(user)) throw ajv.errorsText(validate.errors)

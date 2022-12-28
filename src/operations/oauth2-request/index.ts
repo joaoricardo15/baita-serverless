@@ -1,10 +1,11 @@
 'use strict'
 
 import Axios from 'axios'
-import { Api, BotStatus } from 'src/utils/api'
-import { Http } from 'src/utils/http'
-import { Oauth2 } from 'src/utils/oauth2'
+import { validateOperationInput } from 'src/controllers/bot/schema'
 import { Connection } from 'src/controllers/connection'
+import { Api, BotStatus } from 'src/utils/api'
+import { Oauth2 } from 'src/utils/oauth2'
+import { Http } from 'src/utils/http'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
@@ -13,6 +14,8 @@ exports.handler = async (event, context, callback) => {
   const connectionClient = new Connection()
 
   try {
+    validateOperationInput(event)
+
     const {
       userId,
       connectionId,

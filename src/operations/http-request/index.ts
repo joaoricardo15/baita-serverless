@@ -1,6 +1,7 @@
 'use strict'
 
 import Axios from 'axios'
+import { validateOperationInput } from 'src/controllers/bot/schema'
 import { Api, BotStatus } from 'src/utils/api'
 import { Http } from 'src/utils/http'
 
@@ -9,6 +10,8 @@ exports.handler = async (event, context, callback) => {
   const http = new Http()
 
   try {
+    validateOperationInput(event)
+
     const { appConfig, serviceConfig, inputData, outputPath } = event
 
     const response = await Axios({

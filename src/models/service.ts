@@ -1,5 +1,3 @@
-import { IApp } from './app'
-
 export enum ServiceType {
   invoke = 'invoke',
   trigger = 'trigger',
@@ -30,8 +28,8 @@ export interface IVariable {
   type: VariableType
   name: string
   label: string
-  value?: any
-  sampleValue?: any
+  value: string | number | boolean | object | null
+  sampleValue: string | number | boolean | object | null
   outputIndex?: number
   outputName?: string
   customFieldId?: number
@@ -54,18 +52,18 @@ export interface ISerivceConfig {
     paramName: string
     source: InputSource
     fieldName?: string
-    value?: string
+    value?: string | number
   }[]
   bodyParams?: {
     paramName: string
     source: InputSource
     fieldName?: string
-    value?: string
+    value?: string | number
   }[]
   urlParams?: {
     source: InputSource
     fieldName?: string
-    value?: string
+    value?: string | number
   }[]
 }
 
@@ -74,9 +72,4 @@ export interface IService {
   name: ServiceName
   label: string
   config: ISerivceConfig
-}
-
-export interface IServiceApp {
-  service: IService
-  app: IApp
 }

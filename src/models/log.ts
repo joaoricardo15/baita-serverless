@@ -4,8 +4,8 @@ export interface ILog {
   name: string
   status: TaskStatus
   timestamp: number
-  inputData: any
-  outputData: any
+  inputData: string | number | boolean | object | null
+  outputData: string | number | boolean | object | null
 }
 
 export interface IBotLog {

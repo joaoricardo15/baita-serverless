@@ -1,5 +1,3 @@
-import { IService } from './service'
-
 export interface IAppConfig {
   apiUrl?: string
   loginUrl?: string
@@ -20,8 +18,4 @@ export interface IApp {
   name: string
   appId: string
   config: IAppConfig
-}
-
-export interface IAppService extends IApp {
-  services: IService[]
 }
