@@ -282,6 +282,7 @@ resources:
                     - 's3:*'
                     - 'logs:*'
                     - 'lambda:*'
+                    - 'events:*'
                     - 'dynamodb:*'
                     - 'apigateway:*'
                     - 'iam:PassRole'
