@@ -12,7 +12,7 @@ exports.handler = async (event, context, callback) => {
   try {
     validateOperationInput(event)
 
-    const { appConfig, serviceConfig, inputData, outputPath } = event
+    const { appConfig, serviceConfig, inputData } = event
 
     const response = await Axios({
       method: serviceConfig.method,
@@ -21,7 +21,7 @@ exports.handler = async (event, context, callback) => {
       data: http.getDataFromInputs(appConfig, serviceConfig, inputData),
     })
 
-    const data = http.getDataFromPath(response.data, outputPath)
+    const data = http.getDataFromPath(response.data, serviceConfig.outputPath)
 
     api.httpOperationResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {

@@ -6,6 +6,5 @@ export interface IOperationInput {
   connectionId: string
   appConfig: IAppConfig
   serviceConfig: ISerivceConfig
-  outputPath?: string
   inputData: DataType
 }

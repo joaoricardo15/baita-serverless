@@ -16,14 +16,7 @@ exports.handler = async (event, context, callback) => {
   try {
     validateOperationInput(event)
 
-    const {
-      userId,
-      connectionId,
-      appConfig,
-      serviceConfig,
-      inputData,
-      outputPath,
-    } = event
+    const { userId, connectionId, appConfig, serviceConfig, inputData } = event
 
     const {
       auth: { url, type, method, headers, fields },
@@ -56,7 +49,7 @@ exports.handler = async (event, context, callback) => {
       data: http.getDataFromInputs(appConfig, serviceConfig, inputData),
     })
 
-    const data = http.getDataFromPath(response.data, outputPath)
+    const data = http.getDataFromPath(response.data, serviceConfig.outputPath)
 
     api.httpOperationResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {

@@ -2,6 +2,7 @@
 
 import { Api, BotStatus } from 'src/utils/api'
 import { Log } from 'src/controllers/log'
+import { validateLog } from 'src/controllers/log/schema'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
@@ -10,7 +11,7 @@ exports.handler = async (event, context, callback) => {
   try {
     const { userId, botId, usage, logs, error } = event
 
-    const logSet = {
+    const newLog = {
       userId,
       botId,
       error,
@@ -19,7 +20,9 @@ exports.handler = async (event, context, callback) => {
       timestamp: Date.now(),
     }
 
-    const data = await log.createLog(logSet)
+    validateLog(newLog)
+
+    const data = await log.createLog(newLog)
 
     api.httpResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {

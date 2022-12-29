@@ -4,6 +4,7 @@ import { Api, BotStatus } from 'src/utils/api'
 import { Bot } from 'src/controllers/bot'
 import { Connection } from 'src/controllers/connection'
 import { Google } from './google'
+import { validateConnection } from 'src/controllers/connection/schema'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
@@ -33,6 +34,8 @@ exports.handler = async (event, context, callback) => {
       name: email,
       email,
     }
+
+    validateConnection(newConnection)
 
     await connection.createConnection(newConnection)
 

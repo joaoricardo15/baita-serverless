@@ -152,7 +152,7 @@ functions:
     handler: src/endpoints/bots/test/index.handler
     events:
       - http:
-          path: user/{userId}/bot/{botId}/test
+          path: user/{userId}/bot/{botId}/test/{taskIndex}
           method: post
           cors: true
           # authorizer:

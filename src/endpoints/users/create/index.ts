@@ -2,7 +2,7 @@
 
 import { Api, BotStatus } from 'src/utils/api'
 import { User } from 'src/controllers/user'
-import { IUser } from 'src/models/user'
+import { validateUser } from 'src/controllers/user/schema'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
@@ -11,7 +11,9 @@ exports.handler = async (event, context, callback) => {
   try {
     const body = JSON.parse(event.body)
 
-    const newUser: IUser = { userId: body.user_id, ...body }
+    const newUser = { userId: body.user_id, ...body }
+
+    validateUser(newUser)
 
     const data = await user.create(newUser)
 

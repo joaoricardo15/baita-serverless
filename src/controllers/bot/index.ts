@@ -1,10 +1,10 @@
 'use strict'
 
 import AWS from 'aws-sdk'
-import { IBot, ITask, ITaskResult } from 'src/models/bot'
+import { IBot, ITask, ITaskResult, TaskStatus } from 'src/models/bot'
+import { InputSource } from 'src/models/service'
 import { v4 as uuidv4 } from 'uuid'
 import { Code } from '../../utils/code'
-import { validateTasks } from './schema'
 
 const USERS_TABLE = process.env.USERS_TABLE || ''
 const BOTS_BUCKET = process.env.BOTS_BUCKET || ''
@@ -53,6 +53,7 @@ export class Bot {
 
   async createBot(userId: string) {
     const ddb = new AWS.DynamoDB.DocumentClient()
+    // const eventBridge = new AWS.EventBridge()
     const apigateway = new AWS.ApiGatewayV2()
     const lambda = new AWS.Lambda()
     const s3 = new AWS.S3()
@@ -102,6 +103,28 @@ export class Bot {
         })
         .promise()
 
+      // const eventResult = await eventBridge
+      //   .putRule({
+      //     Name: `${SERVICE_PREFIX}-${botId}`,
+      //     // State: 'DISABLED',
+      //     ScheduleExpression: 'rate(5 minutes)',
+      //   })
+      //   .promise()
+      // console.log(eventResult)
+
+      // const targetResult = await eventBridge
+      //   .putTargets({
+      //     Rule: `${SERVICE_PREFIX}-${botId}`,
+      //     Targets: [
+      //       {
+      //         Id: `${SERVICE_PREFIX}-${botId}`,
+      //         Arn: lambdaResult.FunctionArn || '',
+      //       },
+      //     ],
+      //   })
+      //   .promise()
+      // console.log(targetResult)
+
       const bot: IBot = {
         botId,
         userId,
@@ -136,6 +159,7 @@ export class Bot {
 
   async deleteBot(userId: string, botId: string, apiId: string) {
     const ddb = new AWS.DynamoDB.DocumentClient()
+    // const eventBridge = new AWS.EventBridge()
     const apigateway = new AWS.ApiGatewayV2()
     const lambda = new AWS.Lambda()
     const s3 = new AWS.S3()
@@ -149,6 +173,12 @@ export class Bot {
         .promise()
 
       await apigateway.deleteApi({ ApiId: apiId }).promise()
+
+      // await eventBridge
+      //   .deleteRule({
+      //     Name: `${SERVICE_PREFIX}-${botId}`,
+      //   })
+      //   .promise()
 
       await lambda
         .deleteFunction({ FunctionName: `${SERVICE_PREFIX}-${botId}` })
@@ -170,8 +200,6 @@ export class Bot {
     tasks: ITask[]
   ) {
     const ddb = new AWS.DynamoDB.DocumentClient()
-
-    validateTasks(tasks)
 
     try {
       const result = await ddb
@@ -210,10 +238,8 @@ export class Bot {
     const s3 = new AWS.S3()
     const code = new Code()
 
-    validateTasks(tasks)
-
     try {
-      const botCode = code.getBotCode(userId, botId, active, tasks)
+      const botCode = code.mountBotCode(userId, botId, active, tasks)
       const codeFile = await code.getCodeFile(botCode)
 
       await s3
@@ -256,39 +282,55 @@ export class Bot {
     }
   }
 
-  async testBot(userId: string, botId: string, taskIndex: number) {
+  getTestInput(task: ITask) {
+    const input = {}
+
+    if (
+      task.service?.config.inputFields &&
+      task.service.config.inputSource === InputSource.service
+    )
+      for (let j = 0; j < task.service.config.inputFields.length; j++) {
+        const name = task.service.config.inputFields[j].name
+        const inputField = task.inputData.find((x) => x.name === name)
+        if (!inputField) throw 'Invalid bot config'
+        input[inputField.name] = inputField.sampleValue
+      }
+    else if (task.service?.config.inputSource === InputSource.input)
+      for (let j = 0; j < task.inputData.length; j++) {
+        const inputField = task.inputData[j]
+        input[inputField.name] = inputField.sampleValue
+      }
+
+    return input
+  }
+
+  async testBot(userId: string, botId: string, task: ITask, taskIndex: number) {
     const lambda = new AWS.Lambda()
 
     try {
+      const inputData = this.getTestInput(task)
+
       const testLambdaResult = await lambda
         .invoke({
-          FunctionName: `${SERVICE_PREFIX}-${botId}`,
-          Payload: JSON.stringify({ testTaskIndex: taskIndex }),
+          FunctionName: `${SERVICE_PREFIX}-${task.service?.name}`,
+          Payload: JSON.stringify({
+            userId,
+            connectionId: task.connectionId,
+            appConfig: task.app?.config,
+            serviceConfig: task.service?.config,
+            inputData,
+          }),
         })
         .promise()
 
-      const testLambdaParsedPayload = JSON.parse(
-        testLambdaResult.Payload as string
-      )
-
-      const testLambdaParsedResult = JSON.parse(testLambdaParsedPayload.body)
-
-      const executionSuccess = testLambdaParsedResult.success
-
-      const taskOutputData =
-        executionSuccess && testLambdaParsedResult.data
-          ? testLambdaParsedResult.data
-          : {
-              message:
-                testLambdaParsedResult.message ||
-                testLambdaParsedResult.errorMessage ||
-                'nothing for you this time : (',
-            }
+      const testLambdaPayload = JSON.parse(testLambdaResult.Payload as string)
 
       const sample = {
-        status: taskOutputData.status,
-        inputData: taskOutputData.inputData,
-        outputData: taskOutputData.outputData,
+        inputData,
+        outputData: testLambdaPayload.data,
+        status: testLambdaPayload.success
+          ? TaskStatus.success
+          : TaskStatus.fail,
         timestamp: Date.now(),
       }
 

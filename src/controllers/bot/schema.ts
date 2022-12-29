@@ -348,64 +348,66 @@ export const taskResultSchema: JSONSchemaType<ITaskResult> = {
   required: ['status', 'timestamp'],
 }
 
-export const tasksSchema: JSONSchemaType<ITask[]> = {
-  type: 'array',
-  items: {
-    type: 'object',
-    properties: {
-      app: {
-        nullable: true,
-        ...appSchema,
-      },
-      service: {
-        nullable: true,
-        ...serviceSchema,
-      },
-      taskId: {
-        type: 'number',
-      },
-      connectionId: {
-        type: 'string',
-        nullable: true,
-      },
-      inputData: {
-        type: 'array',
-        items: variableSchema,
-      },
-      sampleResult: {
-        nullable: true,
-        ...taskResultSchema,
-      },
-      returnData: {
-        type: 'boolean',
-        nullable: true,
-      },
-      conditions: {
-        type: 'array',
-        nullable: true,
-        items: {
-          type: 'object',
-          properties: {
-            conditionId: {
-              type: 'number',
-            },
-            andConditions: {
-              type: 'array',
-              nullable: true,
-              items: conditionSchema,
-            },
-            orConditions: {
-              type: 'array',
-              nullable: true,
-              items: conditionSchema,
-            },
+export const taskSchema: JSONSchemaType<ITask> = {
+  type: 'object',
+  properties: {
+    app: {
+      nullable: true,
+      ...appSchema,
+    },
+    service: {
+      nullable: true,
+      ...serviceSchema,
+    },
+    taskId: {
+      type: 'number',
+    },
+    connectionId: {
+      type: 'string',
+      nullable: true,
+    },
+    inputData: {
+      type: 'array',
+      items: variableSchema,
+    },
+    sampleResult: {
+      nullable: true,
+      ...taskResultSchema,
+    },
+    returnData: {
+      type: 'boolean',
+      nullable: true,
+    },
+    conditions: {
+      type: 'array',
+      nullable: true,
+      items: {
+        type: 'object',
+        properties: {
+          conditionId: {
+            type: 'number',
           },
-          required: ['conditionId'],
+          andConditions: {
+            type: 'array',
+            nullable: true,
+            items: conditionSchema,
+          },
+          orConditions: {
+            type: 'array',
+            nullable: true,
+            items: conditionSchema,
+          },
         },
+        required: ['conditionId'],
       },
     },
-    required: ['taskId', 'inputData'],
   },
+  required: ['taskId', 'inputData'],
+}
+
+export const tasksSchema: JSONSchemaType<ITask[]> = {
+  type: 'array',
+  items: taskSchema,
 }
 
 export const operationInputSchema: JSONSchemaType<IOperationInput> = {
@@ -427,12 +429,14 @@ export const operationInputSchema: JSONSchemaType<IOperationInput> = {
     },
     appConfig: appConfigSchema,
     serviceConfig: serviceConfigSchema,
-    outputPath: {
-      type: 'string',
-      nullable: true,
-    },
   },
   required: ['userId', 'connectionId', 'appConfig', 'serviceConfig'],
+}
+
+export const validateTask = (task: ITask) => {
+  const validate = ajv.compile(taskSchema)
+
+  if (!validate(task)) throw ajv.errorsText(validate.errors)
 }
 
 export const validateTasks = (tasks: ITask[]) => {

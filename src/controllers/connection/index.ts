@@ -2,7 +2,6 @@
 
 import AWS from 'aws-sdk'
 import { IAppConnection } from 'src/models/connection'
-import { validateConnection } from './schema'
 
 const USERS_TABLE = process.env.USERS_TABLE || ''
 
@@ -48,8 +47,6 @@ export class Connection {
 
   async createConnection(connection: IAppConnection) {
     const ddb = new AWS.DynamoDB.DocumentClient()
-
-    validateConnection(connection)
 
     try {
       await ddb

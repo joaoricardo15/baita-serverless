@@ -2,7 +2,6 @@
 
 import AWS from 'aws-sdk'
 import { IBotLog, IBotUsage } from 'src/models/log'
-import { validateLog } from './schema'
 
 const LOGS_TABLE = process.env.LOGS_TABLE || ''
 
@@ -74,8 +73,6 @@ export class Log {
 
   async createLog(log: IBotLog) {
     const ddb = new AWS.DynamoDB.DocumentClient()
-
-    validateLog(log)
 
     try {
       await ddb

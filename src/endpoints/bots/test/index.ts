@@ -2,19 +2,20 @@
 
 import { Api, BotStatus } from 'src/utils/api'
 import { Bot } from 'src/controllers/bot'
+import { validateTask } from 'src/controllers/bot/schema'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
   const bot = new Bot()
 
   try {
-    const { userId, botId } = event.pathParameters
+    const { userId, botId, taskIndex } = event.pathParameters
 
-    const body = JSON.parse(event.body)
+    const task = JSON.parse(event.body)
 
-    const { taskIndex } = body
+    validateTask(task)
 
-    const data = await bot.testBot(decodeURI(userId), botId, taskIndex)
+    const data = await bot.testBot(decodeURI(userId), botId, task, taskIndex)
 
     api.httpResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {
