@@ -228,7 +228,9 @@ export class Code {
         task${i}_outputLog['timestamp'] = task${i}_timestamp
         
         task${i}_outputLog['status'] = 'filtered'
-    }`
+    }
+
+    logs.push(task${i}_outputLog)`
     }
 
     return innerCode
