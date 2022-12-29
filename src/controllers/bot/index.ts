@@ -53,7 +53,7 @@ export class Bot {
 
   async createBot(userId: string) {
     const ddb = new AWS.DynamoDB.DocumentClient()
-    // const eventBridge = new AWS.EventBridge()
+    const eventBridge = new AWS.EventBridge()
     const apigateway = new AWS.ApiGatewayV2()
     const lambda = new AWS.Lambda()
     const s3 = new AWS.S3()
@@ -103,27 +103,27 @@ export class Bot {
         })
         .promise()
 
-      // const eventResult = await eventBridge
-      //   .putRule({
-      //     Name: `${SERVICE_PREFIX}-${botId}`,
-      //     // State: 'DISABLED',
-      //     ScheduleExpression: 'rate(5 minutes)',
-      //   })
-      //   .promise()
-      // console.log(eventResult)
+      await eventBridge
+        .putRule({
+          State: 'DISABLED',
+          Name: `${SERVICE_PREFIX}-${botId}`,
+          // TODO - make it configurable
+          ScheduleExpression: 'rate(5 minutes)',
+        })
+        .promise()
 
-      // const targetResult = await eventBridge
-      //   .putTargets({
-      //     Rule: `${SERVICE_PREFIX}-${botId}`,
-      //     Targets: [
-      //       {
-      //         Id: `${SERVICE_PREFIX}-${botId}`,
-      //         Arn: lambdaResult.FunctionArn || '',
-      //       },
-      //     ],
-      //   })
-      //   .promise()
-      // console.log(targetResult)
+      const targetResult = await eventBridge
+        .putTargets({
+          Rule: `${SERVICE_PREFIX}-${botId}`,
+          Targets: [
+            {
+              Id: `${SERVICE_PREFIX}-${botId}`,
+              Arn: lambdaResult.FunctionArn || '',
+            },
+          ],
+        })
+        .promise()
+      console.log(targetResult)
 
       const bot: IBot = {
         botId,
@@ -159,7 +159,7 @@ export class Bot {
 
   async deleteBot(userId: string, botId: string, apiId: string) {
     const ddb = new AWS.DynamoDB.DocumentClient()
-    // const eventBridge = new AWS.EventBridge()
+    const eventBridge = new AWS.EventBridge()
     const apigateway = new AWS.ApiGatewayV2()
     const lambda = new AWS.Lambda()
     const s3 = new AWS.S3()
@@ -174,11 +174,11 @@ export class Bot {
 
       await apigateway.deleteApi({ ApiId: apiId }).promise()
 
-      // await eventBridge
-      //   .deleteRule({
-      //     Name: `${SERVICE_PREFIX}-${botId}`,
-      //   })
-      //   .promise()
+      await eventBridge
+        .deleteRule({
+          Name: `${SERVICE_PREFIX}-${botId}`,
+        })
+        .promise()
 
       await lambda
         .deleteFunction({ FunctionName: `${SERVICE_PREFIX}-${botId}` })
@@ -234,6 +234,7 @@ export class Bot {
     tasks: ITask[]
   ) {
     const ddb = new AWS.DynamoDB.DocumentClient()
+    const eventBridge = new AWS.EventBridge()
     const lambda = new AWS.Lambda()
     const s3 = new AWS.S3()
     const code = new Code()
@@ -257,6 +258,20 @@ export class Bot {
           S3Key: `${botId}.zip`,
         })
         .promise()
+
+      if (active) {
+        await eventBridge
+          .enableRule({
+            Name: `${SERVICE_PREFIX}-${botId}`,
+          })
+          .promise()
+      } else {
+        await eventBridge
+          .disableRule({
+            Name: `${SERVICE_PREFIX}-${botId}`,
+          })
+          .promise()
+      }
 
       const dbResult = await ddb
         .update({
