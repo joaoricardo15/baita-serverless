@@ -7,7 +7,7 @@ import { DynamoDB } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
 import { ApiGatewayV2 } from '@aws-sdk/client-apigatewayv2'
 import { IBot, ITask, ITaskResult, TaskStatus } from 'src/models/bot'
-import { InputSource } from 'src/models/service'
+import { InputSource, ServiceName } from 'src/models/service'
 import { v4 as uuidv4 } from 'uuid'
 import { Code } from '../../utils/code'
 
@@ -101,8 +101,7 @@ export class Bot {
       await scheduler.createSchedule({
         Name: `${SERVICE_PREFIX}-${botId}`,
         State: 'DISABLED',
-        ScheduleExpression: 'rate(5 minutes)',
-
+        ScheduleExpression: 'cron(0 0 1 * ? 2030)',
         FlexibleTimeWindow: {
           Mode: 'OFF',
         },
@@ -231,11 +230,17 @@ export class Bot {
         S3Key: `${botId}.zip`,
       })
 
-      if (active) {
+      if (
+        active &&
+        tasks[0].service?.name === ServiceName.schedule &&
+        tasks[0].inputData.find((input) => input.name === 'expression')?.value
+      ) {
         await scheduler.updateSchedule({
           Name: `${SERVICE_PREFIX}-${botId}`,
           State: 'ENABLED',
-          ScheduleExpression: 'rate(5 minutes)',
+          ScheduleExpression: tasks[0].inputData.find(
+            (input) => input.name === 'expression'
+          )?.value as string,
           FlexibleTimeWindow: {
             Mode: 'OFF',
           },
@@ -248,7 +253,7 @@ export class Bot {
         await scheduler.updateSchedule({
           Name: `${SERVICE_PREFIX}-${botId}`,
           State: 'DISABLED',
-          ScheduleExpression: 'rate(5 minutes)',
+          ScheduleExpression: 'cron(0 0 1 * ? 2030)',
           FlexibleTimeWindow: {
             Mode: 'OFF',
           },

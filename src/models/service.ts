@@ -5,6 +5,7 @@ export enum ServiceType {
 
 export enum ServiceName {
   webhook = 'webhook',
+  schedule = 'schedule',
   code = 'code-execute',
   http = 'http-request',
   oauth2 = 'oauth2-request',
