@@ -20,7 +20,7 @@ provider:
   region: us-east-1
   memorySize: 512
   role: serviceRole
-  runtime: nodejs12.x
+  runtime: nodejs16.x
   versionFunctions: false
   stage: ${opt:stage, 'dev'}
   apiName: ${self:provider.environment.SERVICE_API}
@@ -67,8 +67,8 @@ functions:
     handler: src/services/auth/index.handler
   log-create:
     handler: src/services/log-create/index.handler
-  sample-update:
-    handler: src/services/sample-update/index.handler
+  sample-create:
+    handler: src/services/sample-create/index.handler
 
   ### bot operations ###
   http-request:
@@ -94,7 +94,8 @@ functions:
           cors: true
           # authorizer:
           #   name: auth
-  endpoint-user-bots:
+
+  endpoint-bot-list:
     handler: src/endpoints/bots/list/index.handler
     events:
       - http:
@@ -103,11 +104,11 @@ functions:
           cors: true
           # authorizer:
           #   name: auth
-  endpoint-user-bot:
+  endpoint-bot-get:
     handler: src/endpoints/bots/get/index.handler
     events:
       - http:
-          path: user/{userId}/bot/{botId}
+          path: user/{userId}/bots/{botId}
           method: get
           cors: true
           # authorizer:
@@ -116,7 +117,7 @@ functions:
     handler: src/endpoints/bots/create/index.handler
     events:
       - http:
-          path: user/{userId}/bot
+          path: user/{userId}/bots
           method: post
           cors: true
           # authorizer:
@@ -125,7 +126,7 @@ functions:
     handler: src/endpoints/bots/update/index.handler
     events:
       - http:
-          path: user/{userId}/bot/{botId}
+          path: user/{userId}/bots/{botId}
           method: put
           cors: true
           # authorizer:
@@ -134,7 +135,7 @@ functions:
     handler: src/endpoints/bots/delete/index.handler
     events:
       - http:
-          path: user/{userId}/bot/{botId}/api/{apiId}
+          path: user/{userId}/bots/{botId}/api/{apiId}
           method: delete
           cors: true
           # authorizer:
@@ -143,7 +144,7 @@ functions:
     handler: src/endpoints/bots/deploy/index.handler
     events:
       - http:
-          path: user/{userId}/bot/{botId}/deploy
+          path: user/{userId}/bots/{botId}/deploy
           method: post
           cors: true
           # authorizer:
@@ -152,7 +153,7 @@ functions:
     handler: src/endpoints/bots/test/index.handler
     events:
       - http:
-          path: user/{userId}/bot/{botId}/test/{taskIndex}
+          path: user/{userId}/bots/{botId}/test/{taskIndex}
           method: post
           cors: true
           # authorizer:
@@ -161,7 +162,7 @@ functions:
     handler: src/endpoints/bots/logs/index.handler
     events:
       - http:
-          path: user/{userId}/bot/{botId}/logs
+          path: user/{userId}/bots/{botId}/logs
           method: get
           cors: true
           # authorizer:
@@ -171,7 +172,7 @@ functions:
     memorySize: 4096
     events:
       - http:
-          path: user/{userId}/bot/{botId}/usage
+          path: user/{userId}/bots/{botId}/usage
           method: get
           cors: true
           # authorizer:
@@ -280,10 +281,12 @@ resources:
                 - Effect: Allow
                   Action:
                     - 's3:*'
+                    - 'sqs:*'
                     - 'logs:*'
                     - 'lambda:*'
                     - 'events:*'
                     - 'dynamodb:*'
+                    - 'scheduler:*'
                     - 'apigateway:*'
                     - 'iam:PassRole'
                   Resource: '*'
@@ -300,6 +303,7 @@ resources:
                 Service:
                   - events.amazonaws.com
                   - lambda.amazonaws.com
+                  - scheduler.amazonaws.com
                   - apigateway.amazonaws.com
         Policies:
           - PolicyName: ${self:provider.environment.BOTS_POLICY}
@@ -309,4 +313,8 @@ resources:
                 - Effect: Allow
                   Action:
                     - lambda:InvokeFunction
+                    - logs:CreateLogStream
+                    - logs:DescribeLogStreams
+                    - logs:PutRetentionPolicy
+                    - logs:CreateLogGroup
                   Resource: '*'

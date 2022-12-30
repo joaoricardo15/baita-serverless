@@ -15,7 +15,7 @@ exports.handler = async (event, context, callback) => {
 
     validateTask(task)
 
-    const data = await bot.testBot(decodeURI(userId), botId, task, taskIndex)
+    const data = await bot.testBot(userId, botId, task, taskIndex)
 
     api.httpResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {

@@ -1,35 +1,34 @@
 'use strict'
 
-import AWS from 'aws-sdk'
+import { DynamoDB } from '@aws-sdk/client-dynamodb'
+import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
 import { IBotLog, IBotUsage } from 'src/models/log'
 
 const LOGS_TABLE = process.env.LOGS_TABLE || ''
 
 export class Log {
   async getBotLogs(botId: string) {
-    const ddb = new AWS.DynamoDB.DocumentClient()
+    const ddb = DynamoDBDocument.from(new DynamoDB({}))
 
     try {
-      const result = await ddb
-        .query({
-          TableName: LOGS_TABLE,
-          Limit: 20,
-          KeyConditionExpression: 'botId = :botId',
-          ExpressionAttributeValues: {
-            ':botId': botId,
-          },
-          ScanIndexForward: false,
-        })
-        .promise()
+      const result = await ddb.query({
+        TableName: LOGS_TABLE,
+        Limit: 20,
+        KeyConditionExpression: 'botId = :botId',
+        ExpressionAttributeValues: {
+          ':botId': botId,
+        },
+        ScanIndexForward: false,
+      })
 
-      return result.Items as IBotLog[]
+      return result.Items
     } catch (err) {
       throw err.message
     }
   }
 
   async getBotUsage(botId: string) {
-    const ddb = new AWS.DynamoDB.DocumentClient()
+    const ddb = DynamoDBDocument.from(new DynamoDB({}))
 
     try {
       let total = 0
@@ -47,7 +46,7 @@ export class Log {
       }
 
       const queryBotUsage = async (queryParams) => {
-        const result = await ddb.query(queryParams).promise()
+        const result = await ddb.query(queryParams)
 
         if (result && result.Items) {
           result.Items.forEach((item) => {
@@ -72,15 +71,15 @@ export class Log {
   }
 
   async createLog(log: IBotLog) {
-    const ddb = new AWS.DynamoDB.DocumentClient()
+    const ddb = DynamoDBDocument.from(new DynamoDB({}), {
+      marshallOptions: { removeUndefinedValues: true },
+    })
 
     try {
-      await ddb
-        .put({
-          TableName: LOGS_TABLE,
-          Item: log,
-        })
-        .promise()
+      await ddb.put({
+        TableName: LOGS_TABLE,
+        Item: log,
+      })
 
       return log
     } catch (err) {

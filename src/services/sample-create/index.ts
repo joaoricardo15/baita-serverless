@@ -8,7 +8,7 @@ exports.handler = async (event, context, callback) => {
   const bot = new Bot()
 
   try {
-    const { userId, botId, taskIndex, status, inputData, outputData } = event
+    const { userId, botId, status, inputData, outputData } = event
 
     const sample = {
       status,
@@ -17,7 +17,7 @@ exports.handler = async (event, context, callback) => {
       timestamp: Date.now(),
     }
 
-    const data = await bot.addSampleResult(userId, botId, taskIndex, sample)
+    const data = await bot.addTriggerSample(userId, botId, sample)
 
     api.httpResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {
