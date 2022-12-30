@@ -335,7 +335,7 @@ export class Bot {
         timestamp: Date.now(),
       }
 
-      ddb.update({
+      await ddb.update({
         TableName: USERS_TABLE,
         Key: { userId, sortKey: `#BOT#${botId}` },
         ReturnValues: 'ALL_NEW',
