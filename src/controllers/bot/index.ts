@@ -362,7 +362,7 @@ export class Bot {
         Key: { userId, sortKey: `#BOT#${botId}` },
         ReturnValues: 'ALL_NEW',
         UpdateExpression: `set tasks[0].sampleResult = :sample,
-        triggerSamples = list_append(if_not_exists(triggerSamples, :emptyList), :sampleList)`,
+          triggerSamples = list_append(if_not_exists(triggerSamples, :emptyList), :sampleList)`,
         ExpressionAttributeValues: {
           ':sample': sample,
           ':sampleList': [sample],
