@@ -3,7 +3,7 @@ import { DataType, ISerivceConfig } from './service'
 
 export interface IOperationInput {
   userId: string
-  connectionId: string
+  connectionId?: string
   appConfig: IAppConfig
   serviceConfig: ISerivceConfig
   inputData: DataType

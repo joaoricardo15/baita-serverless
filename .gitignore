@@ -1,4 +1,5 @@
 # package
+.build
 .webpack
 .serverless
 node_modules

@@ -15,98 +15,177 @@ const comparationExpressions = {
   donotexists: '',
 }
 
-export class Code {
-  async getCodeFile(code) {
-    zip.file('index.js', code)
+const getInputStringFromService = (
+  serviceFields: IVariable[],
+  inputData: any
+) => {
+  let inputString = ''
 
-    const archive = await zip.generateAsync({ type: 'base64' })
+  for (let j = 0; j < serviceFields.length; j++) {
+    const name = serviceFields[j].name
 
-    return Buffer.from(archive, 'base64')
-  }
+    const inputField = inputData.find((x) => x.name === name)
 
-  getInputStringFromService(serviceFields: IVariable[], inputData: any) {
-    let inputString = ''
+    if (!inputField) throw 'invalid bot config'
 
-    for (let j = 0; j < serviceFields.length; j++) {
-      const name = serviceFields[j].name
-
-      const inputField = inputData.find((x) => x.name === name)
-
-      if (!inputField) throw 'invalid bot config'
-
-      if (inputField.outputName && inputField.outputIndex !== undefined) {
-        inputString += `'${name}': task${inputField.outputIndex}_outputData['${inputField.outputName}'],`
-      } else if (inputField.value) {
-        inputString += `'${name}': \`${inputField.value}\`,`
-      }
+    if (inputField.outputName && inputField.outputIndex !== undefined) {
+      inputString += `'${name}': task${inputField.outputIndex}_outputData['${inputField.outputName}'],`
+    } else if (inputField.value) {
+      inputString += `'${name}': \`${inputField.value}\`,`
     }
-
-    return inputString
   }
 
-  getInputStringFromInput(inputData: any) {
-    let inputString = ''
+  return inputString
+}
 
-    for (let j = 0; j < inputData.length; j++) {
-      const inputField = inputData[j]
+const getInputStringFromInput = (inputData: any) => {
+  let inputString = ''
 
-      if (inputField.outputName && inputField.outputIndex !== undefined) {
-        inputString += `'${inputField.name}': task${inputField.outputIndex}_outputData['${inputField.outputName}'],`
-      } else if (inputField.value) {
-        inputString += `'${inputField.name}': \`${inputField.value}\`,`
-      }
+  for (let j = 0; j < inputData.length; j++) {
+    const inputField = inputData[j]
+
+    if (inputField.outputName && inputField.outputIndex !== undefined) {
+      inputString += `'${inputField.name}': task${inputField.outputIndex}_outputData['${inputField.outputName}'],`
+    } else if (inputField.value) {
+      inputString += `'${inputField.name}': \`${inputField.value}\`,`
     }
-
-    return inputString
   }
 
-  getConditionsString(conditions: ITaskCondition[]) {
-    let andConditionsString = ''
+  return inputString
+}
 
-    for (let j = 0; j < conditions.length; j++) {
-      const andConditions = conditions[j].andConditions
+const getConditionsString = (conditions: ITaskCondition[]) => {
+  let andConditionsString = ''
 
-      if (andConditions) {
-        for (let k = 0; k < andConditions.length; k++) {
-          const andCondition = andConditions[k]
+  for (let j = 0; j < conditions.length; j++) {
+    const andConditions = conditions[j].andConditions
 
-          let conditionValue = ''
-          if (
-            andCondition.outputName &&
-            andCondition.outputIndex !== undefined
-          ) {
-            conditionValue = `task${andCondition.outputIndex}_outputData['${andCondition.outputName}']`
-          } else if (andCondition.value) {
-            conditionValue = `\`${andCondition.value}\``
-          }
+    if (andConditions) {
+      for (let k = 0; k < andConditions.length; k++) {
+        const andCondition = andConditions[k]
 
-          const conditionExpression = comparationExpressions[andCondition.type]
-
-          const comparationValue = andCondition.type
-
-          if (conditionValue && andCondition.type)
-            andConditionsString += `${k === 0 ? '' : ' && '}${
-              andCondition.type === ConditionType.donotexists
-                ? `!${conditionValue}`
-                : andCondition.type === ConditionType.exists
-                ? `${conditionValue}`
-                : `${conditionValue} ${conditionExpression} ${comparationValue}`
-            }`
+        let conditionValue = ''
+        if (andCondition.outputName && andCondition.outputIndex !== undefined) {
+          conditionValue = `task${andCondition.outputIndex}_outputData['${andCondition.outputName}']`
+        } else if (andCondition.value) {
+          conditionValue = `\`${andCondition.value}\``
         }
-      }
 
-      if (andConditionsString) {
-        andConditionsString += `${
-          j === 0 ? '' : ' || '
-        }(${andConditionsString})`
+        const conditionExpression = comparationExpressions[andCondition.type]
+
+        const comparationValue = andCondition.type
+
+        if (conditionValue && andCondition.type)
+          andConditionsString += `${k === 0 ? '' : ' && '}${
+            andCondition.type === ConditionType.donotexists
+              ? `!${conditionValue}`
+              : andCondition.type === ConditionType.exists
+              ? `${conditionValue}`
+              : `${conditionValue} ${conditionExpression} ${comparationValue}`
+          }`
       }
     }
 
-    return andConditionsString
+    if (andConditionsString) {
+      andConditionsString += `${j === 0 ? '' : ' || '}(${andConditionsString})`
+    }
   }
 
-  getSampleCode(userId: string, botId: string): string {
-    return `
+  return andConditionsString
+}
+
+const getBotInnerCode = (userId: string, active: boolean, tasks: ITask[]) => {
+  let innerCode = ''
+
+  for (let i = 1; i < tasks.length; i++) {
+    const task = tasks[i]
+    const app = task.app
+    const service = task.service
+    const conditions = task.conditions
+
+    let inputDataString = ''
+
+    if (
+      service?.config.inputFields &&
+      service.config.inputSource === InputSource.service
+    ) {
+      inputDataString += getInputStringFromService(
+        service.config.inputFields,
+        task.inputData
+      )
+    } else if (service?.config.inputSource === InputSource.input) {
+      inputDataString += getInputStringFromInput(task.inputData)
+    }
+
+    let conditionsString = ''
+    if (conditions) {
+      conditionsString += getConditionsString(conditions)
+    }
+
+    innerCode += `
+    const task${i}_inputData = { ${inputDataString} }
+
+    let task${i}_outputData = {}
+    
+    let task${i}_outputLog = {
+      name: '${service?.label}',
+      inputData: task${i}_inputData
+    }
+
+    if (${conditionsString || true}) {
+      const task${i}_appConfig = ${JSON.stringify(app?.config)}
+
+      const task${i}_serviceConfig = ${JSON.stringify(service?.config)}
+      
+      const task${i}_outputPath = ${
+      service?.config.outputPath
+        ? `'${service.config.outputPath}'`
+        : 'undefined'
+    };
+        
+      const task${i}_response = await lambda.invoke({
+        FunctionName: '${SERVICE_PREFIX}-${service?.name}',
+        Payload: JSON.stringify({ userId: '${userId}', connectionId: '${
+      task.connectionId
+    }', appConfig: task${i}_appConfig, serviceConfig: task${i}_serviceConfig, inputData: task${i}_inputData, outputPath: task${i}_outputPath }),
+      }).promise()
+  
+      const task${i}_result = JSON.parse(task${i}_response.Payload)
+
+      const task${i}_success = task${i}_result.success
+      
+      task${i}_outputData = task${i}_success && task${i}_result.data ? task${i}_result.data : { message: task${i}_result.message || task${i}_result.errorMessage || 'nothing for you this time : (' }
+
+      task${i}_outputLog['outputData'] = task${i}_outputData
+      
+      const task${i}_timestamp = Date.now()
+      
+      task${i}_outputLog['timestamp'] = task${i}_timestamp
+      
+      task${i}_outputLog['status'] = task${i}_success ? 'success' : 'fail'
+
+      if (task${i}_success) usage += 1
+${
+  task.returnData
+    ? `if (task${i}_success) outputData = task${i}_outputData`
+    : ''
+}
+    } else {
+      const task${i}_timestamp = Date.now()
+
+      task${i}_outputLog['timestamp'] = task${i}_timestamp
+      
+      task${i}_outputLog['status'] = 'filtered'
+    }
+
+    logs.push(task${i}_outputLog)`
+  }
+
+  return innerCode
+}
+
+export const getSampleCode = (userId: string, botId: string) => {
+  return `
 const AWS = require('aws-sdk');
 const lambda = new AWS.Lambda({ region: "us-east-1" });
 
@@ -144,100 +223,15 @@ module.exports.handler = async (event, context, callback) => {
   }); 
 };
     `
-  }
-
-  getBotInnerCode(userId: string, active: boolean, tasks: ITask[]) {
-    let innerCode = ''
-
-    for (let i = 1; i < tasks.length; i++) {
-      const task = tasks[i]
-      const app = task.app
-      const service = task.service
-      const conditions = task.conditions
-
-      let inputDataString = ''
-
-      if (
-        service?.config.inputFields &&
-        service.config.inputSource === InputSource.service
-      ) {
-        inputDataString += this.getInputStringFromService(
-          service.config.inputFields,
-          task.inputData
-        )
-      } else if (service?.config.inputSource === InputSource.input) {
-        inputDataString += this.getInputStringFromInput(task.inputData)
-      }
-
-      let conditionsString = ''
-      if (conditions) {
-        conditionsString += this.getConditionsString(conditions)
-      }
-
-      innerCode += `
-    const task${i}_inputData = { ${inputDataString} }
-
-    let task${i}_outputData = {}
-    
-    let task${i}_outputLog = {
-      name: '${service?.label}',
-      inputData: task${i}_inputData
-    }
-
-    if (${conditionsString || true}) {
-      const task${i}_appConfig = ${JSON.stringify(app?.config)}
-
-      const task${i}_serviceConfig = ${JSON.stringify(service?.config)}
-      
-      const task${i}_outputPath = ${
-        service?.config.outputPath
-          ? `'${service.config.outputPath}'`
-          : 'undefined'
-      };
-        
-      const task${i}_response = await lambda.invoke({
-        FunctionName: '${SERVICE_PREFIX}-${service?.name}',
-        Payload: JSON.stringify({ userId: '${userId}', connectionId: '${
-        task.connectionId
-      }', appConfig: task${i}_appConfig, serviceConfig: task${i}_serviceConfig, inputData: task${i}_inputData, outputPath: task${i}_outputPath }),
-      }).promise()
-  
-      const task${i}_result = JSON.parse(task${i}_response.Payload)
-
-      const task${i}_success = task${i}_result.success
-      
-      task${i}_outputData = task${i}_success && task${i}_result.data ? task${i}_result.data : { message: task${i}_result.message || task${i}_result.errorMessage || 'nothing for you this time : (' }
-
-      task${i}_outputLog['outputData'] = task${i}_outputData
-      
-      const task${i}_timestamp = Date.now()
-      
-      task${i}_outputLog['timestamp'] = task${i}_timestamp
-      
-      task${i}_outputLog['status'] = task${i}_success ? 'success' : 'fail'
-
-      if (task${i}_success) usage += 1
-${
-  task.returnData
-    ? `if (task${i}_success) outputData = task${i}_outputData`
-    : ''
 }
-    } else {
-      const task${i}_timestamp = Date.now()
 
-      task${i}_outputLog['timestamp'] = task${i}_timestamp
-      
-      task${i}_outputLog['status'] = 'filtered'
-    }
-
-    logs.push(task${i}_outputLog)`
-    }
-
-    return innerCode
-  }
-
-  mountBotCode(userId: string, botId: string, active: boolean, tasks: ITask[]) {
-    return `
+export const mountBotCode = (
+  userId: string,
+  botId: string,
+  active: boolean,
+  tasks: ITask[]
+) => {
+  return `
 const AWS = require('aws-sdk')
 const lambda = new AWS.Lambda({ region: "us-east-1" })
 
@@ -301,7 +295,7 @@ ${
   
     usage += 1
 
-    ${this.getBotInnerCode(userId, active, tasks)}
+    ${getBotInnerCode(userId, active, tasks)}
   
   } catch (error) {
     errorResult = error
@@ -325,5 +319,12 @@ ${
   })
 }`
 }`
-  }
+}
+
+export const getCodeFile = async (code: string) => {
+  zip.file('index.js', code)
+
+  const archive = await zip.generateAsync({ type: 'base64' })
+
+  return Buffer.from(archive, 'base64')
 }

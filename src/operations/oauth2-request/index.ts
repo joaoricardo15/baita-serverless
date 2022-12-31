@@ -4,13 +4,16 @@ import Axios from 'axios'
 import { validateOperationInput } from 'src/controllers/bot/schema'
 import { Connection } from 'src/controllers/connection'
 import { Api, BotStatus } from 'src/utils/api'
-import { Oauth2 } from 'src/utils/oauth2'
-import { Http } from 'src/utils/http'
+import {
+  getAuthFromParameters,
+  getDataFromInputs,
+  getDataFromParameters,
+  getDataFromPath,
+  getUrlFromInputs,
+} from 'src/utils/bot'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
-  const http = new Http()
-  const oauth2 = new Oauth2()
   const connectionClient = new Connection()
 
   try {
@@ -34,8 +37,8 @@ exports.handler = async (event, context, callback) => {
       url,
       method,
       headers,
-      auth: oauth2.getAuthFromParameters(type, fields),
-      data: oauth2.getDataFromParameters(type, headers, fields, refresh_token),
+      auth: getAuthFromParameters(type, fields),
+      data: getDataFromParameters(type, headers, fields, refresh_token),
     })
 
     // Http request
@@ -45,11 +48,11 @@ exports.handler = async (event, context, callback) => {
         ...serviceConfig.headers,
         Authorization: `Bearer ${access_token}`,
       },
-      url: http.getUrlFromInputs(appConfig, serviceConfig, inputData),
-      data: http.getDataFromInputs(appConfig, serviceConfig, inputData),
+      url: getUrlFromInputs(appConfig, serviceConfig, inputData),
+      data: getDataFromInputs(appConfig, serviceConfig, inputData),
     })
 
-    const data = http.getDataFromPath(response.data, serviceConfig.outputPath)
+    const data = getDataFromPath(response.data, serviceConfig.outputPath)
 
     api.httpOperationResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {

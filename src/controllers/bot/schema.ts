@@ -418,6 +418,7 @@ export const operationInputSchema: JSONSchemaType<IOperationInput> = {
     },
     connectionId: {
       type: 'string',
+      nullable: true,
     },
     inputData: {
       anyOf: [
@@ -430,7 +431,7 @@ export const operationInputSchema: JSONSchemaType<IOperationInput> = {
     appConfig: appConfigSchema,
     serviceConfig: serviceConfigSchema,
   },
-  required: ['userId', 'connectionId', 'appConfig', 'serviceConfig'],
+  required: ['userId', 'appConfig', 'serviceConfig'],
 }
 
 export const validateTask = (task: ITask) => {

@@ -5,6 +5,10 @@ plugins:
   - serverless-offline
   # - serverless-domain-manager
   - serverless-deployment-bucket
+  # - serverless-plugin-typescript
+
+package:
+  individually: true
 
 custom:
   serverless-offline:
@@ -77,6 +81,16 @@ functions:
     handler: src/operations/oauth2-request/index.handler
   code-execute:
     handler: src/operations/code-execute/index.handler
+  # scrapper:
+  #   handler: src/operations/scrapper/index.handler
+  #   timeout: 60
+  #   layers:
+  #     - arn:aws:lambda:us-east-1:764866452798:layer:chrome-aws-lambda:31
+  #   events:
+  #     - http:
+  #         path: scrapper
+  #         method: get
+  #         cors: true
 
   ### endpoints ###
   endpoint-user-create:
@@ -85,6 +99,14 @@ functions:
       - http:
           path: user
           method: post
+          cors: true
+  endpoint-user-messages:
+    handler: src/endpoints/users/messages/index.handler
+    events:
+      - http:
+          path: user/{userId}/messages
+          method: get
+          cors: true
   endpoint-user-connections:
     handler: src/endpoints/users/connections/index.handler
     events:
@@ -92,9 +114,6 @@ functions:
           path: user/{userId}/connections
           method: get
           cors: true
-          # authorizer:
-          #   name: auth
-
   endpoint-bot-list:
     handler: src/endpoints/bots/list/index.handler
     events:
@@ -102,8 +121,6 @@ functions:
           path: user/{userId}/bots
           method: get
           cors: true
-          # authorizer:
-          #   name: auth
   endpoint-bot-get:
     handler: src/endpoints/bots/get/index.handler
     events:
@@ -111,8 +128,6 @@ functions:
           path: user/{userId}/bots/{botId}
           method: get
           cors: true
-          # authorizer:
-          #   name: auth
   endpoint-bot-create:
     handler: src/endpoints/bots/create/index.handler
     events:
@@ -120,8 +135,6 @@ functions:
           path: user/{userId}/bots
           method: post
           cors: true
-          # authorizer:
-          #   name: auth
   endpoint-bot-update:
     handler: src/endpoints/bots/update/index.handler
     events:
@@ -129,8 +142,6 @@ functions:
           path: user/{userId}/bots/{botId}
           method: put
           cors: true
-          # authorizer:
-          #   name: auth
   endpoint-bot-delete:
     handler: src/endpoints/bots/delete/index.handler
     events:
@@ -138,8 +149,6 @@ functions:
           path: user/{userId}/bots/{botId}/api/{apiId}
           method: delete
           cors: true
-          # authorizer:
-          #   name: auth
   endpoint-bot-deploy:
     handler: src/endpoints/bots/deploy/index.handler
     events:
@@ -147,8 +156,6 @@ functions:
           path: user/{userId}/bots/{botId}/deploy
           method: post
           cors: true
-          # authorizer:
-          #   name: auth
   endpoint-bot-test:
     handler: src/endpoints/bots/test/index.handler
     events:
@@ -156,8 +163,6 @@ functions:
           path: user/{userId}/bots/{botId}/test/{taskIndex}
           method: post
           cors: true
-          # authorizer:
-          #   name: auth
   endpoint-bot-logs:
     handler: src/endpoints/bots/logs/index.handler
     events:
@@ -165,8 +170,6 @@ functions:
           path: user/{userId}/bots/{botId}/logs
           method: get
           cors: true
-          # authorizer:
-          #   name: auth
   endpoint-bot-usage:
     handler: src/endpoints/bots/usage/index.handler
     memorySize: 4096
@@ -175,8 +178,6 @@ functions:
           path: user/{userId}/bots/{botId}/usage
           method: get
           cors: true
-          # authorizer:
-          #   name: auth
 
   ### connectors ###
   connector-pipedrive:

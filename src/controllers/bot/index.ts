@@ -1,15 +1,17 @@
 'use strict'
 
 import { S3 } from '@aws-sdk/client-s3'
+import { SQS } from '@aws-sdk/client-sqs'
 import { Lambda } from '@aws-sdk/client-lambda'
 import { Scheduler } from '@aws-sdk/client-scheduler'
 import { DynamoDB } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
 import { ApiGatewayV2 } from '@aws-sdk/client-apigatewayv2'
 import { IBot, ITask, ITaskResult, TaskStatus } from 'src/models/bot'
-import { InputSource, ServiceName } from 'src/models/service'
+import { getCodeFile, getSampleCode, mountBotCode } from 'src/utils/code'
+import { ServiceName } from 'src/models/service'
 import { v4 as uuidv4 } from 'uuid'
-import { Code } from '../../utils/code'
+import { getTestInput } from 'src/utils/bot'
 
 const USERS_TABLE = process.env.USERS_TABLE || ''
 const BOTS_BUCKET = process.env.BOTS_BUCKET || ''
@@ -58,13 +60,12 @@ export class Bot {
     const scheduler = new Scheduler({})
     const lambda = new Lambda({})
     const s3 = new S3({})
-    const code = new Code()
 
     try {
       const botId = uuidv4()
 
-      const sampleCode = code.getSampleCode(userId, botId)
-      const codeFile = await code.getCodeFile(sampleCode)
+      const sampleCode = getSampleCode(userId, botId)
+      const codeFile = await getCodeFile(sampleCode)
 
       await s3.putObject({
         Bucket: BOTS_BUCKET,
@@ -212,11 +213,10 @@ export class Bot {
     const scheduler = new Scheduler({})
     const lambda = new Lambda({})
     const s3 = new S3({})
-    const code = new Code()
 
     try {
-      const botCode = code.mountBotCode(userId, botId, active, tasks)
-      const codeFile = await code.getCodeFile(botCode)
+      const botCode = mountBotCode(userId, botId, active, tasks)
+      const codeFile = await getCodeFile(botCode)
 
       await s3.putObject({
         Bucket: BOTS_BUCKET,
@@ -285,36 +285,15 @@ export class Bot {
     }
   }
 
-  getTestInput(task: ITask) {
-    const input = {}
-
-    if (
-      task.service?.config.inputFields &&
-      task.service.config.inputSource === InputSource.service
-    )
-      for (let j = 0; j < task.service.config.inputFields.length; j++) {
-        const name = task.service.config.inputFields[j].name
-        const inputField = task.inputData.find((x) => x.name === name)
-        if (!inputField) throw 'Invalid bot config'
-        input[inputField.name] = inputField.sampleValue
-      }
-    else if (task.service?.config.inputSource === InputSource.input)
-      for (let j = 0; j < task.inputData.length; j++) {
-        const inputField = task.inputData[j]
-        input[inputField.name] = inputField.sampleValue
-      }
-
-    return input
-  }
-
   async testBot(userId: string, botId: string, task: ITask, taskIndex: number) {
+    const sqs = new SQS({})
     const lambda = new Lambda({})
     const ddb = DynamoDBDocument.from(new DynamoDB({}), {
       marshallOptions: { removeUndefinedValues: true },
     })
 
     try {
-      const inputData = this.getTestInput(task)
+      const inputData = getTestInput(task)
 
       const testLambdaResult = await lambda.invoke({
         FunctionName: `${SERVICE_PREFIX}-${task.service?.name}`,
@@ -339,6 +318,18 @@ export class Bot {
           : TaskStatus.fail,
         timestamp: Date.now(),
       }
+
+      const queueResult = await sqs.getQueueUrl({
+        QueueName: `${SERVICE_PREFIX.replace('dev', 'prod')}-${userId}`,
+      })
+
+      await sqs.sendMessageBatch({
+        QueueUrl: queueResult.QueueUrl,
+        Entries: testLambdaPayload.data.slice(0, 10).map((entry, index) => ({
+          Id: index,
+          MessageBody: JSON.stringify(entry),
+        })),
+      })
 
       await ddb.update({
         TableName: USERS_TABLE,

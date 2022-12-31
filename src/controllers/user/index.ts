@@ -33,4 +33,27 @@ export class User {
       throw err.message
     }
   }
+
+  async getMessages(userId: string) {
+    const sqs = new SQS({})
+
+    try {
+      const queueUrlResult = await sqs.getQueueUrl({
+        QueueName: `${SERVICE_PREFIX.replace('dev', 'prod')}-${userId}`,
+      })
+
+      const messagesResult = await sqs.receiveMessage({
+        QueueUrl: queueUrlResult.QueueUrl,
+        MaxNumberOfMessages: 10,
+      })
+
+      return (
+        messagesResult.Messages?.filter((message) => message.Body).map(
+          (message) => JSON.parse(message.Body || '{}')
+        ) || []
+      )
+    } catch (err) {
+      throw err.message
+    }
+  }
 }

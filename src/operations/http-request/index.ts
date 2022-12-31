@@ -3,11 +3,14 @@
 import Axios from 'axios'
 import { validateOperationInput } from 'src/controllers/bot/schema'
 import { Api, BotStatus } from 'src/utils/api'
-import { Http } from 'src/utils/http'
+import {
+  getDataFromInputs,
+  getDataFromPath,
+  getUrlFromInputs,
+} from 'src/utils/bot'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
-  const http = new Http()
 
   try {
     validateOperationInput(event)
@@ -17,11 +20,11 @@ exports.handler = async (event, context, callback) => {
     const response = await Axios({
       method: serviceConfig.method,
       headers: serviceConfig.headers,
-      url: http.getUrlFromInputs(appConfig, serviceConfig, inputData),
-      data: http.getDataFromInputs(appConfig, serviceConfig, inputData),
+      url: getUrlFromInputs(appConfig, serviceConfig, inputData),
+      data: getDataFromInputs(appConfig, serviceConfig, inputData),
     })
 
-    const data = http.getDataFromPath(response.data, serviceConfig.outputPath)
+    const data = getDataFromPath(response.data, serviceConfig.outputPath)
 
     api.httpOperationResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {
