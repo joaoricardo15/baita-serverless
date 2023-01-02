@@ -3,6 +3,7 @@
 import Ajv, { JSONSchemaType } from 'ajv'
 import addFormats from 'ajv-formats'
 import {
+  DataType,
   InputSource,
   ISerivceConfig,
   IService,
@@ -23,6 +24,26 @@ import { IOperationInput } from 'src/models/operation'
 
 const ajv = new Ajv()
 addFormats(ajv)
+
+export const dataSchema: JSONSchemaType<DataType> = {
+  anyOf: [
+    { type: 'string' },
+    { type: 'number' },
+    { type: 'boolean' },
+    { type: 'object' },
+    {
+      type: 'array',
+      items: {
+        anyOf: [
+          { type: 'string' },
+          { type: 'number' },
+          { type: 'boolean' },
+          { type: 'object' },
+        ],
+      },
+    },
+  ],
+}
 
 export const appConfigSchema: JSONSchemaType<IAppConfig> = {
   type: 'object',
@@ -102,22 +123,8 @@ export const variableSchema: JSONSchemaType<IVariable> = {
     label: {
       type: 'string',
     },
-    value: {
-      anyOf: [
-        { type: 'string' },
-        { type: 'number' },
-        { type: 'boolean' },
-        { type: 'object' },
-      ],
-    },
-    sampleValue: {
-      anyOf: [
-        { type: 'string' },
-        { type: 'number' },
-        { type: 'boolean' },
-        { type: 'object' },
-      ],
-    },
+    value: dataSchema,
+    sampleValue: dataSchema,
     outputIndex: {
       type: 'number',
       nullable: true,
@@ -171,14 +178,7 @@ export const conditionSchema: JSONSchemaType<ICondition> = {
     label: {
       type: 'string',
     },
-    value: {
-      anyOf: [
-        { type: 'string' },
-        { type: 'number' },
-        { type: 'boolean' },
-        { type: 'object' },
-      ],
-    },
+    value: dataSchema,
     outputName: {
       type: 'string',
       nullable: true,
@@ -328,22 +328,8 @@ export const taskResultSchema: JSONSchemaType<ITaskResult> = {
     timestamp: {
       type: 'number',
     },
-    inputData: {
-      anyOf: [
-        { type: 'string' },
-        { type: 'number' },
-        { type: 'boolean' },
-        { type: 'object' },
-      ],
-    },
-    outputData: {
-      anyOf: [
-        { type: 'string' },
-        { type: 'number' },
-        { type: 'boolean' },
-        { type: 'object' },
-      ],
-    },
+    inputData: dataSchema,
+    outputData: dataSchema,
   },
   required: ['status', 'timestamp'],
 }
@@ -420,14 +406,7 @@ export const operationInputSchema: JSONSchemaType<IOperationInput> = {
       type: 'string',
       nullable: true,
     },
-    inputData: {
-      anyOf: [
-        { type: 'string' },
-        { type: 'number' },
-        { type: 'boolean' },
-        { type: 'object' },
-      ],
-    },
+    inputData: dataSchema,
     appConfig: appConfigSchema,
     serviceConfig: serviceConfigSchema,
   },

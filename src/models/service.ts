@@ -25,7 +25,13 @@ export enum VariableType {
   options = 'options',
 }
 
-export type DataType = string | number | boolean | object | null
+export type DataType =
+  | null
+  | string
+  | number
+  | boolean
+  | object
+  | Array<string | number | boolean | object>
 
 export interface IVariable {
   type: VariableType
