@@ -9,7 +9,7 @@ import { TaskStatus } from 'src/models/bot'
 const ajv = new Ajv()
 addFormats(ajv)
 
-export const dataSchema: JSONSchemaType<DataType> = {
+const dataSchema: JSONSchemaType<DataType> = {
   anyOf: [
     { type: 'string' },
     { type: 'number' },
@@ -29,7 +29,7 @@ export const dataSchema: JSONSchemaType<DataType> = {
   ],
 }
 
-export const logSchema: JSONSchemaType<ILog> = {
+const logSchema: JSONSchemaType<ILog> = {
   type: 'object',
   properties: {
     name: {
@@ -48,7 +48,7 @@ export const logSchema: JSONSchemaType<ILog> = {
   required: ['name', 'status', 'timestamp'],
 }
 
-export const botLogSchema: JSONSchemaType<IBotLog> = {
+const botLogSchema: JSONSchemaType<IBotLog> = {
   type: 'object',
   properties: {
     botId: {

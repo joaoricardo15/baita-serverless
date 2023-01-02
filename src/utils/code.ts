@@ -279,21 +279,18 @@ ${
   })
 }`
     : `
-  let usage = 0
   let errorResult
   let outputData
-  const logs = []
+
+  let usage = 1
+  const logs = [{
+    name: '${tasks[0].service?.label}',
+    outputData: task0_outputData,
+    timestamp: Date.now(),
+    status: 'success'
+  }]
 
   try {
-    
-    logs.push({
-      name: '${tasks[0].service?.label}',
-      outputData: task0_outputData,
-      timestamp: Date.now(),
-      status: 'success'
-    })
-  
-    usage += 1
 
     ${getBotInnerCode(userId, active, tasks)}
   

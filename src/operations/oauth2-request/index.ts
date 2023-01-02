@@ -5,11 +5,13 @@ import { validateOperationInput } from 'src/controllers/bot/schema'
 import { Connection } from 'src/controllers/connection'
 import { Api, BotStatus } from 'src/utils/api'
 import {
-  getAuthFromParameters,
+  getAuthParamsFromApp,
   getDataFromInputs,
-  getDataFromParameters,
+  getAuthDataFromApp,
   getDataFromPath,
+  getDataFromService,
   getUrlFromInputs,
+  getQueryParamsFromInputs,
 } from 'src/utils/bot'
 
 exports.handler = async (event, context, callback) => {
@@ -30,6 +32,14 @@ exports.handler = async (event, context, callback) => {
       credentials: { refresh_token },
     } = await connectionClient.getConnection(userId, connectionId)
 
+    console.log({
+      url,
+      method,
+      headers,
+      auth: getAuthParamsFromApp(type, fields),
+      data: getAuthDataFromApp(type, headers, fields, refresh_token),
+    })
+
     // Get token from app's oauth2 authenticator server
     const {
       data: { access_token },
@@ -37,8 +47,19 @@ exports.handler = async (event, context, callback) => {
       url,
       method,
       headers,
-      auth: getAuthFromParameters(type, fields),
-      data: getDataFromParameters(type, headers, fields, refresh_token),
+      auth: getAuthParamsFromApp(type, fields),
+      data: getAuthDataFromApp(type, headers, fields, refresh_token),
+    })
+
+    console.log({
+      method: serviceConfig.method,
+      headers: {
+        ...serviceConfig.headers,
+        Authorization: `Bearer ${access_token}`,
+      },
+      url: getUrlFromInputs(appConfig, serviceConfig, inputData),
+      data: getDataFromInputs(appConfig, serviceConfig, inputData),
+      params: getQueryParamsFromInputs(appConfig, serviceConfig, inputData),
     })
 
     // Http request
@@ -50,11 +71,23 @@ exports.handler = async (event, context, callback) => {
       },
       url: getUrlFromInputs(appConfig, serviceConfig, inputData),
       data: getDataFromInputs(appConfig, serviceConfig, inputData),
+      params: getQueryParamsFromInputs(appConfig, serviceConfig, inputData),
     })
 
-    const data = getDataFromPath(response.data, serviceConfig.outputPath)
+    console.log(response.data)
 
-    api.httpOperationResponse(callback, BotStatus.success, undefined, data)
+    const initialData = getDataFromPath(response.data, serviceConfig.outputPath)
+
+    console.log(initialData)
+
+    const mappedData = getDataFromService(initialData, serviceConfig)
+
+    api.httpOperationResponse(
+      callback,
+      BotStatus.success,
+      undefined,
+      mappedData
+    )
   } catch (err) {
     api.httpOperationResponse(callback, BotStatus.fail, err)
   }

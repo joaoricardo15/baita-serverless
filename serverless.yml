@@ -100,11 +100,11 @@ functions:
           path: user
           method: post
           cors: true
-  endpoint-user-messages:
-    handler: src/endpoints/users/messages/index.handler
+  endpoint-user-content:
+    handler: src/endpoints/users/content/index.handler
     events:
       - http:
-          path: user/{userId}/messages
+          path: user/{userId}/content
           method: get
           cors: true
   endpoint-user-connections:

@@ -4,92 +4,46 @@ import { IAppConfig } from 'src/models/app'
 import { ITask } from 'src/models/bot'
 import { InputSource, ISerivceConfig } from 'src/models/service'
 
-export const getAuthFromParameters = (type: string, authFields) => {
-  if (type === 'basic')
-    return {
-      username: process.env[authFields.username] || '',
-      password: process.env[authFields.password] || '',
-    }
-}
-
-export const getDataFromPath = (data: any, path: string) => {
-  if (!path) return data
-
-  const paths = path.split('.')
-
-  try {
-    for (let i = 0; i < paths.length; i++) {
-      const [type, value] = paths[i].split(':')
-      data = data[type === 'number' ? parseInt(value) : value]
-    }
-    return data
-  } catch (err) {
-    return {}
-  }
-}
-
-export const getUrlFromInputs = (
-  appConfig: IAppConfig,
-  serviceConfig: ISerivceConfig,
-  inputData: any
+export const getDataFromService = (
+  data: any,
+  serviceConfig: ISerivceConfig
 ) => {
-  const { path, urlParams, queryParams } = serviceConfig
+  return Array.isArray(data)
+    ? data.map((item) => getDataFromObject(item, serviceConfig))
+    : getDataFromObject(data, serviceConfig)
+}
 
-  const { apiUrl, auth = {} } = appConfig
+export const getDataFromPath = (data: any, outputPath?: string) => {
+  if (!outputPath) return data
 
-  let url = `${apiUrl}${path}`
+  const paths = outputPath.split('.')
 
-  if (urlParams) {
-    url += '/'
-    for (let i = 0; i < urlParams.length; i++) {
-      const { source, fieldName = '', value } = urlParams[i]
-
-      const fieldValue =
-        source === InputSource.value
-          ? value
-          : source === InputSource.auth
-          ? auth[fieldName]
-          : source === InputSource.service
-          ? serviceConfig[fieldName]
-          : source === InputSource.input
-          ? inputData[fieldName]
-          : ''
-
-      const encodedSource = encodeURIComponent(fieldValue).replace(
-        /[!'()*]/g,
-        (c) => '%' + c.charCodeAt(0).toString(16)
-      )
-
-      url += `${encodedSource}/`
-    }
+  for (let i = 0; i < paths.length; i++) {
+    const key = paths[i]
+    const intKey = parseInt(key)
+    data = data[isNaN(intKey) ? key : intKey]
   }
 
-  if (queryParams) {
-    url += '?'
-    for (let i = 0; i < queryParams.length; i++) {
-      const { paramName, source, fieldName = '', value } = queryParams[i]
+  return data
+}
 
-      const fieldValue =
-        source === InputSource.value
-          ? value
-          : source === InputSource.auth
-          ? auth[fieldName]
-          : source === InputSource.service
-          ? serviceConfig[fieldName]
-          : source === InputSource.input
-          ? inputData[fieldName]
-          : ''
+export const getDataFromObject = (data: any, serviceConfig: ISerivceConfig) => {
+  const { outputMapping } = serviceConfig
 
-      const encodedSource = encodeURIComponent(fieldValue).replace(
-        /[!'()*]/g,
-        (c) => '%' + c.charCodeAt(0).toString(16)
-      )
+  if (!outputMapping || typeof data !== 'object') return data
 
-      url += `${paramName}=${encodedSource}&`
-    }
+  const mappedData = {}
+  const outputKeys = Object.keys(outputMapping)
+
+  for (let i = 0; i < outputKeys.length; i++) {
+    const outputKey = outputKeys[i]
+    mappedData[outputKey] = getDataFromPath(
+      data,
+      outputMapping[outputKey] as any
+    )
   }
 
-  return url
+  return mappedData
 }
 
 export const getDataFromInputs = (
@@ -124,7 +78,108 @@ export const getDataFromInputs = (
   return data
 }
 
-export const getDataFromParameters = (
+export const getUrlFromInputs = (
+  appConfig: IAppConfig,
+  serviceConfig: ISerivceConfig,
+  inputData: any
+) => {
+  const { path, urlParams } = serviceConfig
+
+  const { apiUrl, auth = {} } = appConfig
+
+  let url = `${apiUrl}${path}`
+
+  if (urlParams) {
+    url += '/'
+    for (let i = 0; i < urlParams.length; i++) {
+      const { source, fieldName = '', value } = urlParams[i]
+
+      const fieldValue =
+        source === InputSource.value
+          ? value
+          : source === InputSource.auth
+          ? auth[fieldName]
+          : source === InputSource.service
+          ? serviceConfig[fieldName]
+          : source === InputSource.input
+          ? inputData[fieldName]
+          : ''
+
+      const encodedSource = encodeURIComponent(fieldValue).replace(
+        /[!'()*]/g,
+        (c) => '%' + c.charCodeAt(0).toString(16)
+      )
+
+      url += `${encodedSource}/`
+    }
+  }
+
+  return url
+}
+
+export const getQueryParamsFromInputs = (
+  appConfig: IAppConfig,
+  serviceConfig: ISerivceConfig,
+  inputData: any
+) => {
+  const { queryParams } = serviceConfig
+
+  const { auth = {} } = appConfig
+
+  const params = {}
+  if (queryParams) {
+    for (let i = 0; i < queryParams.length; i++) {
+      const { paramName, source, fieldName = '', value } = queryParams[i]
+
+      const fieldValue =
+        source === InputSource.value
+          ? value
+          : source === InputSource.auth
+          ? auth[fieldName]
+          : source === InputSource.service
+          ? serviceConfig[fieldName]
+          : source === InputSource.input
+          ? inputData[fieldName]
+          : ''
+
+      params[paramName] = fieldValue
+    }
+  }
+
+  return params
+}
+
+export const getTestInput = (task: ITask) => {
+  const input = {}
+
+  if (
+    task.service?.config.inputFields &&
+    task.service.config.inputSource === InputSource.service
+  )
+    for (let j = 0; j < task.service.config.inputFields.length; j++) {
+      const name = task.service.config.inputFields[j].name
+      const inputField = task.inputData.find((x) => x.name === name)
+      if (!inputField) throw 'Invalid bot config'
+      input[inputField.name] = inputField.sampleValue
+    }
+  else if (task.service?.config.inputSource === InputSource.input)
+    for (let j = 0; j < task.inputData.length; j++) {
+      const inputField = task.inputData[j]
+      input[inputField.name] = inputField.sampleValue
+    }
+
+  return input
+}
+
+export const getAuthParamsFromApp = (type: string, authFields) => {
+  if (type === 'basic')
+    return {
+      username: process.env[authFields.username] || '',
+      password: process.env[authFields.password] || '',
+    }
+}
+
+export const getAuthDataFromApp = (
   type: string,
   headers,
   authFields,
@@ -160,26 +215,4 @@ export const getDataFromParameters = (
   }
 
   return data
-}
-
-export const getTestInput = (task: ITask) => {
-  const input = {}
-
-  if (
-    task.service?.config.inputFields &&
-    task.service.config.inputSource === InputSource.service
-  )
-    for (let j = 0; j < task.service.config.inputFields.length; j++) {
-      const name = task.service.config.inputFields[j].name
-      const inputField = task.inputData.find((x) => x.name === name)
-      if (!inputField) throw 'Invalid bot config'
-      input[inputField.name] = inputField.sampleValue
-    }
-  else if (task.service?.config.inputSource === InputSource.input)
-    for (let j = 0; j < task.inputData.length; j++) {
-      const inputField = task.inputData[j]
-      input[inputField.name] = inputField.sampleValue
-    }
-
-  return input
 }

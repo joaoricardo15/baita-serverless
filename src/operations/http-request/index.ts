@@ -6,6 +6,8 @@ import { Api, BotStatus } from 'src/utils/api'
 import {
   getDataFromInputs,
   getDataFromPath,
+  getDataFromService,
+  getQueryParamsFromInputs,
   getUrlFromInputs,
 } from 'src/utils/bot'
 
@@ -17,16 +19,36 @@ exports.handler = async (event, context, callback) => {
 
     const { appConfig, serviceConfig, inputData } = event
 
+    console.log({
+      method: serviceConfig.method,
+      headers: serviceConfig.headers,
+      url: getUrlFromInputs(appConfig, serviceConfig, inputData),
+      data: getDataFromInputs(appConfig, serviceConfig, inputData),
+      params: getQueryParamsFromInputs(appConfig, serviceConfig, inputData),
+    })
+
     const response = await Axios({
       method: serviceConfig.method,
       headers: serviceConfig.headers,
       url: getUrlFromInputs(appConfig, serviceConfig, inputData),
       data: getDataFromInputs(appConfig, serviceConfig, inputData),
+      params: getQueryParamsFromInputs(appConfig, serviceConfig, inputData),
     })
 
-    const data = getDataFromPath(response.data, serviceConfig.outputPath)
+    console.log(response.data)
 
-    api.httpOperationResponse(callback, BotStatus.success, undefined, data)
+    const initialData = getDataFromPath(response.data, serviceConfig.outputPath)
+
+    console.log(initialData)
+
+    const mappedData = getDataFromService(initialData, serviceConfig)
+
+    api.httpOperationResponse(
+      callback,
+      BotStatus.success,
+      undefined,
+      mappedData
+    )
   } catch (err) {
     api.httpOperationResponse(callback, BotStatus.fail, err)
   }

@@ -1,7 +1,6 @@
 'use strict'
 
 import { S3 } from '@aws-sdk/client-s3'
-import { SQS } from '@aws-sdk/client-sqs'
 import { Lambda } from '@aws-sdk/client-lambda'
 import { Scheduler } from '@aws-sdk/client-scheduler'
 import { DynamoDB } from '@aws-sdk/client-dynamodb'
@@ -12,6 +11,7 @@ import { getCodeFile, getSampleCode, mountBotCode } from 'src/utils/code'
 import { ServiceName } from 'src/models/service'
 import { v4 as uuidv4 } from 'uuid'
 import { getTestInput } from 'src/utils/bot'
+import { validateTaskResult } from './schema'
 
 const USERS_TABLE = process.env.USERS_TABLE || ''
 const BOTS_BUCKET = process.env.BOTS_BUCKET || ''
@@ -28,7 +28,7 @@ export class Bot {
         Key: { userId, sortKey: `#BOT#${botId}` },
       })
 
-      return result.Item
+      return result.Item as IBot
     } catch (err) {
       throw err.message
     }
@@ -285,51 +285,51 @@ export class Bot {
     }
   }
 
-  async testBot(userId: string, botId: string, task: ITask, taskIndex: number) {
-    const sqs = new SQS({})
+  async testBot(userId: string, botId: string, task: ITask, taskIndex: string) {
     const lambda = new Lambda({})
     const ddb = DynamoDBDocument.from(new DynamoDB({}), {
       marshallOptions: { removeUndefinedValues: true },
     })
 
     try {
-      const inputData = getTestInput(task)
+      let sample
 
-      const testLambdaResult = await lambda.invoke({
-        FunctionName: `${SERVICE_PREFIX}-${task.service?.name}`,
-        Payload: JSON.stringify({
-          userId,
-          connectionId: task.connectionId,
-          appConfig: task.app?.config,
-          serviceConfig: task.service?.config,
+      if (parseInt(taskIndex) === 0) {
+        const { triggerSamples } = await this.getBot(userId, botId)
+        if (!triggerSamples) {
+          return
+        }
+
+        sample = triggerSamples.reverse()[0]
+      } else {
+        const inputData = getTestInput(task)
+        console.log('inputData', inputData)
+        const testLambdaResult = await lambda.invoke({
+          FunctionName: `${SERVICE_PREFIX}-${task.service?.name}`,
+          Payload: JSON.stringify({
+            userId,
+            connectionId: task.connectionId,
+            appConfig: task.app?.config,
+            serviceConfig: task.service?.config,
+            inputData,
+          }) as unknown as Uint8Array,
+        })
+
+        const testLambdaPayload = JSON.parse(
+          new TextDecoder().decode(testLambdaResult.Payload)
+        )
+
+        sample = {
           inputData,
-        }) as unknown as Uint8Array,
-      })
-
-      const testLambdaPayload = JSON.parse(
-        new TextDecoder().decode(testLambdaResult.Payload)
-      )
-
-      const sample = {
-        inputData,
-        outputData: testLambdaPayload.data,
-        status: testLambdaPayload.success
-          ? TaskStatus.success
-          : TaskStatus.fail,
-        timestamp: Date.now(),
+          outputData: testLambdaPayload.data,
+          status: testLambdaPayload.success
+            ? TaskStatus.success
+            : TaskStatus.fail,
+          timestamp: Date.now(),
+        }
       }
 
-      const queueResult = await sqs.getQueueUrl({
-        QueueName: `${SERVICE_PREFIX.replace('dev', 'prod')}-${userId}`,
-      })
-
-      await sqs.sendMessageBatch({
-        QueueUrl: queueResult.QueueUrl,
-        Entries: testLambdaPayload.data.slice(0, 10).map((entry, index) => ({
-          Id: index,
-          MessageBody: JSON.stringify(entry),
-        })),
-      })
+      validateTaskResult(sample)
 
       await ddb.update({
         TableName: USERS_TABLE,
@@ -357,8 +357,8 @@ export class Bot {
         TableName: USERS_TABLE,
         Key: { userId, sortKey: `#BOT#${botId}` },
         ReturnValues: 'ALL_NEW',
-        UpdateExpression: `set tasks[0].sampleResult = :sample,
-          triggerSamples = list_append(if_not_exists(triggerSamples, :emptyList), :sampleList)`,
+        UpdateExpression:
+          'triggerSamples = list_append(if_not_exists(triggerSamples, :emptyList), :sampleList)',
         ExpressionAttributeValues: {
           ':sample': sample,
           ':sampleList': [sample],

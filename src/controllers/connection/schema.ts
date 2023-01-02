@@ -7,7 +7,7 @@ import { IAppConnection } from 'src/models/connection'
 const ajv = new Ajv()
 addFormats(ajv)
 
-export const connectionSchema: JSONSchemaType<IAppConnection> = {
+const connectionSchema: JSONSchemaType<IAppConnection> = {
   type: 'object',
   properties: {
     appId: {

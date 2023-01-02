@@ -2,6 +2,7 @@
 
 import { Api, BotStatus } from 'src/utils/api'
 import { Bot } from 'src/controllers/bot'
+import { validateTaskResult } from 'src/controllers/bot/schema'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
@@ -16,6 +17,8 @@ exports.handler = async (event, context, callback) => {
       outputData,
       timestamp: Date.now(),
     }
+
+    validateTaskResult(sample)
 
     const data = await bot.addTriggerSample(userId, botId, sample)
 
