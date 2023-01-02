@@ -55,7 +55,6 @@ export interface ISerivceConfig {
   path?: string
   method?: string
   customFields?: boolean
-  inputSource?: InputSource
   inputFields?: IVariable[]
   outputPath?: string
   outputMapping?: {

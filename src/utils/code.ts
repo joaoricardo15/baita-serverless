@@ -2,7 +2,7 @@
 
 import JSZip from 'jszip'
 import { ConditionType, ITask, ITaskCondition } from 'src/models/bot'
-import { IVariable, InputSource } from 'src/models/service'
+import { IVariable } from 'src/models/service'
 
 const zip = new JSZip()
 
@@ -15,86 +15,74 @@ const comparationExpressions = {
   donotexists: '',
 }
 
-const getInputStringFromService = (
-  serviceFields: IVariable[],
-  inputData: any
+const getInputString = (
+  inputData: IVariable[],
+  serviceFields?: IVariable[]
 ) => {
   let inputString = ''
 
-  for (let j = 0; j < serviceFields.length; j++) {
-    const name = serviceFields[j].name
-
-    const inputField = inputData.find((x) => x.name === name)
-
-    if (!inputField) throw 'invalid bot config'
-
-    if (inputField.outputName && inputField.outputIndex !== undefined) {
-      inputString += `'${name}': task${inputField.outputIndex}_outputData['${inputField.outputName}'],`
-    } else if (inputField.value) {
-      inputString += `'${name}': \`${inputField.value}\`,`
-    }
-  }
-
-  return inputString
-}
-
-const getInputStringFromInput = (inputData: any) => {
-  let inputString = ''
-
-  for (let j = 0; j < inputData.length; j++) {
-    const inputField = inputData[j]
-
-    if (inputField.outputName && inputField.outputIndex !== undefined) {
-      inputString += `'${inputField.name}': task${inputField.outputIndex}_outputData['${inputField.outputName}'],`
-    } else if (inputField.value) {
-      inputString += `'${inputField.name}': \`${inputField.value}\`,`
-    }
-  }
-
-  return inputString
-}
-
-const getConditionsString = (conditions: ITaskCondition[]) => {
-  let andConditionsString = ''
-
-  for (let j = 0; j < conditions.length; j++) {
-    const andConditions = conditions[j].andConditions
-
-    if (andConditions) {
-      for (let k = 0; k < andConditions.length; k++) {
-        const andCondition = andConditions[k]
-
-        let conditionValue = ''
-        if (andCondition.outputName && andCondition.outputIndex !== undefined) {
-          conditionValue = `task${andCondition.outputIndex}_outputData['${andCondition.outputName}']`
-        } else if (andCondition.value) {
-          conditionValue = `\`${andCondition.value}\``
-        }
-
-        const conditionExpression = comparationExpressions[andCondition.type]
-
-        const comparationValue = andCondition.type
-
-        if (conditionValue && andCondition.type)
-          andConditionsString += `${k === 0 ? '' : ' && '}${
-            andCondition.type === ConditionType.donotexists
-              ? `!${conditionValue}`
-              : andCondition.type === ConditionType.exists
-              ? `${conditionValue}`
-              : `${conditionValue} ${conditionExpression} ${comparationValue}`
-          }`
+  if (serviceFields)
+    for (let j = 0; j < serviceFields.length; j++) {
+      const fieldName = serviceFields[j].name
+      const inputField = inputData.find((x) => x.name === fieldName)
+      if (!inputField) throw `Input field ${fieldName} not found.`
+      if (inputField.outputName && inputField.outputIndex !== undefined) {
+        inputString += `'${fieldName}': task${inputField.outputIndex}_outputData['${inputField.outputName}'],`
+      } else if (inputField.value) {
+        inputString += `'${fieldName}': \`${inputField.value}\`,`
       }
     }
 
-    if (andConditionsString) {
-      andConditionsString += `${j === 0 ? '' : ' || '}(${andConditionsString})`
+  return inputString
+}
+
+const getConditionsString = (conditions?: ITaskCondition[]) => {
+  let andConditionsString = ''
+
+  if (conditions)
+    for (let j = 0; j < conditions.length; j++) {
+      const andConditions = conditions[j].andConditions
+
+      if (andConditions) {
+        for (let k = 0; k < andConditions.length; k++) {
+          const andCondition = andConditions[k]
+
+          let conditionValue = ''
+          if (
+            andCondition.outputName &&
+            andCondition.outputIndex !== undefined
+          ) {
+            conditionValue = `task${andCondition.outputIndex}_outputData['${andCondition.outputName}']`
+          } else if (andCondition.value) {
+            conditionValue = `\`${andCondition.value}\``
+          }
+
+          const conditionExpression = comparationExpressions[andCondition.type]
+
+          const comparationValue = andCondition.type
+
+          if (conditionValue && andCondition.type)
+            andConditionsString += `${k === 0 ? '' : ' && '}${
+              andCondition.type === ConditionType.donotexists
+                ? `!${conditionValue}`
+                : andCondition.type === ConditionType.exists
+                ? `${conditionValue}`
+                : `${conditionValue} ${conditionExpression} ${comparationValue}`
+            }`
+        }
+      }
+
+      if (andConditionsString) {
+        andConditionsString += `${
+          j === 0 ? '' : ' || '
+        }(${andConditionsString})`
+      }
     }
-  }
 
   return andConditionsString
 }
 
-const getBotInnerCode = (userId: string, active: boolean, tasks: ITask[]) => {
+const getBotInnerCode = (userId: string, tasks: ITask[]) => {
   let innerCode = ''
 
   for (let i = 1; i < tasks.length; i++) {
@@ -103,24 +91,12 @@ const getBotInnerCode = (userId: string, active: boolean, tasks: ITask[]) => {
     const service = task.service
     const conditions = task.conditions
 
-    let inputDataString = ''
+    const inputDataString = getInputString(
+      task.inputData,
+      service?.config.inputFields
+    )
 
-    if (
-      service?.config.inputFields &&
-      service.config.inputSource === InputSource.service
-    ) {
-      inputDataString += getInputStringFromService(
-        service.config.inputFields,
-        task.inputData
-      )
-    } else if (service?.config.inputSource === InputSource.input) {
-      inputDataString += getInputStringFromInput(task.inputData)
-    }
-
-    let conditionsString = ''
-    if (conditions) {
-      conditionsString += getConditionsString(conditions)
-    }
+    const conditionsString = getConditionsString(conditions)
 
     innerCode += `
     const task${i}_inputData = { ${inputDataString} }
@@ -184,7 +160,7 @@ ${
   return innerCode
 }
 
-export const getSampleCode = (userId: string, botId: string) => {
+export const getBotSampleCode = (userId: string, botId: string) => {
   return `
 const AWS = require('aws-sdk');
 const lambda = new AWS.Lambda({ region: "us-east-1" });
@@ -291,9 +267,7 @@ ${
   }]
 
   try {
-
-    ${getBotInnerCode(userId, active, tasks)}
-  
+    ${getBotInnerCode(userId, tasks)}
   } catch (error) {
     errorResult = error
   }

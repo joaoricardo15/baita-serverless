@@ -4,11 +4,11 @@ import Axios from 'axios'
 import { validateOperationInput } from 'src/controllers/bot/schema'
 import { Api, BotStatus } from 'src/utils/api'
 import {
-  getDataFromInputs,
+  getBodyFromService,
   getDataFromPath,
   getDataFromService,
-  getQueryParamsFromInputs,
-  getUrlFromInputs,
+  getQueryParamsFromService,
+  getUrlFromService,
 } from 'src/utils/bot'
 
 exports.handler = async (event, context, callback) => {
@@ -22,17 +22,17 @@ exports.handler = async (event, context, callback) => {
     console.log({
       method: serviceConfig.method,
       headers: serviceConfig.headers,
-      url: getUrlFromInputs(appConfig, serviceConfig, inputData),
-      data: getDataFromInputs(appConfig, serviceConfig, inputData),
-      params: getQueryParamsFromInputs(appConfig, serviceConfig, inputData),
+      url: getUrlFromService(appConfig, serviceConfig, inputData),
+      data: getBodyFromService(appConfig, serviceConfig, inputData),
+      params: getQueryParamsFromService(appConfig, serviceConfig, inputData),
     })
 
     const response = await Axios({
       method: serviceConfig.method,
       headers: serviceConfig.headers,
-      url: getUrlFromInputs(appConfig, serviceConfig, inputData),
-      data: getDataFromInputs(appConfig, serviceConfig, inputData),
-      params: getQueryParamsFromInputs(appConfig, serviceConfig, inputData),
+      url: getUrlFromService(appConfig, serviceConfig, inputData),
+      data: getBodyFromService(appConfig, serviceConfig, inputData),
+      params: getQueryParamsFromService(appConfig, serviceConfig, inputData),
     })
 
     console.log(response.data)

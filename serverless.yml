@@ -81,6 +81,8 @@ functions:
     handler: src/operations/oauth2-request/index.handler
   code-execute:
     handler: src/operations/code-execute/index.handler
+  queue-publish:
+    handler: src/operations/queue-publish/index.handler
   # scrapper:
   #   handler: src/operations/scrapper/index.handler
   #   timeout: 60

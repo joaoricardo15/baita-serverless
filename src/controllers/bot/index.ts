@@ -7,10 +7,10 @@ import { DynamoDB } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
 import { ApiGatewayV2 } from '@aws-sdk/client-apigatewayv2'
 import { IBot, ITask, ITaskResult, TaskStatus } from 'src/models/bot'
-import { getCodeFile, getSampleCode, mountBotCode } from 'src/utils/code'
+import { getCodeFile, getBotSampleCode, mountBotCode } from 'src/utils/code'
 import { ServiceName } from 'src/models/service'
 import { v4 as uuidv4 } from 'uuid'
-import { getTestInput } from 'src/utils/bot'
+import { getTestDataFromService } from 'src/utils/bot'
 import { validateTaskResult } from './schema'
 
 const USERS_TABLE = process.env.USERS_TABLE || ''
@@ -64,7 +64,7 @@ export class Bot {
     try {
       const botId = uuidv4()
 
-      const sampleCode = getSampleCode(userId, botId)
+      const sampleCode = getBotSampleCode(userId, botId)
       const codeFile = await getCodeFile(sampleCode)
 
       await s3.putObject({
@@ -296,13 +296,13 @@ export class Bot {
 
       if (parseInt(taskIndex) === 0) {
         const { triggerSamples } = await this.getBot(userId, botId)
-        if (!triggerSamples) {
-          return
-        }
-
+        if (!triggerSamples) return
         sample = triggerSamples.reverse()[0]
       } else {
-        const inputData = getTestInput(task)
+        const inputData = getTestDataFromService(
+          task.inputData,
+          task.service?.config.inputFields
+        )
         console.log('inputData', inputData)
         const testLambdaResult = await lambda.invoke({
           FunctionName: `${SERVICE_PREFIX}-${task.service?.name}`,

@@ -1,15 +1,16 @@
 'use strict'
 
 import { IAppConfig } from 'src/models/app'
-import { ITask } from 'src/models/bot'
-import { InputSource, ISerivceConfig } from 'src/models/service'
+import { InputSource, ISerivceConfig, IVariable } from 'src/models/service'
 
 export const getDataFromService = (
   data: any,
   serviceConfig: ISerivceConfig
 ) => {
   return Array.isArray(data)
-    ? data.map((item) => getDataFromObject(item, serviceConfig))
+    ? data
+        .map((item) => getDataFromObject(item, serviceConfig))
+        .filter((item) => item)
     : getDataFromObject(data, serviceConfig)
 }
 
@@ -37,16 +38,15 @@ export const getDataFromObject = (data: any, serviceConfig: ISerivceConfig) => {
 
   for (let i = 0; i < outputKeys.length; i++) {
     const outputKey = outputKeys[i]
-    mappedData[outputKey] = getDataFromPath(
-      data,
-      outputMapping[outputKey] as any
-    )
+    const outputValue = getDataFromPath(data, outputMapping[outputKey])
+    if (!outputValue) return
+    mappedData[outputKey] = outputValue
   }
 
   return mappedData
 }
 
-export const getDataFromInputs = (
+export const getBodyFromService = (
   appConfig: IAppConfig,
   serviceConfig: ISerivceConfig,
   inputData: any
@@ -78,7 +78,7 @@ export const getDataFromInputs = (
   return data
 }
 
-export const getUrlFromInputs = (
+export const getUrlFromService = (
   appConfig: IAppConfig,
   serviceConfig: ISerivceConfig,
   inputData: any
@@ -117,7 +117,7 @@ export const getUrlFromInputs = (
   return url
 }
 
-export const getQueryParamsFromInputs = (
+export const getQueryParamsFromService = (
   appConfig: IAppConfig,
   serviceConfig: ISerivceConfig,
   inputData: any
@@ -149,23 +149,18 @@ export const getQueryParamsFromInputs = (
   return params
 }
 
-export const getTestInput = (task: ITask) => {
+export const getTestDataFromService = (
+  inputData: IVariable[],
+  serviceFields?: IVariable[]
+) => {
   const input = {}
 
-  if (
-    task.service?.config.inputFields &&
-    task.service.config.inputSource === InputSource.service
-  )
-    for (let j = 0; j < task.service.config.inputFields.length; j++) {
-      const name = task.service.config.inputFields[j].name
-      const inputField = task.inputData.find((x) => x.name === name)
-      if (!inputField) throw 'Invalid bot config'
-      input[inputField.name] = inputField.sampleValue
-    }
-  else if (task.service?.config.inputSource === InputSource.input)
-    for (let j = 0; j < task.inputData.length; j++) {
-      const inputField = task.inputData[j]
-      input[inputField.name] = inputField.sampleValue
+  if (serviceFields)
+    for (let j = 0; j < serviceFields.length; j++) {
+      const fieldName = serviceFields[j].name
+      const inputField = inputData.find((x) => x.name === fieldName)
+      if (!inputField) throw `Input field '${fieldName}' not found.`
+      input[fieldName] = inputField.sampleValue
     }
 
   return input

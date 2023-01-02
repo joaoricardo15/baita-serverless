@@ -210,11 +210,6 @@ const serviceConfigSchema: JSONSchemaType<ISerivceConfig> = {
       type: 'boolean',
       nullable: true,
     },
-    inputSource: {
-      type: 'string',
-      enum: Object.values(InputSource) as readonly InputSource[],
-      nullable: true,
-    },
     inputFields: {
       type: 'array',
       nullable: true,

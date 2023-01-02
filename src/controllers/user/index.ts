@@ -84,7 +84,7 @@ export class User {
 
       await sqs.sendMessageBatch({
         QueueUrl: queueResult.QueueUrl,
-        Entries: posts.map((entry, index) => ({
+        Entries: posts.slice(0, 10).map((entry, index) => ({
           Id: index.toString(),
           MessageBody: JSON.stringify(entry),
         })),

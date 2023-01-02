@@ -6,12 +6,12 @@ import { Connection } from 'src/controllers/connection'
 import { Api, BotStatus } from 'src/utils/api'
 import {
   getAuthParamsFromApp,
-  getDataFromInputs,
+  getBodyFromService,
   getAuthDataFromApp,
   getDataFromPath,
   getDataFromService,
-  getUrlFromInputs,
-  getQueryParamsFromInputs,
+  getUrlFromService,
+  getQueryParamsFromService,
 } from 'src/utils/bot'
 
 exports.handler = async (event, context, callback) => {
@@ -57,9 +57,9 @@ exports.handler = async (event, context, callback) => {
         ...serviceConfig.headers,
         Authorization: `Bearer ${access_token}`,
       },
-      url: getUrlFromInputs(appConfig, serviceConfig, inputData),
-      data: getDataFromInputs(appConfig, serviceConfig, inputData),
-      params: getQueryParamsFromInputs(appConfig, serviceConfig, inputData),
+      url: getUrlFromService(appConfig, serviceConfig, inputData),
+      data: getBodyFromService(appConfig, serviceConfig, inputData),
+      params: getQueryParamsFromService(appConfig, serviceConfig, inputData),
     })
 
     // Http request
@@ -69,9 +69,9 @@ exports.handler = async (event, context, callback) => {
         ...serviceConfig.headers,
         Authorization: `Bearer ${access_token}`,
       },
-      url: getUrlFromInputs(appConfig, serviceConfig, inputData),
-      data: getDataFromInputs(appConfig, serviceConfig, inputData),
-      params: getQueryParamsFromInputs(appConfig, serviceConfig, inputData),
+      url: getUrlFromService(appConfig, serviceConfig, inputData),
+      data: getBodyFromService(appConfig, serviceConfig, inputData),
+      params: getQueryParamsFromService(appConfig, serviceConfig, inputData),
     })
 
     console.log(response.data)

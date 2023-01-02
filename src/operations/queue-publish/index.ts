@@ -1,10 +1,9 @@
 'use strict'
 
-import Axios from 'axios'
-import { validateOperationInput } from 'src/controllers/bot/schema'
-import { Api, BotStatus } from 'src/utils/api'
 import { User } from 'src/controllers/user'
 import { validatePosts } from 'src/controllers/user/schema'
+import { validateOperationInput } from 'src/controllers/bot/schema'
+import { Api, BotStatus } from 'src/utils/api'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
@@ -13,17 +12,22 @@ exports.handler = async (event, context, callback) => {
   try {
     validateOperationInput(event)
 
-    const { userId, inputData } = event
+    const {
+      userId,
+      inputData: { posts },
+    } = event
 
-    if (Array.isArray(inputData)) {
-      validatePosts(inputData)
-      await user.publishContent(userId, inputData)
+    if (Array.isArray(posts)) {
+      validatePosts(posts)
+      await user.publishContent(userId, posts)
     } else {
-      validatePosts([inputData])
-      await user.publishContent(userId, [inputData])
+      validatePosts([posts])
+      await user.publishContent(userId, [posts])
     }
 
-    api.httpOperationResponse(callback, BotStatus.success, undefined)
+    api.httpOperationResponse(callback, BotStatus.success, undefined, {
+      message: 'Content published successfully.',
+    })
   } catch (err) {
     api.httpOperationResponse(callback, BotStatus.fail, err)
   }
