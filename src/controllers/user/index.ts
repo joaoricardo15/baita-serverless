@@ -47,10 +47,27 @@ export class User {
         MaxNumberOfMessages: 10,
       })
 
+      if (messagesResult.Messages) {
+        await sqs.deleteMessageBatch({
+          QueueUrl: queueUrlResult.QueueUrl,
+          Entries: messagesResult.Messages?.map((message) => ({
+            Id: message.MessageId,
+            ReceiptHandle: message.ReceiptHandle,
+          })),
+        })
+      }
+
       return (
-        messagesResult.Messages?.filter((message) => message.Body).map(
-          (message) => JSON.parse(message.Body || '{}')
-        ) || []
+        messagesResult.Messages?.filter((message) => message.Body)
+          .map((message) => {
+            try {
+              return JSON.parse(message.Body || '{}')
+            } catch (err) {
+              console.log(message.Body)
+              return null
+            }
+          })
+          .filter((message) => message) || []
       )
     } catch (err) {
       throw err.message
