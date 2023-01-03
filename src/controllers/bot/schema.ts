@@ -3,6 +3,7 @@
 import Ajv, { JSONSchemaType } from 'ajv'
 import addFormats from 'ajv-formats'
 import {
+  DataType,
   InputSource,
   ISerivceConfig,
   IService,
@@ -15,16 +16,36 @@ import {
   ConditionType,
   ITask,
   ICondition,
-  ITaskResult,
-  TaskStatus,
+  ITaskExecutionResult,
+  TaskExecutionStatus,
+  ITaskExecutionInput,
 } from 'src/models/bot'
 import { IApp, IAppConfig } from 'src/models/app'
-import { IOperationInput } from 'src/models/operation'
 
 const ajv = new Ajv()
 addFormats(ajv)
 
-export const appConfigSchema: JSONSchemaType<IAppConfig> = {
+const dataSchema: JSONSchemaType<DataType> = {
+  anyOf: [
+    { type: 'string' },
+    { type: 'number' },
+    { type: 'boolean' },
+    { type: 'object' },
+    {
+      type: 'array',
+      items: {
+        anyOf: [
+          { type: 'string' },
+          { type: 'number' },
+          { type: 'boolean' },
+          { type: 'object' },
+        ],
+      },
+    },
+  ],
+}
+
+const appConfigSchema: JSONSchemaType<IAppConfig> = {
   type: 'object',
   properties: {
     apiUrl: {
@@ -75,7 +96,7 @@ export const appConfigSchema: JSONSchemaType<IAppConfig> = {
   },
 }
 
-export const appSchema: JSONSchemaType<IApp> = {
+const appSchema: JSONSchemaType<IApp> = {
   type: 'object',
   properties: {
     name: {
@@ -89,7 +110,7 @@ export const appSchema: JSONSchemaType<IApp> = {
   required: ['name', 'appId', 'config'],
 }
 
-export const variableSchema: JSONSchemaType<IVariable> = {
+const variableSchema: JSONSchemaType<IVariable> = {
   type: 'object',
   properties: {
     type: {
@@ -102,35 +123,17 @@ export const variableSchema: JSONSchemaType<IVariable> = {
     label: {
       type: 'string',
     },
-    value: {
-      anyOf: [
-        { type: 'string' },
-        { type: 'number' },
-        { type: 'boolean' },
-        { type: 'object' },
-      ],
-    },
-    sampleValue: {
-      anyOf: [
-        { type: 'string' },
-        { type: 'number' },
-        { type: 'boolean' },
-        { type: 'object' },
-      ],
-    },
+    value: dataSchema,
+    sampleValue: dataSchema,
     outputIndex: {
       type: 'number',
       nullable: true,
     },
-    outputName: {
+    outputPath: {
       type: 'string',
       nullable: true,
     },
     customFieldId: {
-      type: 'number',
-      nullable: true,
-    },
-    taskIndex: {
       type: 'number',
       nullable: true,
     },
@@ -158,7 +161,7 @@ export const variableSchema: JSONSchemaType<IVariable> = {
   required: ['type', 'name', 'label'],
 }
 
-export const conditionSchema: JSONSchemaType<ICondition> = {
+const conditionSchema: JSONSchemaType<ICondition> = {
   type: 'object',
   properties: {
     type: {
@@ -171,22 +174,8 @@ export const conditionSchema: JSONSchemaType<ICondition> = {
     label: {
       type: 'string',
     },
-    value: {
-      anyOf: [
-        { type: 'string' },
-        { type: 'number' },
-        { type: 'boolean' },
-        { type: 'object' },
-      ],
-    },
-    outputName: {
-      type: 'string',
-      nullable: true,
-    },
-    sampleValue: {
-      type: 'string',
-      nullable: true,
-    },
+    value: dataSchema,
+    sampleValue: dataSchema,
     outputIndex: {
       type: 'number',
       nullable: true,
@@ -195,7 +184,7 @@ export const conditionSchema: JSONSchemaType<ICondition> = {
   required: ['type', 'name', 'label'],
 }
 
-export const serviceConfigSchema: JSONSchemaType<ISerivceConfig> = {
+const serviceConfigSchema: JSONSchemaType<ISerivceConfig> = {
   type: 'object',
   properties: {
     path: {
@@ -210,11 +199,6 @@ export const serviceConfigSchema: JSONSchemaType<ISerivceConfig> = {
       type: 'boolean',
       nullable: true,
     },
-    inputSource: {
-      type: 'string',
-      enum: Object.values(InputSource) as readonly InputSource[],
-      nullable: true,
-    },
     inputFields: {
       type: 'array',
       nullable: true,
@@ -223,6 +207,11 @@ export const serviceConfigSchema: JSONSchemaType<ISerivceConfig> = {
     outputPath: {
       type: 'string',
       nullable: true,
+    },
+    outputMapping: {
+      type: 'object',
+      nullable: true,
+      required: [],
     },
     queryParams: {
       type: 'array',
@@ -299,7 +288,7 @@ export const serviceConfigSchema: JSONSchemaType<ISerivceConfig> = {
   },
 }
 
-export const serviceSchema: JSONSchemaType<IService> = {
+const serviceSchema: JSONSchemaType<IService> = {
   type: 'object',
   properties: {
     type: {
@@ -318,99 +307,85 @@ export const serviceSchema: JSONSchemaType<IService> = {
   required: ['type', 'name', 'label', 'config'],
 }
 
-export const taskResultSchema: JSONSchemaType<ITaskResult> = {
+const taskResultSchema: JSONSchemaType<ITaskExecutionResult> = {
   type: 'object',
   properties: {
     status: {
       type: 'string',
-      enum: Object.values(TaskStatus) as readonly TaskStatus[],
+      enum: Object.values(
+        TaskExecutionStatus
+      ) as readonly TaskExecutionStatus[],
     },
     timestamp: {
       type: 'number',
     },
-    inputData: {
-      anyOf: [
-        { type: 'string' },
-        { type: 'number' },
-        { type: 'boolean' },
-        { type: 'object' },
-      ],
-    },
-    outputData: {
-      anyOf: [
-        { type: 'string' },
-        { type: 'number' },
-        { type: 'boolean' },
-        { type: 'object' },
-      ],
-    },
+    inputData: dataSchema,
+    outputData: dataSchema,
   },
   required: ['status', 'timestamp'],
 }
 
-export const taskSchema: JSONSchemaType<ITask> = {
-  type: 'object',
-  properties: {
-    app: {
-      nullable: true,
-      ...appSchema,
-    },
-    service: {
-      nullable: true,
-      ...serviceSchema,
-    },
-    taskId: {
-      type: 'number',
-    },
-    connectionId: {
-      type: 'string',
-      nullable: true,
-    },
-    inputData: {
-      type: 'array',
-      items: variableSchema,
-    },
-    sampleResult: {
-      nullable: true,
-      ...taskResultSchema,
-    },
-    returnData: {
-      type: 'boolean',
-      nullable: true,
-    },
-    conditions: {
-      type: 'array',
-      nullable: true,
-      items: {
-        type: 'object',
-        properties: {
-          conditionId: {
-            type: 'number',
+const tasksSchema: JSONSchemaType<ITask[]> = {
+  type: 'array',
+  items: {
+    type: 'object',
+    properties: {
+      app: {
+        nullable: true,
+        ...appSchema,
+      },
+      service: {
+        nullable: true,
+        ...serviceSchema,
+      },
+      taskId: {
+        type: 'number',
+      },
+      connectionId: {
+        type: 'string',
+        nullable: true,
+      },
+      inputData: {
+        type: 'array',
+        items: variableSchema,
+      },
+      sampleResult: {
+        nullable: true,
+        ...taskResultSchema,
+      },
+      returnData: {
+        type: 'boolean',
+        nullable: true,
+      },
+      conditions: {
+        type: 'array',
+        nullable: true,
+        items: {
+          type: 'object',
+          properties: {
+            conditionId: {
+              type: 'number',
+            },
+            andConditions: {
+              type: 'array',
+              nullable: true,
+              items: conditionSchema,
+            },
+            orConditions: {
+              type: 'array',
+              nullable: true,
+              items: conditionSchema,
+            },
           },
-          andConditions: {
-            type: 'array',
-            nullable: true,
-            items: conditionSchema,
-          },
-          orConditions: {
-            type: 'array',
-            nullable: true,
-            items: conditionSchema,
-          },
+          required: ['conditionId'],
         },
-        required: ['conditionId'],
       },
     },
+    required: ['taskId', 'inputData'],
   },
-  required: ['taskId', 'inputData'],
 }
 
-export const tasksSchema: JSONSchemaType<ITask[]> = {
-  type: 'array',
-  items: taskSchema,
-}
-
-export const operationInputSchema: JSONSchemaType<IOperationInput> = {
+const operationInputSchema: JSONSchemaType<ITaskExecutionInput> = {
   type: 'object',
   properties: {
     userId: {
@@ -418,25 +393,13 @@ export const operationInputSchema: JSONSchemaType<IOperationInput> = {
     },
     connectionId: {
       type: 'string',
+      nullable: true,
     },
-    inputData: {
-      anyOf: [
-        { type: 'string' },
-        { type: 'number' },
-        { type: 'boolean' },
-        { type: 'object' },
-      ],
-    },
+    inputData: dataSchema,
     appConfig: appConfigSchema,
     serviceConfig: serviceConfigSchema,
   },
-  required: ['userId', 'connectionId', 'appConfig', 'serviceConfig'],
-}
-
-export const validateTask = (task: ITask) => {
-  const validate = ajv.compile(taskSchema)
-
-  if (!validate(task)) throw ajv.errorsText(validate.errors)
+  required: ['userId', 'appConfig', 'serviceConfig'],
 }
 
 export const validateTasks = (tasks: ITask[]) => {
@@ -445,7 +408,13 @@ export const validateTasks = (tasks: ITask[]) => {
   if (!validate(tasks)) throw ajv.errorsText(validate.errors)
 }
 
-export const validateOperationInput = (input: IOperationInput) => {
+export const validateTaskResult = (taskResult: ITaskExecutionResult) => {
+  const validate = ajv.compile(taskResultSchema)
+
+  if (!validate(taskResult)) throw ajv.errorsText(validate.errors)
+}
+
+export const validateOperationInput = (input: ITaskExecutionInput) => {
   const validate = ajv.compile(operationInputSchema)
 
   if (!validate(input)) throw ajv.errorsText(validate.errors)

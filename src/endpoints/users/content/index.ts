@@ -1,16 +1,16 @@
 'use strict'
 
 import { Api, BotStatus } from 'src/utils/api'
-import { Log } from 'src/controllers/log'
+import { User } from 'src/controllers/user'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
-  const log = new Log()
+  const user = new User()
 
   try {
-    const { botId } = event.pathParameters
+    const { userId } = event.pathParameters
 
-    const data = await log.getBotUsage(botId)
+    const data = await user.getContent(userId)
 
     api.httpResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {

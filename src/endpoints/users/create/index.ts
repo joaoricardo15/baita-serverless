@@ -11,11 +11,12 @@ exports.handler = async (event, context, callback) => {
   try {
     const body = JSON.parse(event.body)
 
-    const newUser = { userId: body.user_id, ...body }
+    // This is a workaround for Auth0's user_id format
+    const newUser = { userId: body.user_id.split('|')[1], ...body }
 
     validateUser(newUser)
 
-    const data = await user.create(newUser)
+    const data = await user.createUser(newUser)
 
     api.httpResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {

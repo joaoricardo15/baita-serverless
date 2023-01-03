@@ -2,12 +2,34 @@
 
 import Ajv, { JSONSchemaType } from 'ajv'
 import addFormats from 'ajv-formats'
+import { TaskExecutionStatus } from 'src/models/bot'
 import { IBotLog, ILog } from 'src/models/log'
+import { DataType } from 'src/models/service'
 
 const ajv = new Ajv()
 addFormats(ajv)
 
-export const logSchema: JSONSchemaType<ILog> = {
+const dataSchema: JSONSchemaType<DataType> = {
+  anyOf: [
+    { type: 'string' },
+    { type: 'number' },
+    { type: 'boolean' },
+    { type: 'object' },
+    {
+      type: 'array',
+      items: {
+        anyOf: [
+          { type: 'string' },
+          { type: 'number' },
+          { type: 'boolean' },
+          { type: 'object' },
+        ],
+      },
+    },
+  ],
+}
+
+const logSchema: JSONSchemaType<ILog> = {
   type: 'object',
   properties: {
     name: {
@@ -15,31 +37,20 @@ export const logSchema: JSONSchemaType<ILog> = {
     },
     status: {
       type: 'string',
+      enum: Object.values(
+        TaskExecutionStatus
+      ) as readonly TaskExecutionStatus[],
     },
     timestamp: {
       type: 'number',
     },
-    inputData: {
-      anyOf: [
-        { type: 'string' },
-        { type: 'number' },
-        { type: 'boolean' },
-        { type: 'object' },
-      ],
-    },
-    outputData: {
-      anyOf: [
-        { type: 'string' },
-        { type: 'number' },
-        { type: 'boolean' },
-        { type: 'object' },
-      ],
-    },
+    inputData: dataSchema,
+    outputData: dataSchema,
   },
   required: ['name', 'status', 'timestamp'],
 }
 
-export const botLogSchema: JSONSchemaType<IBotLog> = {
+const botLogSchema: JSONSchemaType<IBotLog> = {
   type: 'object',
   properties: {
     botId: {

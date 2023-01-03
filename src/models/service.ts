@@ -4,10 +4,12 @@ export enum ServiceType {
 }
 
 export enum ServiceName {
-  webhook = 'webhook',
   code = 'code-execute',
   http = 'http-request',
+  queue = 'queue-publish',
   oauth2 = 'oauth2-request',
+  webhook = 'webhook',
+  schedule = 'schedule',
 }
 
 export enum InputSource {
@@ -24,7 +26,13 @@ export enum VariableType {
   options = 'options',
 }
 
-export type DataType = string | number | boolean | object | null
+export type DataType =
+  | null
+  | string
+  | number
+  | boolean
+  | object
+  | Array<string | number | boolean | object>
 
 export interface IVariable {
   type: VariableType
@@ -33,9 +41,8 @@ export interface IVariable {
   value: DataType
   sampleValue: DataType
   outputIndex?: number
-  outputName?: string
+  outputPath?: string
   customFieldId?: number
-  taskIndex?: number
   groupName?: string
   options?: {
     label: string
@@ -47,9 +54,11 @@ export interface ISerivceConfig {
   path?: string
   method?: string
   customFields?: boolean
-  inputSource?: InputSource
   inputFields?: IVariable[]
   outputPath?: string
+  outputMapping?: {
+    [key: string]: string
+  }
   queryParams?: {
     paramName: string
     source: InputSource

@@ -1,10 +1,27 @@
 'use strict'
 
-import AWS from 'aws-sdk'
-import { IBot, ITask, ITaskResult, TaskStatus } from 'src/models/bot'
-import { InputSource } from 'src/models/service'
+import { S3 } from '@aws-sdk/client-s3'
+import { Lambda } from '@aws-sdk/client-lambda'
+import { Scheduler } from '@aws-sdk/client-scheduler'
+import { DynamoDB } from '@aws-sdk/client-dynamodb'
+import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
+import { ApiGatewayV2 } from '@aws-sdk/client-apigatewayv2'
+import { CloudWatchLogs } from '@aws-sdk/client-cloudwatch-logs'
+import {
+  IBot,
+  ITask,
+  ITaskExecutionResult,
+  TaskExecutionStatus,
+} from 'src/models/bot'
+import {
+  getCodeFile,
+  getBotSampleCode,
+  getCompleteBotCode,
+} from 'src/utils/code'
+import { ServiceName } from 'src/models/service'
 import { v4 as uuidv4 } from 'uuid'
-import { Code } from '../../utils/code'
+import { getTestDataFromService } from 'src/utils/bot'
+import { validateTaskResult } from './schema'
 
 const USERS_TABLE = process.env.USERS_TABLE || ''
 const BOTS_BUCKET = process.env.BOTS_BUCKET || ''
@@ -13,37 +30,33 @@ const SERVICE_PREFIX = process.env.SERVICE_PREFIX || ''
 
 export class Bot {
   async getBot(userId: string, botId: string) {
-    const ddb = new AWS.DynamoDB.DocumentClient()
+    const ddb = DynamoDBDocument.from(new DynamoDB({}))
 
     try {
-      const result = await ddb
-        .get({
-          TableName: USERS_TABLE,
-          Key: { userId, sortKey: `#BOT#${botId}` },
-        })
-        .promise()
+      const result = await ddb.get({
+        TableName: USERS_TABLE,
+        Key: { userId, sortKey: `#BOT#${botId}` },
+      })
 
-      return result.Item
+      return result.Item as IBot
     } catch (err) {
       throw err.message
     }
   }
 
   async getBots(userId: string) {
-    const ddb = new AWS.DynamoDB.DocumentClient()
+    const ddb = DynamoDBDocument.from(new DynamoDB({}))
 
     try {
-      const result = await ddb
-        .query({
-          TableName: USERS_TABLE,
-          KeyConditionExpression:
-            'userId = :userId and begins_with(sortKey, :sortKey)',
-          ExpressionAttributeValues: {
-            ':userId': userId,
-            ':sortKey': '#BOT',
-          },
-        })
-        .promise()
+      const result = await ddb.query({
+        TableName: USERS_TABLE,
+        KeyConditionExpression:
+          'userId = :userId and begins_with(sortKey, :sortKey)',
+        ExpressionAttributeValues: {
+          ':userId': userId,
+          ':sortKey': '#BOT',
+        },
+      })
 
       return result.Items
     } catch (err) {
@@ -52,86 +65,71 @@ export class Bot {
   }
 
   async createBot(userId: string) {
-    const ddb = new AWS.DynamoDB.DocumentClient()
-    // const eventBridge = new AWS.EventBridge()
-    const apigateway = new AWS.ApiGatewayV2()
-    const lambda = new AWS.Lambda()
-    const s3 = new AWS.S3()
-    const code = new Code()
+    const ddb = DynamoDBDocument.from(new DynamoDB({}))
+    const apigateway = new ApiGatewayV2({})
+    const scheduler = new Scheduler({})
+    const lambda = new Lambda({})
+    const s3 = new S3({})
 
     try {
       const botId = uuidv4()
+      const botPrefix = `${SERVICE_PREFIX}-${botId}`
 
-      const sampleCode = code.getSampleCode(userId, botId)
-      const codeFile = await code.getCodeFile(sampleCode)
+      const sampleCode = getBotSampleCode(userId, botId)
+      const codeFile = await getCodeFile(sampleCode)
 
-      await s3
-        .upload({
-          Bucket: BOTS_BUCKET,
-          Key: `${botId}.zip`,
-          Body: codeFile,
-        })
-        .promise()
+      await s3.putObject({
+        Bucket: BOTS_BUCKET,
+        Key: `${botId}.zip`,
+        Body: codeFile,
+      })
 
-      const lambdaResult = await lambda
-        .createFunction({
-          FunctionName: `${SERVICE_PREFIX}-${botId}`,
-          Handler: 'index.handler',
-          Runtime: 'nodejs12.x',
-          Role: BOTS_PERMISSION,
-          Code: {
-            S3Bucket: BOTS_BUCKET,
-            S3Key: `${botId}.zip`,
-          },
-        })
-        .promise()
+      const lambdaResult = await lambda.createFunction({
+        FunctionName: botPrefix,
+        Handler: 'index.handler',
+        Runtime: 'nodejs12.x',
+        Role: BOTS_PERMISSION,
+        Code: {
+          S3Bucket: BOTS_BUCKET,
+          S3Key: `${botId}.zip`,
+        },
+      })
 
       const botUrl = '/bot'
 
-      const apiResult = await apigateway
-        .createApi({
-          Name: `${SERVICE_PREFIX}-${botId}`,
-          ProtocolType: 'HTTP',
-          CredentialsArn: BOTS_PERMISSION,
-          RouteKey: `ANY ${botUrl}`,
-          Target: lambdaResult.FunctionArn,
-          CorsConfiguration: {
-            AllowHeaders: ['*'],
-            AllowOrigins: ['*'],
-            AllowMethods: ['*'],
-          },
-        })
-        .promise()
+      const apiResult = await apigateway.createApi({
+        Name: botPrefix,
+        ProtocolType: 'HTTP',
+        CredentialsArn: BOTS_PERMISSION,
+        RouteKey: `ANY ${botUrl}`,
+        Target: lambdaResult.FunctionArn,
+        CorsConfiguration: {
+          AllowHeaders: ['*'],
+          AllowOrigins: ['*'],
+          AllowMethods: ['*'],
+        },
+      })
 
-      // const eventResult = await eventBridge
-      //   .putRule({
-      //     Name: `${SERVICE_PREFIX}-${botId}`,
-      //     // State: 'DISABLED',
-      //     ScheduleExpression: 'rate(5 minutes)',
-      //   })
-      //   .promise()
-      // console.log(eventResult)
-
-      // const targetResult = await eventBridge
-      //   .putTargets({
-      //     Rule: `${SERVICE_PREFIX}-${botId}`,
-      //     Targets: [
-      //       {
-      //         Id: `${SERVICE_PREFIX}-${botId}`,
-      //         Arn: lambdaResult.FunctionArn || '',
-      //       },
-      //     ],
-      //   })
-      //   .promise()
-      // console.log(targetResult)
+      await scheduler.createSchedule({
+        Name: botPrefix,
+        State: 'DISABLED',
+        ScheduleExpression: 'cron(0 0 1 * ? 2030)',
+        FlexibleTimeWindow: {
+          Mode: 'OFF',
+        },
+        Target: {
+          Arn: lambdaResult.FunctionArn || '',
+          RoleArn: BOTS_PERMISSION,
+        },
+      })
 
       const bot: IBot = {
         botId,
         userId,
-        apiId: apiResult.ApiId || '',
         name: '',
-        triggerUrl: `${apiResult.ApiEndpoint}${botUrl}`,
         active: false,
+        apiId: apiResult.ApiId || '',
+        triggerUrl: `${apiResult.ApiEndpoint}${botUrl}`,
         triggerSamples: [],
         tasks: [
           {
@@ -141,15 +139,13 @@ export class Bot {
         ],
       }
 
-      await ddb
-        .put({
-          TableName: USERS_TABLE,
-          Item: {
-            ...bot,
-            sortKey: `#BOT#${bot.botId}`,
-          },
-        })
-        .promise()
+      await ddb.put({
+        TableName: USERS_TABLE,
+        Item: {
+          ...bot,
+          sortKey: `#BOT#${bot.botId}`,
+        },
+      })
 
       return bot
     } catch (err) {
@@ -158,35 +154,36 @@ export class Bot {
   }
 
   async deleteBot(userId: string, botId: string, apiId: string) {
-    const ddb = new AWS.DynamoDB.DocumentClient()
-    // const eventBridge = new AWS.EventBridge()
-    const apigateway = new AWS.ApiGatewayV2()
-    const lambda = new AWS.Lambda()
-    const s3 = new AWS.S3()
+    const ddb = DynamoDBDocument.from(new DynamoDB({}))
+    const cloudWatchLogs = new CloudWatchLogs({})
+    const apigateway = new ApiGatewayV2({})
+    const scheduler = new Scheduler({})
+    const lambda = new Lambda({})
+    const s3 = new S3({})
 
     try {
-      await ddb
-        .delete({
-          TableName: USERS_TABLE,
-          Key: { userId, sortKey: `#BOT#${botId}` },
-        })
-        .promise()
+      const botPrefix = `${SERVICE_PREFIX}-${botId}`
 
-      await apigateway.deleteApi({ ApiId: apiId }).promise()
+      await ddb.delete({
+        TableName: USERS_TABLE,
+        Key: { userId, sortKey: `#BOT#${botId}` },
+      })
 
-      // await eventBridge
-      //   .deleteRule({
-      //     Name: `${SERVICE_PREFIX}-${botId}`,
-      //   })
-      //   .promise()
+      await apigateway.deleteApi({ ApiId: apiId })
 
-      await lambda
-        .deleteFunction({ FunctionName: `${SERVICE_PREFIX}-${botId}` })
-        .promise()
+      await scheduler.deleteSchedule({
+        Name: botPrefix,
+      })
 
-      await s3
-        .deleteObject({ Bucket: BOTS_BUCKET, Key: `${botId}.zip` })
-        .promise()
+      await lambda.deleteFunction({
+        FunctionName: botPrefix,
+      })
+
+      await cloudWatchLogs.deleteLogGroup({
+        logGroupName: `/aws/lambda/${botPrefix}`,
+      })
+
+      await s3.deleteObject({ Bucket: BOTS_BUCKET, Key: `${botId}.zip` })
     } catch (err) {
       throw err.message
     }
@@ -199,26 +196,23 @@ export class Bot {
     active: boolean,
     tasks: ITask[]
   ) {
-    const ddb = new AWS.DynamoDB.DocumentClient()
+    const ddb = DynamoDBDocument.from(new DynamoDB({}))
 
     try {
-      const result = await ddb
-        .update({
-          TableName: USERS_TABLE,
-          Key: { userId, sortKey: `#BOT#${botId}` },
-          UpdateExpression:
-            'set #name = :name, tasks = :tasks, active = :active',
-          ExpressionAttributeNames: {
-            '#name': 'name', // Expression used here bacause 'name' is a reserved word
-          },
-          ExpressionAttributeValues: {
-            ':name': name,
-            ':tasks': tasks,
-            ':active': active,
-          },
-          ReturnValues: 'ALL_NEW',
-        })
-        .promise()
+      const result = await ddb.update({
+        TableName: USERS_TABLE,
+        Key: { userId, sortKey: `#BOT#${botId}` },
+        UpdateExpression: 'set #name = :name, tasks = :tasks, active = :active',
+        ExpressionAttributeNames: {
+          '#name': 'name', // Expression used here bacause 'name' is a reserved word
+        },
+        ExpressionAttributeValues: {
+          ':name': name,
+          ':tasks': tasks,
+          ':active': active,
+        },
+        ReturnValues: 'ALL_NEW',
+      })
 
       return result.Attributes
     } catch (err) {
@@ -233,48 +227,79 @@ export class Bot {
     active: boolean,
     tasks: ITask[]
   ) {
-    const ddb = new AWS.DynamoDB.DocumentClient()
-    const lambda = new AWS.Lambda()
-    const s3 = new AWS.S3()
-    const code = new Code()
+    const ddb = DynamoDBDocument.from(new DynamoDB({}))
+    const scheduler = new Scheduler({})
+    const lambda = new Lambda({})
+    const s3 = new S3({})
 
     try {
-      const botCode = code.mountBotCode(userId, botId, active, tasks)
-      const codeFile = await code.getCodeFile(botCode)
+      const botPrefix = `${SERVICE_PREFIX}-${botId}`
 
-      await s3
-        .upload({
-          Bucket: BOTS_BUCKET,
-          Key: `${botId}.zip`,
-          Body: codeFile,
-        })
-        .promise()
+      const botCode = !active
+        ? getBotSampleCode(userId, botId)
+        : getCompleteBotCode(userId, botId, tasks)
+      const codeFile = await getCodeFile(botCode)
 
-      await lambda
-        .updateFunctionCode({
-          FunctionName: `${SERVICE_PREFIX}-${botId}`,
-          S3Bucket: BOTS_BUCKET,
-          S3Key: `${botId}.zip`,
-        })
-        .promise()
+      await s3.putObject({
+        Bucket: BOTS_BUCKET,
+        Key: `${botId}.zip`,
+        Body: codeFile,
+      })
 
-      const dbResult = await ddb
-        .update({
-          TableName: USERS_TABLE,
-          Key: { userId, sortKey: `#BOT#${botId}` },
-          UpdateExpression:
-            'set #name = :name, tasks = :tasks, active = :active',
-          ExpressionAttributeNames: {
-            '#name': 'name', // Expression used here bacause 'name' is a reserved word
+      const lambdaResult = await lambda.updateFunctionCode({
+        FunctionName: botPrefix,
+        S3Bucket: BOTS_BUCKET,
+        S3Key: `${botId}.zip`,
+      })
+
+      if (
+        active &&
+        tasks[0].service?.name === ServiceName.schedule &&
+        tasks[0].inputData.find((input) => input.name === 'expression')?.value
+      ) {
+        await scheduler.updateSchedule({
+          Name: botPrefix,
+          State: 'ENABLED',
+          ScheduleExpression: tasks[0].inputData.find(
+            (input) => input.name === 'expression'
+          )?.value as string,
+          FlexibleTimeWindow: {
+            Mode: 'OFF',
           },
-          ExpressionAttributeValues: {
-            ':name': name,
-            ':tasks': tasks,
-            ':active': active,
+          Target: {
+            Arn: lambdaResult.FunctionArn || '',
+            RoleArn: BOTS_PERMISSION,
           },
-          ReturnValues: 'ALL_NEW',
         })
-        .promise()
+      } else {
+        await scheduler.updateSchedule({
+          Name: botPrefix,
+          State: 'DISABLED',
+          ScheduleExpression: 'cron(0 0 1 * ? 2030)',
+          FlexibleTimeWindow: {
+            Mode: 'OFF',
+          },
+          Target: {
+            Arn: lambdaResult.FunctionArn || '',
+            RoleArn: BOTS_PERMISSION,
+          },
+        })
+      }
+
+      const dbResult = await ddb.update({
+        TableName: USERS_TABLE,
+        Key: { userId, sortKey: `#BOT#${botId}` },
+        UpdateExpression: 'set #name = :name, tasks = :tasks, active = :active',
+        ExpressionAttributeNames: {
+          '#name': 'name', // Expression used here bacause 'name' is a reserved word
+        },
+        ExpressionAttributeValues: {
+          ':name': name,
+          ':tasks': tasks,
+          ':active': active,
+        },
+        ReturnValues: 'ALL_NEW',
+      })
 
       return dbResult.Attributes
     } catch (err) {
@@ -282,61 +307,89 @@ export class Bot {
     }
   }
 
-  getTestInput(task: ITask) {
-    const input = {}
-
-    if (
-      task.service?.config.inputFields &&
-      task.service.config.inputSource === InputSource.service
-    )
-      for (let j = 0; j < task.service.config.inputFields.length; j++) {
-        const name = task.service.config.inputFields[j].name
-        const inputField = task.inputData.find((x) => x.name === name)
-        if (!inputField) throw 'Invalid bot config'
-        input[inputField.name] = inputField.sampleValue
-      }
-    else if (task.service?.config.inputSource === InputSource.input)
-      for (let j = 0; j < task.inputData.length; j++) {
-        const inputField = task.inputData[j]
-        input[inputField.name] = inputField.sampleValue
-      }
-
-    return input
-  }
-
-  async testBot(userId: string, botId: string, task: ITask, taskIndex: number) {
-    const lambda = new AWS.Lambda()
+  async testBot(userId: string, botId: string, task: ITask, taskIndex: string) {
+    const lambda = new Lambda({})
+    const ddb = DynamoDBDocument.from(new DynamoDB({}), {
+      marshallOptions: { removeUndefinedValues: true },
+    })
 
     try {
-      const inputData = this.getTestInput(task)
+      let sample
 
-      const testLambdaResult = await lambda
-        .invoke({
-          FunctionName: `${SERVICE_PREFIX}-${task.service?.name}`,
+      if (parseInt(taskIndex) === 0) {
+        const { triggerSamples } = await this.getBot(userId, botId)
+        if (!triggerSamples) return
+        sample = triggerSamples.reverse()[0]
+      } else {
+        const inputData = getTestDataFromService(
+          task.inputData,
+          task.service?.config.inputFields
+        )
+
+        const testLambdaResult = await lambda.invoke({
+          FunctionName: `${SERVICE_PREFIX}-task-${task.service?.name}`,
           Payload: JSON.stringify({
             userId,
             connectionId: task.connectionId,
             appConfig: task.app?.config,
             serviceConfig: task.service?.config,
             inputData,
-          }),
+          }) as unknown as Uint8Array,
         })
-        .promise()
 
-      const testLambdaPayload = JSON.parse(testLambdaResult.Payload as string)
+        const testLambdaPayload = JSON.parse(
+          new TextDecoder().decode(testLambdaResult.Payload)
+        )
 
-      const sample = {
-        inputData,
-        outputData: testLambdaPayload.data,
-        status: testLambdaPayload.success
-          ? TaskStatus.success
-          : TaskStatus.fail,
-        timestamp: Date.now(),
+        sample = {
+          inputData,
+          outputData: testLambdaPayload.data,
+          status: testLambdaPayload.success
+            ? TaskExecutionStatus.success
+            : TaskExecutionStatus.fail,
+          timestamp: Date.now(),
+        }
       }
 
-      await this.addSampleResult(userId, botId, taskIndex, sample)
+      validateTaskResult(sample)
+
+      await ddb.update({
+        TableName: USERS_TABLE,
+        Key: { userId, sortKey: `#BOT#${botId}` },
+        ReturnValues: 'ALL_NEW',
+        UpdateExpression: `set tasks[${taskIndex}].sampleResult = :sample`,
+        ExpressionAttributeValues: {
+          ':sample': sample,
+        },
+      })
 
       return sample
+    } catch (err) {
+      throw err.message
+    }
+  }
+
+  async addTriggerSample(
+    userId: string,
+    botId: string,
+    sample: ITaskExecutionResult
+  ) {
+    const ddb = DynamoDBDocument.from(new DynamoDB({}), {
+      marshallOptions: { removeUndefinedValues: true },
+    })
+
+    try {
+      await ddb.update({
+        TableName: USERS_TABLE,
+        Key: { userId, sortKey: `#BOT#${botId}` },
+        ReturnValues: 'ALL_NEW',
+        UpdateExpression:
+          'set triggerSamples = list_append(if_not_exists(triggerSamples, :emptyList), :sampleList)',
+        ExpressionAttributeValues: {
+          ':sampleList': [sample],
+          ':emptyList': [],
+        },
+      })
     } catch (err) {
       throw err.message
     }
@@ -348,61 +401,18 @@ export class Bot {
     connectionId: string,
     taskIndex: number
   ) {
-    const ddb = new AWS.DynamoDB.DocumentClient()
-    try {
-      await ddb
-        .update({
-          TableName: USERS_TABLE,
-          Key: { userId, sortKey: `#BOT#${botId}` },
-          UpdateExpression: `set tasks[${taskIndex}].connectionId = :connectionId`,
-          ExpressionAttributeValues: {
-            ':connectionId': connectionId,
-          },
-          ReturnValues: 'ALL_NEW',
-        })
-        .promise()
-    } catch (err) {
-      throw err.message
-    }
-  }
-
-  async addSampleResult(
-    userId: string,
-    botId: string,
-    taskIndex: number,
-    sample: ITaskResult
-  ) {
-    const ddb = new AWS.DynamoDB.DocumentClient()
+    const ddb = DynamoDBDocument.from(new DynamoDB({}))
 
     try {
-      let UpdateExpression: string, ExpressionAttributeValues: object
-
-      if (taskIndex == 0) {
-        UpdateExpression = `set tasks[${taskIndex}].sampleResult = :sample,
-          triggerSamples = list_append(if_not_exists(triggerSamples, :emptyList), :sampleList)`
-        ExpressionAttributeValues = {
-          ':sample': sample,
-          ':sampleList': [sample],
-          ':emptyList': [],
-        }
-      } else {
-        UpdateExpression = `set tasks[${taskIndex}].sampleResult = :sample`
-        ExpressionAttributeValues = {
-          ':sample': sample,
-        }
-      }
-
-      const result = await ddb
-        .update({
-          TableName: USERS_TABLE,
-          Key: { userId, sortKey: `#BOT#${botId}` },
-          ReturnValues: 'ALL_NEW',
-          UpdateExpression,
-          ExpressionAttributeValues,
-        })
-        .promise()
-
-      return result.Attributes
+      await ddb.update({
+        TableName: USERS_TABLE,
+        Key: { userId, sortKey: `#BOT#${botId}` },
+        UpdateExpression: `set tasks[${taskIndex}].connectionId = :connectionId`,
+        ExpressionAttributeValues: {
+          ':connectionId': connectionId,
+        },
+        ReturnValues: 'ALL_NEW',
+      })
     } catch (err) {
       throw err.message
     }

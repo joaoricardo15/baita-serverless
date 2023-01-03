@@ -1,20 +1,20 @@
-import { TaskStatus } from './bot'
+import { TaskExecutionStatus } from './bot'
 import { DataType } from './service'
 
 export interface ILog {
   name: string
-  status: TaskStatus
   timestamp: number
   inputData: DataType
   outputData: DataType
+  status: TaskExecutionStatus
 }
 
 export interface IBotLog {
+  logs: ILog[]
+  usage: number
   botId: string
   userId: string
-  usage: number
   timestamp: number
-  logs: ILog[]
 }
 
 export interface IBotUsage {

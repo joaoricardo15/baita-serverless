@@ -1,3 +1,5 @@
 {
-    "body": "{\"userId\": \"google-oauth2|110121804349224987489\"}"
+    "pathParameters": {
+        "userId": "google-oauth2|110121804349224987489"
+    }
 }

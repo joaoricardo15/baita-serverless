@@ -2,13 +2,14 @@
 
 import { Api, BotStatus } from 'src/utils/api'
 import { Bot } from 'src/controllers/bot'
+import { validateTaskResult } from 'src/controllers/bot/schema'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
   const bot = new Bot()
 
   try {
-    const { userId, botId, taskIndex, status, inputData, outputData } = event
+    const { userId, botId, status, inputData, outputData } = event
 
     const sample = {
       status,
@@ -17,7 +18,9 @@ exports.handler = async (event, context, callback) => {
       timestamp: Date.now(),
     }
 
-    const data = await bot.addSampleResult(userId, botId, taskIndex, sample)
+    validateTaskResult(sample)
+
+    const data = await bot.addTriggerSample(userId, botId, sample)
 
     api.httpResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {
