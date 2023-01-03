@@ -32,9 +32,7 @@ provider:
     SERVICE_PROD_URL: https://mm32a4e7me.execute-api.us-east-1.amazonaws.com/prod
 
     # Database
-    APPS_TABLE: ${self:service}-prod-apps
     USERS_TABLE: ${self:service}-prod-users
-    LOGS_TABLE: ${self:service}-prod-logs
 
     # Buckets
     BOTS_BUCKET: ${self:provider.environment.SERVICE_PREFIX}-bots
@@ -177,21 +175,6 @@ resources:
         - prod
   Resources:
     # Database
-    appsTable:
-      Condition: IsProd
-      Type: AWS::DynamoDB::Table
-      DeletionPolicy: Retain
-      Properties:
-        TableName: ${self:provider.environment.APPS_TABLE}
-        KeySchema:
-          - AttributeName: appId
-            KeyType: HASH
-        AttributeDefinitions:
-          - AttributeName: appId
-            AttributeType: S
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
     usersTable:
       Condition: IsProd
       Type: AWS::DynamoDB::Table

@@ -2,7 +2,6 @@
 
 import { CloudWatchLogs } from '@aws-sdk/client-cloudwatch-logs'
 
-const LOGS_TABLE = process.env.LOGS_TABLE || ''
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX || ''
 export class Log {
   async getBotLogs(botId: string, searchTerms: string | string[] | undefined) {

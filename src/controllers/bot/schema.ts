@@ -16,11 +16,11 @@ import {
   ConditionType,
   ITask,
   ICondition,
-  ITaskResult,
-  TaskStatus,
+  ITaskExecutionResult,
+  TaskExecutionStatus,
+  ITaskExecutionInput,
 } from 'src/models/bot'
 import { IApp, IAppConfig } from 'src/models/app'
-import { IOperationInput } from 'src/models/operation'
 
 const ajv = new Ajv()
 addFormats(ajv)
@@ -307,12 +307,14 @@ const serviceSchema: JSONSchemaType<IService> = {
   required: ['type', 'name', 'label', 'config'],
 }
 
-const taskResultSchema: JSONSchemaType<ITaskResult> = {
+const taskResultSchema: JSONSchemaType<ITaskExecutionResult> = {
   type: 'object',
   properties: {
     status: {
       type: 'string',
-      enum: Object.values(TaskStatus) as readonly TaskStatus[],
+      enum: Object.values(
+        TaskExecutionStatus
+      ) as readonly TaskExecutionStatus[],
     },
     timestamp: {
       type: 'number',
@@ -383,7 +385,7 @@ const tasksSchema: JSONSchemaType<ITask[]> = {
   },
 }
 
-const operationInputSchema: JSONSchemaType<IOperationInput> = {
+const operationInputSchema: JSONSchemaType<ITaskExecutionInput> = {
   type: 'object',
   properties: {
     userId: {
@@ -406,13 +408,13 @@ export const validateTasks = (tasks: ITask[]) => {
   if (!validate(tasks)) throw ajv.errorsText(validate.errors)
 }
 
-export const validateTaskResult = (taskResult: ITaskResult) => {
+export const validateTaskResult = (taskResult: ITaskExecutionResult) => {
   const validate = ajv.compile(taskResultSchema)
 
   if (!validate(taskResult)) throw ajv.errorsText(validate.errors)
 }
 
-export const validateOperationInput = (input: IOperationInput) => {
+export const validateOperationInput = (input: ITaskExecutionInput) => {
   const validate = ajv.compile(operationInputSchema)
 
   if (!validate(input)) throw ajv.errorsText(validate.errors)

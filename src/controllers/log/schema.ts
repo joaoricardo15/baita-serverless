@@ -2,9 +2,9 @@
 
 import Ajv, { JSONSchemaType } from 'ajv'
 import addFormats from 'ajv-formats'
+import { TaskExecutionStatus } from 'src/models/bot'
 import { IBotLog, ILog } from 'src/models/log'
 import { DataType } from 'src/models/service'
-import { TaskStatus } from 'src/models/bot'
 
 const ajv = new Ajv()
 addFormats(ajv)
@@ -37,7 +37,9 @@ const logSchema: JSONSchemaType<ILog> = {
     },
     status: {
       type: 'string',
-      enum: Object.values(TaskStatus) as readonly TaskStatus[],
+      enum: Object.values(
+        TaskExecutionStatus
+      ) as readonly TaskExecutionStatus[],
     },
     timestamp: {
       type: 'number',

@@ -7,7 +7,12 @@ import { DynamoDB } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
 import { ApiGatewayV2 } from '@aws-sdk/client-apigatewayv2'
 import { CloudWatchLogs } from '@aws-sdk/client-cloudwatch-logs'
-import { IBot, ITask, ITaskResult, TaskStatus } from 'src/models/bot'
+import {
+  IBot,
+  ITask,
+  ITaskExecutionResult,
+  TaskExecutionStatus,
+} from 'src/models/bot'
 import {
   getCodeFile,
   getBotSampleCode,
@@ -340,8 +345,8 @@ export class Bot {
           inputData,
           outputData: testLambdaPayload.data,
           status: testLambdaPayload.success
-            ? TaskStatus.success
-            : TaskStatus.fail,
+            ? TaskExecutionStatus.success
+            : TaskExecutionStatus.fail,
           timestamp: Date.now(),
         }
       }
@@ -364,7 +369,11 @@ export class Bot {
     }
   }
 
-  async addTriggerSample(userId: string, botId: string, sample: ITaskResult) {
+  async addTriggerSample(
+    userId: string,
+    botId: string,
+    sample: ITaskExecutionResult
+  ) {
     const ddb = DynamoDBDocument.from(new DynamoDB({}), {
       marshallOptions: { removeUndefinedValues: true },
     })

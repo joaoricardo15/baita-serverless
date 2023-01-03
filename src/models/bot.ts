@@ -1,10 +1,25 @@
-import { IApp } from './app'
-import { DataType, IService, IVariable } from './service'
+import { IApp, IAppConfig } from './app'
+import { DataType, ISerivceConfig, IService, IVariable } from './service'
 
-export enum TaskStatus {
+export enum TaskExecutionStatus {
   fail = 'fail',
   filtered = 'filtered',
   success = 'success',
+}
+
+export interface ITaskExecutionInput {
+  userId: string
+  connectionId?: string
+  appConfig: IAppConfig
+  serviceConfig: ISerivceConfig
+  inputData: DataType
+}
+
+export interface ITaskExecutionResult {
+  timestamp: number
+  inputData: DataType
+  outputData: DataType
+  status: TaskExecutionStatus
 }
 
 export enum ConditionType {
@@ -13,13 +28,6 @@ export enum ConditionType {
   contains = 'contains',
   startsWith = 'startsWith',
   endsWith = 'endsWith',
-}
-
-export interface ITaskResult {
-  status: TaskStatus
-  timestamp: number
-  inputData: DataType
-  outputData: DataType
 }
 
 export interface ICondition {
@@ -38,14 +46,14 @@ export interface ITaskCondition {
 }
 
 export interface ITask {
+  taskId: number
   app?: IApp
   service?: IService
-  connectionId?: string
-  taskId: number
-  inputData: IVariable[]
-  sampleResult?: ITaskResult
   returnData?: boolean
+  connectionId?: string
+  inputData: IVariable[]
   conditions?: ITaskCondition[]
+  sampleResult?: ITaskExecutionResult
 }
 
 export interface IBot {
@@ -55,6 +63,6 @@ export interface IBot {
   name: string
   active: boolean
   triggerUrl: string
-  triggerSamples: ITaskResult[]
+  triggerSamples: ITaskExecutionResult[]
   tasks: ITask[]
 }
