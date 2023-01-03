@@ -238,7 +238,7 @@ module.exports.handler = async (event, context, callback) => {
   // 3. Publish trigger sample
 
   await lambda.invoke({
-    FunctionName: '${SERVICE_PREFIX}-task-trigger-sample',
+    FunctionName: '${SERVICE_PREFIX}-service-trigger-sample',
     Payload: JSON.stringify({ userId, botId, outputData, status: 'success' })
   }).promise();
 
