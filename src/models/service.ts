@@ -41,6 +41,7 @@ export interface IVariable {
   value: DataType
   sampleValue: DataType
   outputIndex?: number
+  outputPath?: string
   customFieldId?: number
   groupName?: string
   options?: {

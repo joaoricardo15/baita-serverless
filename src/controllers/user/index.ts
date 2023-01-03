@@ -65,7 +65,6 @@ export class User {
           try {
             return JSON.parse(message.Body)
           } catch (err) {
-            console.log(message.Body)
             return null
           }
       }).filter((message) => message)

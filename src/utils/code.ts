@@ -26,8 +26,25 @@ const getInputString = (
       const fieldName = serviceFields[j].name
       const inputField = inputData.find((x) => x.name === fieldName)
       if (!inputField) throw `Input field ${fieldName} not found.`
-      if (inputField.outputIndex !== undefined) {
-        inputString += `'${inputField.name}': task${inputField.outputIndex}_outputData['${inputField.name}'],`
+      if (
+        inputField.outputIndex !== undefined &&
+        inputField.outputPath !== undefined
+      ) {
+        inputString += `'${inputField.name}': task${
+          inputField.outputIndex
+        }_outputData${inputField.outputPath
+          .split('.')
+          .reduce(
+            (prev, curr) =>
+              `${prev}${
+                !curr
+                  ? ''
+                  : !isNaN(parseInt(curr))
+                  ? `[${curr}]`
+                  : `['${curr}']`
+              }`,
+            ''
+          )},`
       } else if (inputField.value) {
         inputString += `'${inputField.name}': \`${inputField.value}\`,`
       }
@@ -79,7 +96,7 @@ const getConditionsString = (conditions?: ITaskCondition[]) => {
   return andConditionsString
 }
 
-const getBotInnerCode = (userId: string, tasks: ITask[]) => {
+const getBotInnerCode = (tasks: ITask[]) => {
   let innerCode = ''
 
   for (let i = 1; i < tasks.length; i++) {
@@ -96,62 +113,83 @@ const getBotInnerCode = (userId: string, tasks: ITask[]) => {
     const conditionsString = getConditionsString(conditions)
 
     innerCode += `
-    const task${i}_inputData = { ${inputDataString} }
+    ////////////////////////////////////////////////////////////////////////////////
+    // 4.1. Collect operation inputs
 
-    let task${i}_outputData = {}
+    const task${i}_inputData = { ${inputDataString} };
     
-    let task${i}_outputLog = {
-      name: '${service?.label}',
-      inputData: task${i}_inputData
-    }
+    const task${i}_appConfig = ${JSON.stringify(app?.config)};
+
+    const task${i}_serviceConfig = ${JSON.stringify(service?.config)};
+    
+    const task${i}_connectionId = '${task.connectionId}';
+
+    const task${i}_outputPath = '${service?.config.outputPath || ''}';
+
+    const task${i}_outputData = {};
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // 4.2. Check conditions
 
     if (${conditionsString || true}) {
-      const task${i}_appConfig = ${JSON.stringify(app?.config)}
+      ////////////////////////////////////////////////////////////////////////////////
+      // 4.2.1 If condition passes, execute operation
 
-      const task${i}_serviceConfig = ${JSON.stringify(service?.config)}
-      
-      const task${i}_outputPath = ${
-      service?.config.outputPath
-        ? `'${service.config.outputPath}'`
-        : 'undefined'
-    };
-        
       const task${i}_response = await lambda.invoke({
         FunctionName: '${SERVICE_PREFIX}-${service?.name}',
-        Payload: JSON.stringify({ userId: '${userId}', connectionId: '${
-      task.connectionId
-    }', appConfig: task${i}_appConfig, serviceConfig: task${i}_serviceConfig, inputData: task${i}_inputData, outputPath: task${i}_outputPath }),
-      }).promise()
+        Payload: JSON.stringify({ userId, appConfig: task${i}_appConfig, serviceConfig: task${i}_serviceConfig, connectionId: task${i}_connectionId, inputData: task${i}_inputData, outputPath: task${i}_outputPath }),
+      }).promise();
   
-      const task${i}_result = JSON.parse(task${i}_response.Payload)
 
-      const task${i}_success = task${i}_result.success
+      ////////////////////////////////////////////////////////////////////////////////
+      // 4.2.2 Parse results
       
-      task${i}_outputData = task${i}_success && task${i}_result.data ? task${i}_result.data : { message: task${i}_result.message || task${i}_result.errorMessage || 'nothing for you this time : (' }
+      const task${i}_success = task${i}_result.success;
 
-      task${i}_outputLog['outputData'] = task${i}_outputData
+      const task${i}_result = JSON.parse(task${i}_response.Payload);
       
-      const task${i}_timestamp = Date.now()
+      task${i}_outputData = task${i}_success && task${i}_result.data ? task${i}_result.data : { message: task${i}_result.message || task${i}_result.errorMessage || 'nothing for you this time : (' };
       
-      task${i}_outputLog['timestamp'] = task${i}_timestamp
-      
-      task${i}_outputLog['status'] = task${i}_success ? 'success' : 'fail'
 
-      if (task${i}_success) usage += 1
-${
-  task.returnData
-    ? `if (task${i}_success) outputData = task${i}_outputData`
-    : ''
-}
+      ////////////////////////////////////////////////////////////////////////////////
+      // 4.2.3 Add result to logs
+
+      logs.push({
+        timestamp: Date.now(),
+        name: '${service?.label}',
+        inputData: task${i}_inputData,
+        outputData: task${i}_outputData,
+        status: task${i}_success ? 'success' : 'fail',
+      });
+
+
+      ////////////////////////////////////////////////////////////////////////////////
+      // 4.2.4 If task executed successfully, increment usage
+
+      if (task${i}_success) usage += 1;
+
+  ${
+    task.returnData
+      ? `
+      ////////////////////////////////////////////////////////////////////////////////
+      // 4.2.5 If task property returnData equals true, set outputData to task result
+        
+      if (task${i}_success) outputData = task${i}_outputData;
+      `
+      : ''
+  }
     } else {
-      const task${i}_timestamp = Date.now()
+      ////////////////////////////////////////////////////////////////////////////////
+      // 4.2.1 If condition does not pass, add result to logs
 
-      task${i}_outputLog['timestamp'] = task${i}_timestamp
-      
-      task${i}_outputLog['status'] = 'filtered'
-    }
-
-    logs.push(task${i}_outputLog)`
+      logs.push({
+        timestamp: Date.now(),
+        name: '${service?.label}',
+        inputData: task${i}_inputData,
+        outputData: task${i}_outputData,
+        status: 'filtered',
+      });
+    }`
   }
 
   return innerCode
@@ -160,29 +198,53 @@ ${
 export const getBotSampleCode = (userId: string, botId: string) => {
   return `
 const AWS = require('aws-sdk');
-const lambda = new AWS.Lambda({ region: "us-east-1" });
-
-const userId = '${userId}';
-const botId = '${botId}';
+const lambda = new AWS.Lambda();
 
 module.exports.handler = async (event, context, callback) => {
+  ////////////////////////////////////////////////////////////////////////////////
+  // 1. Declare global variables
 
-  let task0_outputData;
+  const botId = '${botId}';
+  const userId = '${userId}';
   
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // 2. Get data from event and save it as outputData
+
+  let outputData;
   if (event.body) {
     try {
-        task0_outputData = JSON.parse(event.body);
+      if (event.isBase64Encoded &&
+          event.headers['Content-type'] &&
+          event.headers['Content-type'] === 'application/x-www-form-urlencoded'
+        ) {
+        const buffer = new Buffer(event.body, 'base64');
+        const bodyString = buffer.toString('ascii').replace(/&/g, ",").replace(/=/g, ":");
+        const jsonBody = JSON.parse('{"' + decodeURI(bodyString) + '"}');
+        outputData = jsonBody;
+      }
+      else {
+        outputData = JSON.parse(event.body);
+      }
     } catch (error) {
-        task0_outputData = event.body;
+      outputData = event.body;
     }
   } else {
-    task0_outputData = event
+    outputData = event;
   }
+
   
+  ////////////////////////////////////////////////////////////////////////////////
+  // 3. Publish trigger sample
+
   await lambda.invoke({
-    FunctionName: '${SERVICE_PREFIX}-sample-create',
-    Payload: JSON.stringify({ userId, botId, status: 'success', outputData: task0_outputData })
+    FunctionName: '${SERVICE_PREFIX}-trigger-sample',
+    Payload: JSON.stringify({ userId, botId, outputData, status: 'success' })
   }).promise();
+
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // 4. Return success
 
   callback(null, {
     statusCode: 200,
@@ -198,81 +260,85 @@ module.exports.handler = async (event, context, callback) => {
     `
 }
 
-export const mountBotCode = (
+export const getCompleteBotCode = (
   userId: string,
   botId: string,
-  active: boolean,
   tasks: ITask[]
 ) => {
   return `
-const AWS = require('aws-sdk')
-const lambda = new AWS.Lambda({ region: "us-east-1" })
+const AWS = require('aws-sdk');
+const lambda = new AWS.Lambda();
 
 module.exports.handler = async (event, context, callback) => {
+  ////////////////////////////////////////////////////////////////////////////////
+  // 1. Declare global variables
 
-  const userId = '${userId}'
-  const botId = '${botId}'
+  const botId = '${botId}';
+  const userId = '${userId}';
+  let logs = [], usage = 0, errorData, outputData;
+  
+  ////////////////////////////////////////////////////////////////////////////////
+  // 2. Get input bot from event, and save it as task0_outputData
 
-  let task0_outputData
-
+  let task0_outputData;
   if (event.body) {
     try {
-      if (event.headers['Content-type'] && event.isBase64Encoded && event.headers['Content-type'] === 'application/x-www-form-urlencoded') {
-        const buffer = new Buffer(event.body, 'base64')
-        const bodyString = buffer.toString('ascii').replace(/&/g, ",").replace(/=/g, ":")
-        const jsonBody = JSON.parse('{"' + decodeURI(bodyString) + '"}')
-        task0_outputData = jsonBody
+      if (event.isBase64Encoded &&
+          event.headers['Content-type'] &&
+          event.headers['Content-type'] === 'application/x-www-form-urlencoded'
+        ) {
+        const buffer = new Buffer(event.body, 'base64');
+        const bodyString = buffer.toString('ascii').replace(/&/g, ",").replace(/=/g, ":");
+        const jsonBody = JSON.parse('{"' + decodeURI(bodyString) + '"}');
+        task0_outputData = jsonBody;
       }
       else {
-        task0_outputData = JSON.parse(event.body)
+        task0_outputData = JSON.parse(event.body);
       }
     } catch (error) {
-      task0_outputData = event.body
+      task0_outputData = event.body;
     }
   } else {
-    task0_outputData = event
+    task0_outputData = event;
   }
-${
-  !active
-    ? `
-  await lambda.invoke({
-    FunctionName: '${SERVICE_PREFIX}-sample-create',
-    Payload: JSON.stringify({ userId, botId, status: 'success', outputData: task0_outputData })
-  }).promise()
 
-  callback(null, {
-    statusCode: 200,
-    headers: {
-      'Content-type': 'application/json',
-      'Access-Control-Allow-Origin': '*'
-    },
-    body: JSON.stringify({
-      success: true
-    })
-  })
-}`
-    : `
-  let errorResult
-  let outputData
+  ////////////////////////////////////////////////////////////////////////////////
+  // 3. Register fist log and increment usage
 
-  let usage = 1
-  const logs = [{
+  usage += 1;
+  logs.push({
     name: '${tasks[0].service?.label}',
     outputData: task0_outputData,
     timestamp: Date.now(),
     status: 'success'
-  }]
+  });
+  
+  
+  ////////////////////////////////////////////////////////////////////////////////
+  // 4. Execute tasks
 
   try {
-    ${getBotInnerCode(userId, tasks)}
+    ${getBotInnerCode(tasks)}
   } catch (error) {
-    errorResult = error
+    errorData = error;
   }
 
-  await lambda.invoke({
-    FunctionName: '${SERVICE_PREFIX}-log-create',
-    Payload: JSON.stringify({ userId, botId, usage, logs, error: errorResult })
-  }).promise()
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // 5. Publish bot logs
+
+  console.log({
+    logs,
+    usage,
+    botId,
+    userId,
+    error: errorData,
+    timestamp: Date.now(),
+  });
+
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // 6. Return success
 
   callback(null, {
     statusCode: 200,
@@ -281,12 +347,11 @@ ${
       'Access-Control-Allow-Origin': '*'
     },
     body: JSON.stringify({
-      success: !errorResult,
-      data: errorResult || outputData
+      success: !errorData,
+      data: errorData || outputData
     })
-  })
-}`
-}`
+  });
+};`
 }
 
 export const getCodeFile = async (code: string) => {

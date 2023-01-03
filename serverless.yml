@@ -69,10 +69,8 @@ functions:
   ### internal services ###
   auth:
     handler: src/services/auth/index.handler
-  log-create:
-    handler: src/services/log-create/index.handler
-  sample-create:
-    handler: src/services/sample-create/index.handler
+  trigger-sample:
+    handler: src/services/trigger-sample/index.handler
 
   ### bot operations ###
   http-request:
@@ -304,7 +302,6 @@ resources:
               Action: sts:AssumeRole
               Principal:
                 Service:
-                  - events.amazonaws.com
                   - lambda.amazonaws.com
                   - scheduler.amazonaws.com
                   - apigateway.amazonaws.com
@@ -317,7 +314,6 @@ resources:
                   Action:
                     - lambda:InvokeFunction
                     - logs:CreateLogStream
-                    - logs:DescribeLogStreams
-                    - logs:PutRetentionPolicy
                     - logs:CreateLogGroup
+                    - logs:PutLogEvents
                   Resource: '*'

@@ -129,6 +129,10 @@ const variableSchema: JSONSchemaType<IVariable> = {
       type: 'number',
       nullable: true,
     },
+    outputPath: {
+      type: 'string',
+      nullable: true,
+    },
     customFieldId: {
       type: 'number',
       nullable: true,

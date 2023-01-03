@@ -69,21 +69,4 @@ export class Log {
       throw err.message
     }
   }
-
-  async createLog(log: IBotLog) {
-    const ddb = DynamoDBDocument.from(new DynamoDB({}), {
-      marshallOptions: { removeUndefinedValues: true },
-    })
-
-    try {
-      await ddb.put({
-        TableName: LOGS_TABLE,
-        Item: log,
-      })
-
-      return log
-    } catch (err) {
-      throw err.message
-    }
-  }
 }

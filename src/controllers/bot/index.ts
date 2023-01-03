@@ -7,7 +7,11 @@ import { DynamoDB } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
 import { ApiGatewayV2 } from '@aws-sdk/client-apigatewayv2'
 import { IBot, ITask, ITaskResult, TaskStatus } from 'src/models/bot'
-import { getCodeFile, getBotSampleCode, mountBotCode } from 'src/utils/code'
+import {
+  getCodeFile,
+  getBotSampleCode,
+  getCompleteBotCode,
+} from 'src/utils/code'
 import { ServiceName } from 'src/models/service'
 import { v4 as uuidv4 } from 'uuid'
 import { getTestDataFromService } from 'src/utils/bot'
@@ -215,7 +219,9 @@ export class Bot {
     const s3 = new S3({})
 
     try {
-      const botCode = mountBotCode(userId, botId, active, tasks)
+      const botCode = !active
+        ? getBotSampleCode(userId, botId)
+        : getCompleteBotCode(userId, botId, tasks)
       const codeFile = await getCodeFile(botCode)
 
       await s3.putObject({
@@ -303,7 +309,7 @@ export class Bot {
           task.inputData,
           task.service?.config.inputFields
         )
-        console.log('inputData', inputData)
+
         const testLambdaResult = await lambda.invoke({
           FunctionName: `${SERVICE_PREFIX}-${task.service?.name}`,
           Payload: JSON.stringify({
@@ -358,9 +364,8 @@ export class Bot {
         Key: { userId, sortKey: `#BOT#${botId}` },
         ReturnValues: 'ALL_NEW',
         UpdateExpression:
-          'triggerSamples = list_append(if_not_exists(triggerSamples, :emptyList), :sampleList)',
+          'set triggerSamples = list_append(if_not_exists(triggerSamples, :emptyList), :sampleList)',
         ExpressionAttributeValues: {
-          ':sample': sample,
           ':sampleList': [sample],
           ':emptyList': [],
         },
