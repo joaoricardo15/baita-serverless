@@ -10,7 +10,10 @@ exports.handler = async (event, context, callback) => {
   try {
     const { botId } = event.pathParameters
 
-    const data = await log.getBotLogs(botId)
+    const data = await log.getBotLogs(
+      botId,
+      event.queryStringParameters?.searchTerm
+    )
 
     api.httpResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {

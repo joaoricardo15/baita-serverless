@@ -3,9 +3,7 @@ service: baita-help
 plugins:
   - serverless-bundle
   - serverless-offline
-  # - serverless-domain-manager
   - serverless-deployment-bucket
-  # - serverless-plugin-typescript
 
 package:
   individually: true
@@ -13,10 +11,6 @@ package:
 custom:
   serverless-offline:
     useChildProcesses: true
-  # customDomain:
-  #   domainName: api.baita.help
-  #   createRoute53Record: true
-  #   stage: prod
 
 provider:
   name: aws
@@ -67,30 +61,20 @@ provider:
 
 functions:
   ### internal services ###
-  auth:
+  service-auth:
     handler: src/services/auth/index.handler
-  trigger-sample:
+  service-trigger-sample:
     handler: src/services/trigger-sample/index.handler
 
-  ### bot operations ###
-  http-request:
-    handler: src/operations/http-request/index.handler
-  oauth2-request:
-    handler: src/operations/oauth2-request/index.handler
-  code-execute:
-    handler: src/operations/code-execute/index.handler
-  queue-publish:
-    handler: src/operations/queue-publish/index.handler
-  # scrapper:
-  #   handler: src/operations/scrapper/index.handler
-  #   timeout: 60
-  #   layers:
-  #     - arn:aws:lambda:us-east-1:764866452798:layer:chrome-aws-lambda:31
-  #   events:
-  #     - http:
-  #         path: scrapper
-  #         method: get
-  #         cors: true
+  ### tasks ###
+  task-http-request:
+    handler: src/tasks/http-request/index.handler
+  task-oauth2-request:
+    handler: src/tasks/oauth2-request/index.handler
+  task-code-execute:
+    handler: src/tasks/code-execute/index.handler
+  task-queue-publish:
+    handler: src/tasks/queue-publish/index.handler
 
   ### endpoints ###
   endpoint-user-create:
@@ -170,14 +154,6 @@ functions:
           path: user/{userId}/bots/{botId}/logs
           method: get
           cors: true
-  endpoint-bot-usage:
-    handler: src/endpoints/bots/usage/index.handler
-    memorySize: 4096
-    events:
-      - http:
-          path: user/{userId}/bots/{botId}/usage
-          method: get
-          cors: true
 
   ### connectors ###
   connector-pipedrive:
@@ -232,25 +208,6 @@ resources:
             AttributeType: S
           - AttributeName: sortKey
             AttributeType: S
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
-    logsTable:
-      Condition: IsProd
-      Type: AWS::DynamoDB::Table
-      DeletionPolicy: Retain
-      Properties:
-        TableName: ${self:provider.environment.LOGS_TABLE}
-        KeySchema:
-          - AttributeName: botId
-            KeyType: HASH
-          - AttributeName: timestamp
-            KeyType: RANGE
-        AttributeDefinitions:
-          - AttributeName: botId
-            AttributeType: S
-          - AttributeName: timestamp
-            AttributeType: N
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1

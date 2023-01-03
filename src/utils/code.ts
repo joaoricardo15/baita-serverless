@@ -126,7 +126,7 @@ const getBotInnerCode = (tasks: ITask[]) => {
 
     const task${i}_outputPath = '${service?.config.outputPath || ''}';
 
-    const task${i}_outputData = {};
+    let task${i}_outputData = {};
 
     ////////////////////////////////////////////////////////////////////////////////
     // 4.2. Check conditions
@@ -135,19 +135,19 @@ const getBotInnerCode = (tasks: ITask[]) => {
       ////////////////////////////////////////////////////////////////////////////////
       // 4.2.1 If condition passes, execute operation
 
-      const task${i}_response = await lambda.invoke({
-        FunctionName: '${SERVICE_PREFIX}-${service?.name}',
+      const { Payload: task${i}_lambda_payload } = await lambda.invoke({
+        FunctionName: '${SERVICE_PREFIX}-task-${service?.name}',
         Payload: JSON.stringify({ userId, appConfig: task${i}_appConfig, serviceConfig: task${i}_serviceConfig, connectionId: task${i}_connectionId, inputData: task${i}_inputData, outputPath: task${i}_outputPath }),
       }).promise();
   
 
       ////////////////////////////////////////////////////////////////////////////////
       // 4.2.2 Parse results
+
+      const task${i}_result = JSON.parse(task${i}_lambda_payload);
       
       const task${i}_success = task${i}_result.success;
 
-      const task${i}_result = JSON.parse(task${i}_response.Payload);
-      
       task${i}_outputData = task${i}_success && task${i}_result.data ? task${i}_result.data : { message: task${i}_result.message || task${i}_result.errorMessage || 'nothing for you this time : (' };
       
 
@@ -238,7 +238,7 @@ module.exports.handler = async (event, context, callback) => {
   // 3. Publish trigger sample
 
   await lambda.invoke({
-    FunctionName: '${SERVICE_PREFIX}-trigger-sample',
+    FunctionName: '${SERVICE_PREFIX}-task-trigger-sample',
     Payload: JSON.stringify({ userId, botId, outputData, status: 'success' })
   }).promise();
 
@@ -320,21 +320,21 @@ module.exports.handler = async (event, context, callback) => {
   try {
     ${getBotInnerCode(tasks)}
   } catch (error) {
-    errorData = error;
+    errorData = error.toString()
   }
 
 
   ////////////////////////////////////////////////////////////////////////////////
   // 5. Publish bot logs
 
-  console.log({
+  console.log(JSON.stringify({
     logs,
     usage,
     botId,
     userId,
     error: errorData,
-    timestamp: Date.now(),
-  });
+    timestamp: Date.now()
+  }));
 
 
   ////////////////////////////////////////////////////////////////////////////////

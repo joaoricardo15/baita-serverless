@@ -6,6 +6,7 @@ import { Scheduler } from '@aws-sdk/client-scheduler'
 import { DynamoDB } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
 import { ApiGatewayV2 } from '@aws-sdk/client-apigatewayv2'
+import { CloudWatchLogs } from '@aws-sdk/client-cloudwatch-logs'
 import { IBot, ITask, ITaskResult, TaskStatus } from 'src/models/bot'
 import {
   getCodeFile,
@@ -67,6 +68,7 @@ export class Bot {
 
     try {
       const botId = uuidv4()
+      const botPrefix = `${SERVICE_PREFIX}-${botId}`
 
       const sampleCode = getBotSampleCode(userId, botId)
       const codeFile = await getCodeFile(sampleCode)
@@ -78,7 +80,7 @@ export class Bot {
       })
 
       const lambdaResult = await lambda.createFunction({
-        FunctionName: `${SERVICE_PREFIX}-${botId}`,
+        FunctionName: botPrefix,
         Handler: 'index.handler',
         Runtime: 'nodejs12.x',
         Role: BOTS_PERMISSION,
@@ -91,7 +93,7 @@ export class Bot {
       const botUrl = '/bot'
 
       const apiResult = await apigateway.createApi({
-        Name: `${SERVICE_PREFIX}-${botId}`,
+        Name: botPrefix,
         ProtocolType: 'HTTP',
         CredentialsArn: BOTS_PERMISSION,
         RouteKey: `ANY ${botUrl}`,
@@ -104,7 +106,7 @@ export class Bot {
       })
 
       await scheduler.createSchedule({
-        Name: `${SERVICE_PREFIX}-${botId}`,
+        Name: botPrefix,
         State: 'DISABLED',
         ScheduleExpression: 'cron(0 0 1 * ? 2030)',
         FlexibleTimeWindow: {
@@ -148,12 +150,15 @@ export class Bot {
 
   async deleteBot(userId: string, botId: string, apiId: string) {
     const ddb = DynamoDBDocument.from(new DynamoDB({}))
-    const scheduler = new Scheduler({})
+    const cloudWatchLogs = new CloudWatchLogs({})
     const apigateway = new ApiGatewayV2({})
+    const scheduler = new Scheduler({})
     const lambda = new Lambda({})
     const s3 = new S3({})
 
     try {
+      const botPrefix = `${SERVICE_PREFIX}-${botId}`
+
       await ddb.delete({
         TableName: USERS_TABLE,
         Key: { userId, sortKey: `#BOT#${botId}` },
@@ -162,11 +167,15 @@ export class Bot {
       await apigateway.deleteApi({ ApiId: apiId })
 
       await scheduler.deleteSchedule({
-        Name: `${SERVICE_PREFIX}-${botId}`,
+        Name: botPrefix,
       })
 
       await lambda.deleteFunction({
-        FunctionName: `${SERVICE_PREFIX}-${botId}`,
+        FunctionName: botPrefix,
+      })
+
+      await cloudWatchLogs.deleteLogGroup({
+        logGroupName: `/aws/lambda/${botPrefix}`,
       })
 
       await s3.deleteObject({ Bucket: BOTS_BUCKET, Key: `${botId}.zip` })
@@ -219,6 +228,8 @@ export class Bot {
     const s3 = new S3({})
 
     try {
+      const botPrefix = `${SERVICE_PREFIX}-${botId}`
+
       const botCode = !active
         ? getBotSampleCode(userId, botId)
         : getCompleteBotCode(userId, botId, tasks)
@@ -231,7 +242,7 @@ export class Bot {
       })
 
       const lambdaResult = await lambda.updateFunctionCode({
-        FunctionName: `${SERVICE_PREFIX}-${botId}`,
+        FunctionName: botPrefix,
         S3Bucket: BOTS_BUCKET,
         S3Key: `${botId}.zip`,
       })
@@ -242,7 +253,7 @@ export class Bot {
         tasks[0].inputData.find((input) => input.name === 'expression')?.value
       ) {
         await scheduler.updateSchedule({
-          Name: `${SERVICE_PREFIX}-${botId}`,
+          Name: botPrefix,
           State: 'ENABLED',
           ScheduleExpression: tasks[0].inputData.find(
             (input) => input.name === 'expression'
@@ -257,7 +268,7 @@ export class Bot {
         })
       } else {
         await scheduler.updateSchedule({
-          Name: `${SERVICE_PREFIX}-${botId}`,
+          Name: botPrefix,
           State: 'DISABLED',
           ScheduleExpression: 'cron(0 0 1 * ? 2030)',
           FlexibleTimeWindow: {
@@ -311,7 +322,7 @@ export class Bot {
         )
 
         const testLambdaResult = await lambda.invoke({
-          FunctionName: `${SERVICE_PREFIX}-${task.service?.name}`,
+          FunctionName: `${SERVICE_PREFIX}-task-${task.service?.name}`,
           Payload: JSON.stringify({
             userId,
             connectionId: task.connectionId,

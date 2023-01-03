@@ -1,70 +1,51 @@
 'use strict'
 
-import { DynamoDB } from '@aws-sdk/client-dynamodb'
-import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
-import { IBotLog, IBotUsage } from 'src/models/log'
+import { CloudWatchLogs } from '@aws-sdk/client-cloudwatch-logs'
 
 const LOGS_TABLE = process.env.LOGS_TABLE || ''
-
+const SERVICE_PREFIX = process.env.SERVICE_PREFIX || ''
 export class Log {
-  async getBotLogs(botId: string) {
-    const ddb = DynamoDBDocument.from(new DynamoDB({}))
+  async getBotLogs(botId: string, searchTerms: string | string[] | undefined) {
+    const cloudWatchLogs = new CloudWatchLogs({})
 
     try {
-      const result = await ddb.query({
-        TableName: LOGS_TABLE,
-        Limit: 20,
-        KeyConditionExpression: 'botId = :botId',
-        ExpressionAttributeValues: {
-          ':botId': botId,
-        },
-        ScanIndexForward: false,
+      const botPrefix = `${SERVICE_PREFIX}-${botId}`
+
+      let queryString =
+        'fields @message | sort @timestamp desc | filter @message like "\tINFO\t"'
+
+      if (searchTerms) {
+        if (Array.isArray(searchTerms))
+          searchTerms.forEach(
+            (term) => (queryString += ` | filter @message like /(?i)${term}/`)
+          )
+        else queryString += ` | filter @message like /(?i)${searchTerms}/`
+      }
+
+      const startResponse = await cloudWatchLogs.startQuery({
+        limit: 20,
+        queryString,
+        endTime: Date.now(),
+        startTime: Date.now() - 10 * 24 * 60 * 60 * 1000, // last 10 days
+        logGroupName: `/aws/lambda/${botPrefix}`,
       })
 
-      return result.Items
-    } catch (err) {
-      throw err.message
-    }
-  }
+      let queryResponse
+      while (!queryResponse || queryResponse.status !== 'Complete') {
+        await new Promise((resolve) => setTimeout(resolve, 100))
 
-  async getBotUsage(botId: string) {
-    const ddb = DynamoDBDocument.from(new DynamoDB({}))
-
-    try {
-      let total = 0
-
-      const queryParams = {
-        TableName: LOGS_TABLE,
-        ProjectionExpression: '#usage',
-        ExpressionAttributeNames: {
-          '#usage': 'usage', // Expression used here bacause 'usage' is a reserved word
-        },
-        KeyConditionExpression: 'botId = :botId',
-        ExpressionAttributeValues: {
-          ':botId': botId,
-        },
+        queryResponse = await cloudWatchLogs.getQueryResults({
+          queryId: startResponse.queryId,
+        })
       }
 
-      const queryBotUsage = async (queryParams) => {
-        const result = await ddb.query(queryParams)
-
-        if (result && result.Items) {
-          result.Items.forEach((item) => {
-            total += item.usage
-          })
-
-          if (typeof result.LastEvaluatedKey != 'undefined') {
-            queryParams.ExclusiveStartKey = result.LastEvaluatedKey
-            return await queryBotUsage(queryParams)
-          } else {
-            return total
-          }
-        }
-      }
-
-      await queryBotUsage(queryParams)
-
-      return { total } as IBotUsage
+      return queryResponse?.results?.map((result) =>
+        JSON.parse(
+          result
+            .find((obj) => obj.field === '@message')
+            .value.split('\tINFO\t')[1]
+        )
+      )
     } catch (err) {
       throw err.message
     }
