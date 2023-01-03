@@ -26,10 +26,10 @@ const getInputString = (
       const fieldName = serviceFields[j].name
       const inputField = inputData.find((x) => x.name === fieldName)
       if (!inputField) throw `Input field ${fieldName} not found.`
-      if (inputField.outputName && inputField.outputIndex !== undefined) {
-        inputString += `'${fieldName}': task${inputField.outputIndex}_outputData['${inputField.outputName}'],`
+      if (inputField.outputIndex !== undefined) {
+        inputString += `'${inputField.name}': task${inputField.outputIndex}_outputData['${inputField.name}'],`
       } else if (inputField.value) {
-        inputString += `'${fieldName}': \`${inputField.value}\`,`
+        inputString += `'${inputField.name}': \`${inputField.value}\`,`
       }
     }
 
@@ -48,11 +48,8 @@ const getConditionsString = (conditions?: ITaskCondition[]) => {
           const andCondition = andConditions[k]
 
           let conditionValue = ''
-          if (
-            andCondition.outputName &&
-            andCondition.outputIndex !== undefined
-          ) {
-            conditionValue = `task${andCondition.outputIndex}_outputData['${andCondition.outputName}']`
+          if (andCondition.outputIndex !== undefined) {
+            conditionValue = `task${andCondition.outputIndex}_outputData['${andCondition.name}']`
           } else if (andCondition.value) {
             conditionValue = `\`${andCondition.value}\``
           }

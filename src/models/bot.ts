@@ -27,8 +27,7 @@ export interface ICondition {
   name: string
   label: string
   value: DataType
-  outputName?: string
-  sampleValue?: string
+  sampleValue: DataType
   outputIndex?: number
 }
 

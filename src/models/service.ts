@@ -41,9 +41,7 @@ export interface IVariable {
   value: DataType
   sampleValue: DataType
   outputIndex?: number
-  outputName?: string
   customFieldId?: number
-  taskIndex?: number
   groupName?: string
   options?: {
     label: string

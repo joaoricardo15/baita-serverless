@@ -129,15 +129,7 @@ const variableSchema: JSONSchemaType<IVariable> = {
       type: 'number',
       nullable: true,
     },
-    outputName: {
-      type: 'string',
-      nullable: true,
-    },
     customFieldId: {
-      type: 'number',
-      nullable: true,
-    },
-    taskIndex: {
       type: 'number',
       nullable: true,
     },
@@ -179,14 +171,7 @@ const conditionSchema: JSONSchemaType<ICondition> = {
       type: 'string',
     },
     value: dataSchema,
-    outputName: {
-      type: 'string',
-      nullable: true,
-    },
-    sampleValue: {
-      type: 'string',
-      nullable: true,
-    },
+    sampleValue: dataSchema,
     outputIndex: {
       type: 'number',
       nullable: true,
