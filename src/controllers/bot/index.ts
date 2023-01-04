@@ -314,18 +314,18 @@ export class Bot {
     })
 
     try {
-      let sample
+      let sample: ITaskExecutionResult
+
+      const inputData = getTestDataFromService(
+        task.inputData,
+        task.service?.config.inputFields
+      )
 
       if (parseInt(taskIndex) === 0) {
         const { triggerSamples } = await this.getBot(userId, botId)
         if (!triggerSamples) return
         sample = triggerSamples.reverse()[0]
       } else {
-        const inputData = getTestDataFromService(
-          task.inputData,
-          task.service?.config.inputFields
-        )
-
         const testLambdaResult = await lambda.invoke({
           FunctionName: `${SERVICE_PREFIX}-task-${task.service?.name}`,
           Payload: JSON.stringify({
