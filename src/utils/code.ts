@@ -29,18 +29,16 @@ const getInputString = (
       if (
         required &&
         (!inputField ||
-          (!inputField.value && inputField?.outputIndex !== undefined))
+          (inputField.value === undefined &&
+            inputField.outputIndex === undefined))
       ) {
         throw Error(`Required input field '${label}' is missing.`)
       }
 
-      if (
-        inputField?.outputIndex !== undefined &&
-        inputField?.outputPath !== undefined
-      ) {
+      if (inputField?.outputIndex !== undefined) {
         inputString += `'${inputField.name}': task${
           inputField.outputIndex
-        }_outputData${inputField.outputPath
+        }_outputData${(inputField.outputPath || '')
           .split('.')
           .reduce(
             (prev, curr) =>
@@ -122,7 +120,7 @@ const getBotInnerCode = (tasks: ITask[]) => {
 
     innerCode += `
     ////////////////////////////////////////////////////////////////////////////////
-    // 4.1. Collect operation inputs
+    // Task ${i}
 
     const task${i}_inputData = { ${inputDataString} };
     
@@ -137,11 +135,11 @@ const getBotInnerCode = (tasks: ITask[]) => {
     let task${i}_outputData = {};
 
     ////////////////////////////////////////////////////////////////////////////////
-    // 4.2. Check conditions
+    // Task ${i}.1. Check conditions
 
     if (${conditionsString || true}) {
       ////////////////////////////////////////////////////////////////////////////////
-      // 4.2.1 If condition passes, execute operation
+      // If Task ${i} condition passes, 1. execute operation
 
       const { Payload: task${i}_lambda_payload } = await lambda.invoke({
         FunctionName: '${SERVICE_PREFIX}-task-${service?.name}',
@@ -150,7 +148,7 @@ const getBotInnerCode = (tasks: ITask[]) => {
   
 
       ////////////////////////////////////////////////////////////////////////////////
-      // 4.2.2 Parse results
+      // Task ${i}.2 Parse results
 
       const task${i}_result = JSON.parse(task${i}_lambda_payload);
       
@@ -160,7 +158,7 @@ const getBotInnerCode = (tasks: ITask[]) => {
       
 
       ////////////////////////////////////////////////////////////////////////////////
-      // 4.2.3 Add result to logs
+      // Task ${i}.3 Add result to logs
 
       logs.push({
         timestamp: Date.now(),
@@ -172,7 +170,7 @@ const getBotInnerCode = (tasks: ITask[]) => {
 
 
       ////////////////////////////////////////////////////////////////////////////////
-      // 4.2.4 If task executed successfully, increment usage
+      // Task ${i}.4 If task executed successfully, increment usage
 
       if (task${i}_success) usage += 1;
 
@@ -180,7 +178,7 @@ const getBotInnerCode = (tasks: ITask[]) => {
     task.returnData
       ? `
       ////////////////////////////////////////////////////////////////////////////////
-      // 4.2.5 If task property returnData equals true, set outputData to task result
+      // Task ${i}.5 If task property returnData equals true, set outputData to task result
         
       if (task${i}_success) outputData = task${i}_outputData;
       `
@@ -188,7 +186,7 @@ const getBotInnerCode = (tasks: ITask[]) => {
   }
     } else {
       ////////////////////////////////////////////////////////////////////////////////
-      // 4.2.1 If condition does not pass, add result to logs
+      // If Task ${i} condition does not pass, 1. add result to logs
 
       logs.push({
         timestamp: Date.now(),
@@ -197,7 +195,9 @@ const getBotInnerCode = (tasks: ITask[]) => {
         outputData: task${i}_outputData,
         status: 'filtered',
       });
-    }`
+    }
+  
+  `
   }
 
   return innerCode
