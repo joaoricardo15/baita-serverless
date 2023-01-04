@@ -40,6 +40,7 @@ export interface IVariable {
   label: string
   value: DataType
   sampleValue: DataType
+  required?: boolean
   outputIndex?: number
   outputPath?: string
   customFieldId?: number

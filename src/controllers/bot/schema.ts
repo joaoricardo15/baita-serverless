@@ -125,6 +125,10 @@ const variableSchema: JSONSchemaType<IVariable> = {
     },
     value: dataSchema,
     sampleValue: dataSchema,
+    required: {
+      type: 'boolean',
+      nullable: true,
+    },
     outputIndex: {
       type: 'number',
       nullable: true,

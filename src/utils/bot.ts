@@ -158,10 +158,14 @@ export const getTestDataFromService = (
 
   if (serviceFields)
     for (let j = 0; j < serviceFields.length; j++) {
-      const fieldName = serviceFields[j].name
-      const inputField = inputData.find((x) => x.name === fieldName)
-      if (!inputField) throw `Input field '${fieldName}' not found.`
-      input[fieldName] = inputField.sampleValue
+      const { name, required } = serviceFields[j]
+      const inputField = inputData.find((x) => x.name === name)
+
+      if (required && (!inputField || !inputField.sampleValue)) {
+        throw Error(`Required input field '${name}' is missing.`)
+      }
+
+      input[name] = inputField?.sampleValue || ''
     }
 
   return input

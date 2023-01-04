@@ -22,13 +22,21 @@ const getInputString = (
   let inputString = ''
 
   if (serviceFields)
-    for (let j = 0; j < serviceFields.length; j++) {
-      const fieldName = serviceFields[j].name
-      const inputField = inputData.find((x) => x.name === fieldName)
-      if (!inputField) throw `Input field ${fieldName} not found.`
+    for (let i = 0; i < serviceFields.length; i++) {
+      const { name, required } = serviceFields[i]
+      const inputField = inputData.find((x) => x.name === name)
+
       if (
-        inputField.outputIndex !== undefined &&
-        inputField.outputPath !== undefined
+        required &&
+        (!inputField ||
+          (!inputField.value && inputField?.outputIndex !== undefined))
+      ) {
+        throw Error(`Required input field '${name}' is missing.`)
+      }
+
+      if (
+        inputField?.outputIndex !== undefined &&
+        inputField?.outputPath !== undefined
       ) {
         inputString += `'${inputField.name}': task${
           inputField.outputIndex
@@ -45,8 +53,8 @@ const getInputString = (
               }`,
             ''
           )},`
-      } else if (inputField.value) {
-        inputString += `'${inputField.name}': \`${inputField.value}\`,`
+      } else {
+        inputString += `'${inputField?.name}': \`${inputField?.value}\`,`
       }
     }
 
