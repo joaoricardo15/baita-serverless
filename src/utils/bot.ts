@@ -19,13 +19,16 @@ export const getDataFromPath = (data: any, outputPath?: string) => {
 
   const paths = outputPath.split('.')
 
-  for (let i = 0; i < paths.length; i++) {
-    const key = paths[i]
-    const intKey = parseInt(key)
-    data = data[isNaN(intKey) ? key : intKey]
+  try {
+    for (let i = 0; i < paths.length; i++) {
+      const key = paths[i]
+      const intKey = parseInt(key)
+      data = data[isNaN(intKey) ? key : intKey]
+    }
+    return data
+  } catch (error) {
+    return null
   }
-
-  return data
 }
 
 export const getDataFromObject = (data: any, serviceConfig: ISerivceConfig) => {
@@ -38,9 +41,7 @@ export const getDataFromObject = (data: any, serviceConfig: ISerivceConfig) => {
 
   for (let i = 0; i < outputKeys.length; i++) {
     const outputKey = outputKeys[i]
-    const outputValue = getDataFromPath(data, outputMapping[outputKey])
-    if (!outputValue) return
-    mappedData[outputKey] = outputValue
+    mappedData[outputKey] = getDataFromPath(data, outputMapping[outputKey])
   }
 
   return mappedData

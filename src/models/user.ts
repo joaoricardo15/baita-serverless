@@ -5,10 +5,10 @@ export interface IUser {
 }
 
 export interface IPost {
-  title: string
-  description: string
-  author: string
-  image: string
   date: string
-  url: string
+  author: string
+  title: string
+  body: string
+  image?: string
+  url?: string
 }

@@ -29,26 +29,28 @@ const postsSchema: JSONSchemaType<IPost[]> = {
   items: {
     type: 'object',
     properties: {
-      title: {
-        type: 'string',
-      },
-      description: {
+      date: {
         type: 'string',
       },
       author: {
         type: 'string',
       },
-      image: {
+      title: {
         type: 'string',
       },
-      date: {
+      body: {
         type: 'string',
+      },
+      image: {
+        type: 'string',
+        nullable: true,
       },
       url: {
         type: 'string',
+        nullable: true,
       },
     },
-    required: ['title', 'description', 'author', 'image', 'date', 'url'],
+    required: ['date', 'author', 'title', 'body'],
   },
 }
 
