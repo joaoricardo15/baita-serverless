@@ -23,7 +23,7 @@ const getInputString = (
 
   if (serviceFields)
     for (let i = 0; i < serviceFields.length; i++) {
-      const { name, required } = serviceFields[i]
+      const { name, label, required } = serviceFields[i]
       const inputField = inputData.find((x) => x.name === name)
 
       if (
@@ -31,7 +31,7 @@ const getInputString = (
         (!inputField ||
           (!inputField.value && inputField?.outputIndex !== undefined))
       ) {
-        throw Error(`Required input field '${name}' is missing.`)
+        throw Error(`Required input field '${label}' is missing.`)
       }
 
       if (
