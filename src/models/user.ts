@@ -5,9 +5,9 @@ export interface IUser {
 }
 
 export interface IPost {
-  title: string
   body: string
   date: string
+  header?: string
   image?: string
   url?: string
   likes?: number
