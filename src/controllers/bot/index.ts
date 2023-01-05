@@ -2,11 +2,12 @@
 
 import { S3 } from '@aws-sdk/client-s3'
 import { Lambda } from '@aws-sdk/client-lambda'
-import { Scheduler } from '@aws-sdk/client-scheduler'
 import { DynamoDB } from '@aws-sdk/client-dynamodb'
+import { Scheduler } from '@aws-sdk/client-scheduler'
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
 import { ApiGatewayV2 } from '@aws-sdk/client-apigatewayv2'
 import { CloudWatchLogs } from '@aws-sdk/client-cloudwatch-logs'
+import { v4 as uuidv4 } from 'uuid'
 import {
   IBot,
   ITask,
@@ -19,7 +20,6 @@ import {
   getCompleteBotCode,
 } from 'src/utils/code'
 import { ServiceName } from 'src/models/service'
-import { v4 as uuidv4 } from 'uuid'
 import { getTestDataFromService } from 'src/utils/bot'
 import { validateTaskResult } from './schema'
 
@@ -316,6 +316,7 @@ export class Bot {
     try {
       let sample: ITaskExecutionResult
 
+      // Get input data from service in both cases to check input data validity
       const inputData = getTestDataFromService(
         task.inputData,
         task.service?.config.inputFields
@@ -338,7 +339,11 @@ export class Bot {
         })
 
         const testLambdaPayload = JSON.parse(
-          new TextDecoder().decode(testLambdaResult.Payload)
+          new TextDecoder().decode(testLambdaResult.Payload),
+          (_, value) =>
+            !isNaN(value) && value > Number.MAX_SAFE_INTEGER
+              ? value.toString()
+              : value
         )
 
         sample = {

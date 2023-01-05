@@ -29,16 +29,13 @@ const postsSchema: JSONSchemaType<IPost[]> = {
   items: {
     type: 'object',
     properties: {
-      date: {
-        type: 'string',
-      },
-      author: {
-        type: 'string',
-      },
       title: {
         type: 'string',
       },
       body: {
+        type: 'string',
+      },
+      date: {
         type: 'string',
       },
       image: {
@@ -49,8 +46,49 @@ const postsSchema: JSONSchemaType<IPost[]> = {
         type: 'string',
         nullable: true,
       },
+      likes: {
+        type: 'number',
+        nullable: true,
+      },
+      comments: {
+        type: 'number',
+        nullable: true,
+      },
+      author: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+          },
+          accountName: {
+            type: 'string',
+            nullable: true,
+          },
+          descripion: {
+            type: 'string',
+            nullable: true,
+          },
+          image: {
+            type: 'string',
+            nullable: true,
+          },
+          url: {
+            type: 'string',
+            nullable: true,
+          },
+          location: {
+            type: 'string',
+            nullable: true,
+          },
+          followers: {
+            type: 'number',
+            nullable: true,
+          },
+        },
+        required: ['name'],
+      },
     },
-    required: ['date', 'author', 'title', 'body'],
+    required: ['title', 'body', 'date', 'author'],
   },
 }
 

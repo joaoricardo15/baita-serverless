@@ -60,14 +60,16 @@ const getDataFromServiceMapping = (
 ) => {
   if (!outputMapping || typeof data !== 'object') return data
 
-  const mappedData = {}
-  const outputKeys = Object.keys(outputMapping)
+  let mappedData = {}
+  const inputPaths = Object.keys(outputMapping)
 
-  for (let i = 0; i < outputKeys.length; i++) {
-    const outputKey = outputKeys[i]
-    mappedData[outputKey] = getObjectDataFromPath(
-      data,
-      outputMapping[outputKey]
+  for (let i = 0; i < inputPaths.length; i++) {
+    const inputPath = inputPaths[i]
+
+    mappedData = setObjectDataFromPath(
+      mappedData,
+      getObjectDataFromPath(data, outputMapping[inputPath]),
+      inputPath
     )
   }
 

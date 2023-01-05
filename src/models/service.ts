@@ -21,6 +21,7 @@ export enum InputSource {
 
 export enum VariableType {
   code = 'code',
+  value = 'value',
   input = 'input',
   output = 'output',
   options = 'options',
