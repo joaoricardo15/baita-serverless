@@ -4,11 +4,11 @@ import Axios from 'axios'
 import { validateOperationInput } from 'src/controllers/bot/schema'
 import { Api, BotStatus } from 'src/utils/api'
 import {
-  getBodyFromService,
-  getDataFromPath,
+  parseBodyFromTask,
+  getObjectDataFromPath,
   getDataFromService,
-  getQueryParamsFromService,
-  getUrlFromService,
+  parseQueryParamsFromTask,
+  parseUrlFromTask,
 } from 'src/utils/bot'
 
 exports.handler = async (event, context, callback) => {
@@ -22,22 +22,25 @@ exports.handler = async (event, context, callback) => {
     console.log({
       method: serviceConfig.method,
       headers: serviceConfig.headers,
-      url: getUrlFromService(appConfig, serviceConfig, inputData),
-      data: getBodyFromService(appConfig, serviceConfig, inputData),
-      params: getQueryParamsFromService(appConfig, serviceConfig, inputData),
+      url: parseUrlFromTask(appConfig, serviceConfig, inputData),
+      data: parseBodyFromTask(appConfig, serviceConfig, inputData),
+      params: parseQueryParamsFromTask(appConfig, serviceConfig, inputData),
     })
 
     const response = await Axios({
       method: serviceConfig.method,
       headers: serviceConfig.headers,
-      url: getUrlFromService(appConfig, serviceConfig, inputData),
-      data: getBodyFromService(appConfig, serviceConfig, inputData),
-      params: getQueryParamsFromService(appConfig, serviceConfig, inputData),
+      url: parseUrlFromTask(appConfig, serviceConfig, inputData),
+      data: parseBodyFromTask(appConfig, serviceConfig, inputData),
+      params: parseQueryParamsFromTask(appConfig, serviceConfig, inputData),
     })
 
     console.log(response.data)
 
-    const initialData = getDataFromPath(response.data, serviceConfig.outputPath)
+    const initialData = getObjectDataFromPath(
+      response.data,
+      serviceConfig.outputPath
+    )
 
     console.log(initialData)
 

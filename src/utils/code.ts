@@ -40,17 +40,7 @@ const getInputString = (
           inputField.outputIndex
         }_outputData${(inputField.outputPath || '')
           .split('.')
-          .reduce(
-            (prev, curr) =>
-              `${prev}${
-                !curr
-                  ? ''
-                  : !isNaN(parseInt(curr))
-                  ? `[${curr}]`
-                  : `['${curr}']`
-              }`,
-            ''
-          )},`
+          .reduce((p, c) => p + (c ? `['${c}']` : ''), '')},`
       } else {
         inputString += `'${inputField?.name}': \`${inputField?.value}\`,`
       }

@@ -5,13 +5,13 @@ import { validateOperationInput } from 'src/controllers/bot/schema'
 import { Connection } from 'src/controllers/connection'
 import { Api, BotStatus } from 'src/utils/api'
 import {
-  getAuthParamsFromApp,
-  getBodyFromService,
-  getAuthDataFromApp,
-  getDataFromPath,
+  parseAuthParamsFromTask,
+  parseBodyFromTask,
+  parseAuthDataFromTask,
+  getObjectDataFromPath,
   getDataFromService,
-  getUrlFromService,
-  getQueryParamsFromService,
+  parseUrlFromTask,
+  parseQueryParamsFromTask,
 } from 'src/utils/bot'
 
 exports.handler = async (event, context, callback) => {
@@ -36,8 +36,8 @@ exports.handler = async (event, context, callback) => {
       url,
       method,
       headers,
-      auth: getAuthParamsFromApp(type, fields),
-      data: getAuthDataFromApp(type, headers, fields, refresh_token),
+      auth: parseAuthParamsFromTask(type, fields),
+      data: parseAuthDataFromTask(type, headers, fields, refresh_token),
     })
 
     // Get token from app's oauth2 authenticator server
@@ -47,8 +47,8 @@ exports.handler = async (event, context, callback) => {
       url,
       method,
       headers,
-      auth: getAuthParamsFromApp(type, fields),
-      data: getAuthDataFromApp(type, headers, fields, refresh_token),
+      auth: parseAuthParamsFromTask(type, fields),
+      data: parseAuthDataFromTask(type, headers, fields, refresh_token),
     })
 
     console.log({
@@ -57,9 +57,9 @@ exports.handler = async (event, context, callback) => {
         ...serviceConfig.headers,
         Authorization: `Bearer ${access_token}`,
       },
-      url: getUrlFromService(appConfig, serviceConfig, inputData),
-      data: getBodyFromService(appConfig, serviceConfig, inputData),
-      params: getQueryParamsFromService(appConfig, serviceConfig, inputData),
+      url: parseUrlFromTask(appConfig, serviceConfig, inputData),
+      data: parseBodyFromTask(appConfig, serviceConfig, inputData),
+      params: parseQueryParamsFromTask(appConfig, serviceConfig, inputData),
     })
 
     // Http request
@@ -69,14 +69,17 @@ exports.handler = async (event, context, callback) => {
         ...serviceConfig.headers,
         Authorization: `Bearer ${access_token}`,
       },
-      url: getUrlFromService(appConfig, serviceConfig, inputData),
-      data: getBodyFromService(appConfig, serviceConfig, inputData),
-      params: getQueryParamsFromService(appConfig, serviceConfig, inputData),
+      url: parseUrlFromTask(appConfig, serviceConfig, inputData),
+      data: parseBodyFromTask(appConfig, serviceConfig, inputData),
+      params: parseQueryParamsFromTask(appConfig, serviceConfig, inputData),
     })
 
     console.log(response.data)
 
-    const initialData = getDataFromPath(response.data, serviceConfig.outputPath)
+    const initialData = getObjectDataFromPath(
+      response.data,
+      serviceConfig.outputPath
+    )
 
     console.log(initialData)
 

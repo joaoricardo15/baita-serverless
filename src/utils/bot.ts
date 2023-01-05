@@ -3,37 +3,61 @@
 import { IAppConfig } from 'src/models/app'
 import { InputSource, ISerivceConfig, IVariable } from 'src/models/service'
 
-export const getDataFromService = (
-  data: any,
-  serviceConfig: ISerivceConfig
-) => {
-  return Array.isArray(data)
-    ? data
-        .map((item) => getDataFromObject(item, serviceConfig))
-        .filter((item) => item)
-    : getDataFromObject(data, serviceConfig)
-}
-
-export const getDataFromPath = (data: any, outputPath?: string) => {
-  if (!outputPath) return data
+export const getObjectDataFromPath = (data: object, outputPath?: string) => {
+  if (!outputPath) {
+    return data
+  }
 
   const paths = outputPath.split('.')
 
-  try {
-    for (let i = 0; i < paths.length; i++) {
-      const key = paths[i]
-      const intKey = parseInt(key)
-      data = data[isNaN(intKey) ? key : intKey]
+  for (let i = 0; i < paths.length; i++) {
+    const key = paths[i]
+    if (key in data) {
+      data = data[key]
+    } else {
+      return null
     }
-    return data
-  } catch (error) {
-    return null
   }
+
+  return data
 }
 
-export const getDataFromObject = (data: any, serviceConfig: ISerivceConfig) => {
-  const { outputMapping } = serviceConfig
+const setObjectDataFromPath = (
+  data: object,
+  value: any,
+  inputPath?: string
+) => {
+  if (!inputPath) {
+    return value
+  }
 
+  let currentData = data
+  const paths = inputPath.split('.')
+
+  for (let i = 0; i < paths.length; i++) {
+    const key = paths[i]
+
+    if (i === paths.length - 1) {
+      currentData[key] = value
+    } else if (!(key in currentData)) {
+      const nextIntKey = parseInt(paths[i + 1])
+      if (isNaN(nextIntKey)) {
+        currentData[key] = {}
+      } else {
+        currentData[key] = []
+      }
+    }
+
+    currentData = currentData[key]
+  }
+
+  return data
+}
+
+const getDataFromServiceMapping = (
+  data: any,
+  outputMapping?: { [key: string]: string }
+) => {
   if (!outputMapping || typeof data !== 'object') return data
 
   const mappedData = {}
@@ -41,13 +65,50 @@ export const getDataFromObject = (data: any, serviceConfig: ISerivceConfig) => {
 
   for (let i = 0; i < outputKeys.length; i++) {
     const outputKey = outputKeys[i]
-    mappedData[outputKey] = getDataFromPath(data, outputMapping[outputKey])
+    mappedData[outputKey] = getObjectDataFromPath(
+      data,
+      outputMapping[outputKey]
+    )
   }
 
   return mappedData
 }
 
-export const getBodyFromService = (
+export const getDataFromService = (
+  data: any,
+  serviceConfig: ISerivceConfig
+) => {
+  return Array.isArray(data)
+    ? data
+        .map((item) =>
+          getDataFromServiceMapping(item, serviceConfig.outputMapping)
+        )
+        .filter((item) => item)
+    : getDataFromServiceMapping(data, serviceConfig.outputMapping)
+}
+
+export const getTestDataFromService = (
+  inputData: IVariable[],
+  serviceFields?: IVariable[]
+) => {
+  const input = {}
+
+  if (serviceFields)
+    for (let j = 0; j < serviceFields.length; j++) {
+      const { name, label, required } = serviceFields[j]
+      const inputField = inputData.find((x) => x.name === name)
+
+      if (required && (!inputField || !inputField.sampleValue)) {
+        throw Error(`Required input field '${label}' is missing.`)
+      }
+
+      input[name] = inputField?.sampleValue || ''
+    }
+
+  return input
+}
+
+export const parseBodyFromTask = (
   appConfig: IAppConfig,
   serviceConfig: ISerivceConfig,
   inputData: any
@@ -56,7 +117,7 @@ export const getBodyFromService = (
 
   const { auth = {} } = appConfig
 
-  const data = {}
+  let data = {}
   if (bodyParams) {
     for (let i = 0; i < bodyParams.length; i++) {
       const { paramName, source, fieldName = '', value } = bodyParams[i]
@@ -72,14 +133,14 @@ export const getBodyFromService = (
           ? inputData[fieldName]
           : ''
 
-      data[paramName] = fieldValue
+      data = setObjectDataFromPath(data, fieldValue, paramName)
     }
   }
 
   return data
 }
 
-export const getUrlFromService = (
+export const parseUrlFromTask = (
   appConfig: IAppConfig,
   serviceConfig: ISerivceConfig,
   inputData: any
@@ -118,7 +179,7 @@ export const getUrlFromService = (
   return url
 }
 
-export const getQueryParamsFromService = (
+export const parseQueryParamsFromTask = (
   appConfig: IAppConfig,
   serviceConfig: ISerivceConfig,
   inputData: any
@@ -150,28 +211,7 @@ export const getQueryParamsFromService = (
   return params
 }
 
-export const getTestDataFromService = (
-  inputData: IVariable[],
-  serviceFields?: IVariable[]
-) => {
-  const input = {}
-
-  if (serviceFields)
-    for (let j = 0; j < serviceFields.length; j++) {
-      const { name, label, required } = serviceFields[j]
-      const inputField = inputData.find((x) => x.name === name)
-
-      if (required && (!inputField || !inputField.sampleValue)) {
-        throw Error(`Required input field '${label}' is missing.`)
-      }
-
-      input[name] = inputField?.sampleValue || ''
-    }
-
-  return input
-}
-
-export const getAuthParamsFromApp = (type: string, authFields) => {
+export const parseAuthParamsFromTask = (type: string, authFields) => {
   if (type === 'basic')
     return {
       username: process.env[authFields.username] || '',
@@ -179,7 +219,7 @@ export const getAuthParamsFromApp = (type: string, authFields) => {
     }
 }
 
-export const getAuthDataFromApp = (
+export const parseAuthDataFromTask = (
   type: string,
   headers,
   authFields,
