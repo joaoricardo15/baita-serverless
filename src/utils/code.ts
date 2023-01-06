@@ -19,8 +19,9 @@ const getInputString = (
   inputData: IVariable[],
   serviceFields?: IVariable[]
 ) => {
-  let inputString = ''
+  let dataString = ''
 
+  // Get all servcie fields
   if (serviceFields)
     for (let i = 0; i < serviceFields.length; i++) {
       const { name, label, required } = serviceFields[i]
@@ -36,17 +37,33 @@ const getInputString = (
       }
 
       if (inputField?.outputIndex !== undefined) {
-        inputString += `'${inputField.name}': task${
+        dataString += `'${inputField.name}': task${
           inputField.outputIndex
         }_outputData${(inputField.outputPath || '')
           .split('.')
           .reduce((p, c) => p + (c ? `['${c}']` : ''), '')},`
       } else {
-        inputString += `'${inputField?.name}': \`${inputField?.value}\`,`
+        dataString += `'${inputField?.name}': \`${inputField?.value}\`,`
       }
     }
 
-  return inputString
+  // Get all custom fields
+  for (let i = 0; i < inputData.length; i++) {
+    const { customFieldId, name, value, outputIndex, outputPath } = inputData[i]
+    if (customFieldId) {
+      if (outputIndex !== undefined) {
+        dataString += `'${name}': task${outputIndex}_outputData${(
+          outputPath || ''
+        )
+          .split('.')
+          .reduce((p, c) => p + (c ? `['${c}']` : ''), '')},`
+      } else {
+        dataString += `'${name}': \`${value}\`,`
+      }
+    }
+  }
+
+  return dataString
 }
 
 const getConditionsString = (conditions?: ITaskCondition[]) => {

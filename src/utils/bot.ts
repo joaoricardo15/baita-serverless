@@ -93,21 +93,30 @@ export const getTestDataFromService = (
   inputData: IVariable[],
   serviceFields?: IVariable[]
 ) => {
-  const input = {}
+  let data = {}
 
+  // Get all servcie fields
   if (serviceFields)
     for (let j = 0; j < serviceFields.length; j++) {
       const { name, label, required } = serviceFields[j]
-      const inputField = inputData.find((x) => x.name === name)
+      const serviceInputField = inputData.find((x) => x.name === name)
 
-      if (required && (!inputField || !inputField.sampleValue)) {
+      if (required && (!serviceInputField || !serviceInputField.sampleValue)) {
         throw Error(`Required input field '${label}' is missing.`)
       }
 
-      input[name] = inputField?.sampleValue || ''
+      data[name] = serviceInputField?.sampleValue || ''
     }
 
-  return input
+  // Get all custom fields
+  for (let i = 0; i < inputData.length; i++) {
+    const { name, sampleValue, customFieldId } = inputData[i]
+    if (customFieldId) {
+      data = setObjectDataFromPath(data, sampleValue, name)
+    }
+  }
+
+  return data
 }
 
 export const parseBodyFromTask = (
