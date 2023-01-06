@@ -93,7 +93,7 @@ export const getTestDataFromService = (
   inputData: IVariable[],
   serviceFields?: IVariable[]
 ) => {
-  let data = {}
+  const data = {}
 
   // Get all servcie fields
   if (serviceFields)
@@ -112,7 +112,7 @@ export const getTestDataFromService = (
   for (let i = 0; i < inputData.length; i++) {
     const { name, sampleValue, customFieldId } = inputData[i]
     if (customFieldId) {
-      data = setObjectDataFromPath(data, sampleValue, name)
+      data[name] = sampleValue || ''
     }
   }
 
