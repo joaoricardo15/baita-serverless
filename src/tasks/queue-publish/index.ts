@@ -12,10 +12,15 @@ exports.handler = async (event, context, callback) => {
   try {
     validateOperationInput(event)
 
+    const { userId, inputData } = event
+
     const {
-      userId,
-      inputData: { posts },
-    } = event
+      // Required fields
+      posts,
+
+      // Custom fields
+      ...customFields
+    } = inputData
 
     if (Array.isArray(posts)) {
       validatePosts(posts)

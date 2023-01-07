@@ -4,7 +4,6 @@ import Ajv, { JSONSchemaType } from 'ajv'
 import addFormats from 'ajv-formats'
 import {
   DataType,
-  InputSource,
   ISerivceConfig,
   IService,
   IVariable,
@@ -216,78 +215,6 @@ const serviceConfigSchema: JSONSchemaType<ISerivceConfig> = {
       type: 'object',
       nullable: true,
       required: [],
-    },
-    queryParams: {
-      type: 'array',
-      nullable: true,
-      items: {
-        type: 'object',
-        properties: {
-          paramName: {
-            type: 'string',
-          },
-          source: {
-            type: 'string',
-            enum: Object.values(InputSource) as readonly InputSource[],
-          },
-          fieldName: {
-            type: 'string',
-            nullable: true,
-          },
-          value: {
-            type: ['string', 'number'],
-            nullable: true,
-          },
-        },
-        required: ['paramName', 'source'],
-      },
-    },
-    bodyParams: {
-      type: 'array',
-      nullable: true,
-      items: {
-        type: 'object',
-        properties: {
-          paramName: {
-            type: 'string',
-          },
-          source: {
-            type: 'string',
-            enum: Object.values(InputSource) as readonly InputSource[],
-          },
-          fieldName: {
-            type: 'string',
-            nullable: true,
-          },
-          value: {
-            type: ['string', 'number'],
-            nullable: true,
-          },
-        },
-        required: ['paramName', 'source'],
-      },
-    },
-    urlParams: {
-      type: 'array',
-      nullable: true,
-      items: {
-        type: 'object',
-        properties: {
-          source: {
-            type: 'string',
-            enum: Object.values(InputSource) as readonly InputSource[],
-          },
-          fieldName: {
-            type: 'string',
-            nullable: true,
-          },
-          value: {
-            type: ['string', 'number'],
-            nullable: true,
-          },
-        },
-        required: ['source'],
-      },
     },
   },
 }

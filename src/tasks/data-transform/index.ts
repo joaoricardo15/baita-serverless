@@ -1,8 +1,8 @@
 'use strict'
 
-import vm from 'vm'
 import { Api, BotStatus } from 'src/utils/api'
 import { validateOperationInput } from 'src/controllers/bot/schema'
+import { parseDataFromOutputMapping } from 'src/utils/bot'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
@@ -10,23 +10,20 @@ exports.handler = async (event, context, callback) => {
   try {
     validateOperationInput(event)
 
+    const { inputData } = event
+
     const {
       // Required fields
-      code,
+      fromArray,
+      arraySource,
 
       // Custom fields
       ...customFields
-    } = event.inputData
+    } = inputData
 
-    const codeInput: any = {}
-
-    const script = new vm.Script(`${code}`)
-
-    vm.createContext(customFields)
-
-    script.runInContext(codeInput, { displayErrors: true, timeout: 5000 })
-
-    const { output: data } = codeInput
+    const data = fromArray
+      ? parseDataFromOutputMapping(arraySource, customFields)
+      : customFields
 
     api.httpOperationResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {

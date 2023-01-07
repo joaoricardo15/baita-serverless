@@ -4,11 +4,8 @@ import Axios from 'axios'
 import { validateOperationInput } from 'src/controllers/bot/schema'
 import { Api, BotStatus } from 'src/utils/api'
 import {
-  parseBodyFromTask,
   getObjectDataFromPath,
-  getDataFromService,
-  parseQueryParamsFromTask,
-  parseUrlFromTask,
+  parseDataFromOutputMapping,
 } from 'src/utils/bot'
 
 exports.handler = async (event, context, callback) => {
@@ -17,42 +14,60 @@ exports.handler = async (event, context, callback) => {
   try {
     validateOperationInput(event)
 
-    const { appConfig, serviceConfig, inputData } = event
+    const {
+      inputData,
+      appConfig: { apiUrl },
+      serviceConfig: { path, method, headers, outputPath, outputMapping },
+    } = event
+
+    const {
+      // Required fields
+      urlParams,
+      bodyParams,
+      queryParams,
+
+      // Custom fields
+      ...customFields
+    } = inputData
 
     console.log({
-      method: serviceConfig.method,
-      headers: serviceConfig.headers,
-      url: parseUrlFromTask(appConfig, serviceConfig, inputData),
-      data: parseBodyFromTask(appConfig, serviceConfig, inputData),
-      params: parseQueryParamsFromTask(appConfig, serviceConfig, inputData),
+      url: parseUrlFromTask(apiUrl, path, urlParams),
+      method: method,
+      headers: headers,
+      data: bodyParams,
+      params: queryParams,
     })
 
     const response = await Axios({
-      method: serviceConfig.method,
-      headers: serviceConfig.headers,
-      url: parseUrlFromTask(appConfig, serviceConfig, inputData),
-      data: parseBodyFromTask(appConfig, serviceConfig, inputData),
-      params: parseQueryParamsFromTask(appConfig, serviceConfig, inputData),
+      url: parseUrlFromTask(apiUrl, path, urlParams),
+      method,
+      headers,
+      data: bodyParams,
+      params: queryParams,
     })
 
     console.log(response.data)
 
-    const initialData = getObjectDataFromPath(
-      response.data,
-      serviceConfig.outputPath
-    )
+    const initialData = getObjectDataFromPath(response.data, outputPath)
 
-    console.log(initialData)
+    const data = parseDataFromOutputMapping(initialData, outputMapping)
 
-    const mappedData = getDataFromService(initialData, serviceConfig)
-
-    api.httpOperationResponse(
-      callback,
-      BotStatus.success,
-      undefined,
-      mappedData
-    )
+    api.httpOperationResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {
     api.httpOperationResponse(callback, BotStatus.fail, err)
   }
+}
+
+export const parseUrlFromTask = (
+  url,
+  path,
+  urlParams?: { [key: string]: string }
+) => {
+  const initialUrl = `${url}/${path}`
+
+  return !urlParams
+    ? initialUrl
+    : encodeURIComponent(
+        Object.values(urlParams).reduce((p, c) => `${p}/${c}`, initialUrl)
+      )
 }

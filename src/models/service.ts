@@ -4,19 +4,13 @@ export enum ServiceType {
 }
 
 export enum ServiceName {
-  code = 'code-execute',
-  http = 'http-request',
-  queue = 'queue-publish',
-  oauth2 = 'oauth2-request',
   webhook = 'webhook',
   schedule = 'schedule',
-}
-
-export enum InputSource {
-  auth = 'authFields',
-  input = 'inputFields',
-  value = 'valueFields',
-  service = 'serviceFields',
+  code = 'code-execute',
+  data = 'data-transform',
+  http = 'http-request',
+  oauth2 = 'oauth2-request',
+  queue = 'queue-publish',
 }
 
 export enum VariableType {
@@ -25,6 +19,7 @@ export enum VariableType {
   input = 'input',
   output = 'output',
   options = 'options',
+  boolean = 'boolean',
 }
 
 export type DataType =
@@ -61,23 +56,6 @@ export interface ISerivceConfig {
   outputMapping?: {
     [key: string]: string
   }
-  queryParams?: {
-    paramName: string
-    source: InputSource
-    fieldName?: string
-    value?: string | number
-  }[]
-  bodyParams?: {
-    paramName: string
-    source: InputSource
-    fieldName?: string
-    value?: string | number
-  }[]
-  urlParams?: {
-    source: InputSource
-    fieldName?: string
-    value?: string | number
-  }[]
 }
 
 export interface IService {
