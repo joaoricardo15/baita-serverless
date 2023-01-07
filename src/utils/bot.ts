@@ -3,6 +3,8 @@
 import { IAppConfig } from 'src/models/app'
 import { InputSource, ISerivceConfig, IVariable } from 'src/models/service'
 
+export const OUTPUT_SEPARATOR = '###'
+
 export const getObjectDataFromPath = (data: object, outputPath?: string) => {
   if (!outputPath) {
     return data
@@ -89,30 +91,63 @@ export const getDataFromService = (
     : getDataFromServiceMapping(data, serviceConfig.outputMapping)
 }
 
-export const getTestDataFromService = (
+export const getInputDataFromService = (
   inputData: IVariable[],
-  serviceFields?: IVariable[]
+  serviceFields?: IVariable[],
+  testData?: boolean
 ) => {
-  const data = {}
+  let data = {}
 
-  // Get all servcie fields
+  // Get all service fields
   if (serviceFields)
     for (let j = 0; j < serviceFields.length; j++) {
       const { name, label, required } = serviceFields[j]
       const serviceInputField = inputData.find((x) => x.name === name)
 
-      if (required && (!serviceInputField || !serviceInputField.sampleValue)) {
-        throw Error(`Required input field '${label}' is missing.`)
-      }
+      if (!serviceInputField) {
+        if (required) {
+          throw Error(`Required input field '${label}' is missing.`)
+        }
+      } else {
+        const { sampleValue, value, outputIndex, outputPath } =
+          serviceInputField
 
-      data[name] = serviceInputField?.sampleValue || ''
+        if (required) {
+          if (testData) {
+            if (sampleValue === undefined)
+              throw Error(`Required input field '${label}' is empty.`)
+          } else {
+            if (outputIndex === undefined && value === undefined)
+              throw Error(`Required input field '${label}' is empty.`)
+          }
+        }
+
+        data = setObjectDataFromPath(
+          data,
+          testData
+            ? sampleValue
+            : outputIndex !== undefined
+            ? `${outputIndex}${OUTPUT_SEPARATOR}${outputPath}`
+            : value,
+          name
+        )
+      }
     }
 
   // Get all custom fields
   for (let i = 0; i < inputData.length; i++) {
-    const { name, sampleValue, customFieldId } = inputData[i]
+    const { customFieldId, name, value, sampleValue, outputIndex, outputPath } =
+      inputData[i]
     if (customFieldId) {
-      data[name] = sampleValue || ''
+      data = setObjectDataFromPath(
+        data,
+        testData
+          ? sampleValue
+          : outputIndex !== undefined
+          ? `${outputIndex}${OUTPUT_SEPARATOR}${outputPath}`
+          : value,
+        name
+      )
     }
   }
 

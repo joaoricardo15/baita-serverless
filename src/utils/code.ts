@@ -2,7 +2,7 @@
 
 import JSZip from 'jszip'
 import { ConditionType, ITask, ITaskCondition } from 'src/models/bot'
-import { IVariable } from 'src/models/service'
+import { getInputDataFromService, OUTPUT_SEPARATOR } from './bot'
 
 const zip = new JSZip()
 
@@ -15,55 +15,27 @@ const comparationExpressions = {
   donotexists: '',
 }
 
-const getInputString = (
-  inputData: IVariable[],
-  serviceFields?: IVariable[]
-) => {
-  let dataString = ''
+const stringifyInputData = (inputData: any) => {
+  return JSON.stringify(inputData, (_, value) => {
+    if (typeof value === 'string' && value.includes(OUTPUT_SEPARATOR)) {
+      const [outputIndex, outputPath] = value.split(OUTPUT_SEPARATOR)
 
-  // Get all servcie fields
-  if (serviceFields)
-    for (let i = 0; i < serviceFields.length; i++) {
-      const { name, label, required } = serviceFields[i]
-      const inputField = inputData.find((x) => x.name === name)
-
-      if (
-        required &&
-        (!inputField ||
-          (inputField.value === undefined &&
-            inputField.outputIndex === undefined))
-      ) {
-        throw Error(`Required input field '${label}' is missing.`)
-      }
-
-      if (inputField?.outputIndex !== undefined) {
-        dataString += `'${inputField.name}': task${
-          inputField.outputIndex
-        }_outputData${(inputField.outputPath || '')
+      return (
+        OUTPUT_SEPARATOR +
+        outputPath
           .split('.')
-          .reduce((p, c) => p + (c ? `['${c}']` : ''), '')},`
-      } else {
-        dataString += `'${inputField?.name}': \`${inputField?.value}\`,`
-      }
+          .reduce(
+            (p, c) => p + (c ? `['${c}']` : ''),
+            `task${outputIndex}_outputData`
+          ) +
+        OUTPUT_SEPARATOR
+      )
+    } else {
+      return value
     }
-
-  // Get all custom fields
-  for (let i = 0; i < inputData.length; i++) {
-    const { customFieldId, name, value, outputIndex, outputPath } = inputData[i]
-    if (customFieldId) {
-      if (outputIndex !== undefined) {
-        dataString += `'${name}': task${outputIndex}_outputData${(
-          outputPath || ''
-        )
-          .split('.')
-          .reduce((p, c) => p + (c ? `['${c}']` : ''), '')},`
-      } else {
-        dataString += `'${name}': \`${value}\`,`
-      }
-    }
-  }
-
-  return dataString
+  })
+    .replace(new RegExp(`"${OUTPUT_SEPARATOR}`, 'g'), '')
+    .replace(new RegExp(`${OUTPUT_SEPARATOR}"`, 'g'), '')
 }
 
 const getConditionsString = (conditions?: ITaskCondition[]) => {
@@ -118,7 +90,7 @@ const getBotInnerCode = (tasks: ITask[]) => {
     const service = task.service
     const conditions = task.conditions
 
-    const inputDataString = getInputString(
+    const inputData = getInputDataFromService(
       task.inputData,
       service?.config.inputFields
     )
@@ -129,20 +101,20 @@ const getBotInnerCode = (tasks: ITask[]) => {
     ////////////////////////////////////////////////////////////////////////////////
     // Task ${i}
 
-    const task${i}_inputData = { ${inputDataString} };
+    const task${i}_inputData = ${stringifyInputData(inputData)};
     
     const task${i}_appConfig = ${JSON.stringify(app?.config)};
 
     const task${i}_serviceConfig = ${JSON.stringify(service?.config)};
     
-    const task${i}_connectionId = '${task.connectionId}';
+    const task${i}_connectionId = '${task.connectionId || ''}';
 
     const task${i}_outputPath = '${service?.config.outputPath || ''}';
 
     let task${i}_outputData = {};
 
     ////////////////////////////////////////////////////////////////////////////////
-    // Task ${i}.1. Check conditions
+    // Task ${i} Filter conditions
 
     if (${conditionsString || true}) {
       ////////////////////////////////////////////////////////////////////////////////
