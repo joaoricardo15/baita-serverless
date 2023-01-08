@@ -1,35 +1,25 @@
 'use strict'
 
+import { ConditionType, ITaskCondition } from 'src/models/bot'
 import { IVariable, VariableType } from 'src/models/service'
 
 export const OUTPUT_SEPARATOR = '###'
-
-export const getObjectDataFromPath = (data: object, outputPath?: string) => {
-  if (!outputPath) {
-    return data
-  }
-
-  const paths = outputPath.split('.')
-
-  for (let i = 0; i < paths.length; i++) {
-    const key = paths[i]
-    if (key in data) {
-      data = data[key]
-    } else {
-      return null
-    }
-  }
-
-  return data
-}
 
 const setObjectDataFromPath = (
   data: object,
   value: any,
   inputPath?: string
 ) => {
+  /*
+    data = { id: '123' }
+    value = 'john'
+    inputPath = 'user.name'
+
+    => { id: '123', user: { name: 'john' } }
+  */
+
   if (!inputPath) {
-    return value
+    return data
   }
 
   let currentData = data
@@ -59,6 +49,13 @@ const geObjectFromOutputMapping = (
   data: any,
   outputMapping?: { [key: string]: string }
 ) => {
+  /*
+    data = { user: { name: 'john' } }
+    outputMapping = { 'author.name': 'user.name' }
+
+    => { author: { name: 'john' } }
+  */
+
   if (!outputMapping || typeof data !== 'object') return data
 
   let mappedData = {}
@@ -75,6 +72,32 @@ const geObjectFromOutputMapping = (
   }
 
   return mappedData
+}
+
+export const getObjectDataFromPath = (data: object, outputPath?: string) => {
+  /*
+    data = { user: { name: 'john' } }
+    outputPath = 'user.name'
+
+    => 'john'
+  */
+
+  if (!outputPath) {
+    return data
+  }
+
+  const paths = outputPath.split('.')
+
+  for (let i = 0; i < paths.length; i++) {
+    const key = paths[i]
+    if (key in data) {
+      data = data[key]
+    } else {
+      return null
+    }
+  }
+
+  return data
 }
 
 export const parseDataFromOutputMapping = (
@@ -165,4 +188,54 @@ export const getInputDataFromService = (
   }
 
   return data
+}
+
+const comparationExpressions = {
+  equals: '==',
+  diferent: '!=',
+  exists: '',
+  donotexists: '',
+}
+
+export const getConditionsString = (conditions?: ITaskCondition[]) => {
+  let andConditionsString = ''
+
+  if (conditions)
+    for (let j = 0; j < conditions.length; j++) {
+      const andConditions = conditions[j].andConditions
+
+      if (andConditions) {
+        for (let k = 0; k < andConditions.length; k++) {
+          const andCondition = andConditions[k]
+
+          let conditionValue = ''
+          if (andCondition.outputIndex !== undefined) {
+            conditionValue = `task${andCondition.outputIndex}_outputData['${andCondition.name}']`
+          } else if (andCondition.value) {
+            conditionValue = `\`${andCondition.value}\``
+          }
+
+          const conditionExpression = comparationExpressions[andCondition.type]
+
+          const comparationValue = andCondition.type
+
+          if (conditionValue && andCondition.type)
+            andConditionsString += `${k === 0 ? '' : ' && '}${
+              andCondition.type === ConditionType.donotexists
+                ? `!${conditionValue}`
+                : andCondition.type === ConditionType.exists
+                ? `${conditionValue}`
+                : `${conditionValue} ${conditionExpression} ${comparationValue}`
+            }`
+        }
+      }
+
+      if (andConditionsString) {
+        andConditionsString += `${
+          j === 0 ? '' : ' || '
+        }(${andConditionsString})`
+      }
+    }
+
+  return andConditionsString
 }

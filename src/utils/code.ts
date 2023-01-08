@@ -1,19 +1,16 @@
 'use strict'
 
 import JSZip from 'jszip'
-import { ConditionType, ITask, ITaskCondition } from 'src/models/bot'
-import { getInputDataFromService, OUTPUT_SEPARATOR } from './bot'
+import { ITask } from 'src/models/bot'
+import {
+  getConditionsString,
+  getInputDataFromService,
+  OUTPUT_SEPARATOR,
+} from './bot'
 
 const zip = new JSZip()
 
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX || ''
-
-const comparationExpressions = {
-  equals: '==',
-  diferent: '!=',
-  exists: '',
-  donotexists: '',
-}
 
 const stringifyInputData = (inputData: any) => {
   return JSON.stringify(inputData, (_, value) => {
@@ -36,49 +33,6 @@ const stringifyInputData = (inputData: any) => {
   })
     .replace(new RegExp(`"${OUTPUT_SEPARATOR}`, 'g'), '')
     .replace(new RegExp(`${OUTPUT_SEPARATOR}"`, 'g'), '')
-}
-
-const getConditionsString = (conditions?: ITaskCondition[]) => {
-  let andConditionsString = ''
-
-  if (conditions)
-    for (let j = 0; j < conditions.length; j++) {
-      const andConditions = conditions[j].andConditions
-
-      if (andConditions) {
-        for (let k = 0; k < andConditions.length; k++) {
-          const andCondition = andConditions[k]
-
-          let conditionValue = ''
-          if (andCondition.outputIndex !== undefined) {
-            conditionValue = `task${andCondition.outputIndex}_outputData['${andCondition.name}']`
-          } else if (andCondition.value) {
-            conditionValue = `\`${andCondition.value}\``
-          }
-
-          const conditionExpression = comparationExpressions[andCondition.type]
-
-          const comparationValue = andCondition.type
-
-          if (conditionValue && andCondition.type)
-            andConditionsString += `${k === 0 ? '' : ' && '}${
-              andCondition.type === ConditionType.donotexists
-                ? `!${conditionValue}`
-                : andCondition.type === ConditionType.exists
-                ? `${conditionValue}`
-                : `${conditionValue} ${conditionExpression} ${comparationValue}`
-            }`
-        }
-      }
-
-      if (andConditionsString) {
-        andConditionsString += `${
-          j === 0 ? '' : ' || '
-        }(${andConditionsString})`
-      }
-    }
-
-  return andConditionsString
 }
 
 const getBotInnerCode = (tasks: ITask[]) => {

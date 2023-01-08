@@ -10,23 +10,23 @@ exports.handler = async (event, context, callback) => {
   try {
     validateOperationInput(event)
 
+    const { inputData } = event
+
     const {
       // Required fields
       code,
 
       // Custom fields
       ...customFields
-    } = event.inputData
+    } = inputData
 
-    const codeInput: any = {}
+    const codeContext: any = customFields
 
-    const script = new vm.Script(`${code}`)
+    vm.createContext(codeContext)
 
-    vm.createContext(customFields)
+    vm.runInContext(code, codeContext, { displayErrors: true, timeout: 5000 })
 
-    script.runInContext(codeInput, { displayErrors: true, timeout: 5000 })
-
-    const { output: data } = codeInput
+    const { output: data } = codeContext
 
     api.httpOperationResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {
