@@ -135,7 +135,7 @@ export const getInputDataFromService = (
 
       const { type, name, value, label, required } = serviceInputField
 
-      if (type === VariableType.value) {
+      if (type === VariableType.constant) {
         if (required && !serviceInputField.value) {
           throw Error(`Required service field '${label}' is missing.`)
         }

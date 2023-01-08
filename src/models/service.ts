@@ -15,11 +15,11 @@ export enum ServiceName {
 
 export enum VariableType {
   code = 'code',
-  value = 'value',
-  input = 'input',
+  text = 'text',
   output = 'output',
   options = 'options',
   boolean = 'boolean',
+  constant = 'constant',
 }
 
 export type DataType =
