@@ -1,6 +1,4 @@
 'use strict'
-
-import { ConditionType, ITaskCondition } from 'src/models/bot'
 import { IVariable, VariableType } from 'src/models/service'
 
 export const OUTPUT_SEPARATOR = '###'
@@ -74,6 +72,32 @@ const geObjectFromOutputMapping = (
   return mappedData
 }
 
+const getVariableInputPath = (field: IVariable) => {
+  return field.groupName ? `${field.groupName}.${field.name}` : field.name
+}
+
+export const getVariableValue = (field: IVariable, testData?: boolean) => {
+  /*
+    field = { outputIndex: 0, outputPath: 'user.name' } }
+    testData = false
+
+    => '###task0_outputData['user']['name']###'
+  */
+
+  return testData
+    ? field.sampleValue
+    : field.outputIndex !== undefined && field.outputPath !== undefined
+    ? OUTPUT_SEPARATOR +
+      field.outputPath
+        .split('.')
+        .reduce(
+          (p, c) => p + (c ? `['${c}']` : ''),
+          `task${field.outputIndex}_outputData`
+        ) +
+      OUTPUT_SEPARATOR
+    : field.value
+}
+
 export const getObjectDataFromPath = (data: object, outputPath?: string) => {
   /*
     data = { user: { name: 'john' } }
@@ -116,16 +140,6 @@ export const getInputDataFromService = (
   serviceFields?: IVariable[],
   testData?: boolean
 ) => {
-  const getInputValue = (field: IVariable, testData?: boolean) =>
-    testData
-      ? field.sampleValue
-      : field.outputIndex !== undefined
-      ? `${field.outputIndex}${OUTPUT_SEPARATOR}${field.outputPath || ''}`
-      : field.value
-
-  const getInputPath = (field: IVariable) =>
-    field.groupName ? `${field.groupName}.${field.name}` : field.name
-
   let data = {}
 
   // Get all service fields
@@ -143,7 +157,7 @@ export const getInputDataFromService = (
         data = setObjectDataFromPath(
           data,
           value,
-          getInputPath(serviceInputField)
+          getVariableInputPath(serviceInputField)
         )
       } else {
         const inputDataField = inputData.find((x) => x.name === name)
@@ -167,8 +181,8 @@ export const getInputDataFromService = (
 
           data = setObjectDataFromPath(
             data,
-            getInputValue(inputDataField, testData),
-            getInputPath(inputDataField)
+            getVariableValue(inputDataField, testData),
+            getVariableInputPath(inputDataField)
           )
         }
       }
@@ -181,61 +195,11 @@ export const getInputDataFromService = (
     if (inputDataField.customFieldId) {
       data = setObjectDataFromPath(
         data,
-        getInputValue(inputDataField, testData),
-        getInputPath(inputDataField)
+        getVariableValue(inputDataField, testData),
+        getVariableInputPath(inputDataField)
       )
     }
   }
 
   return data
-}
-
-const comparationExpressions = {
-  equals: '==',
-  diferent: '!=',
-  exists: '',
-  donotexists: '',
-}
-
-export const getConditionsString = (conditions?: ITaskCondition[]) => {
-  let andConditionsString = ''
-
-  if (conditions)
-    for (let j = 0; j < conditions.length; j++) {
-      const andConditions = conditions[j].andConditions
-
-      if (andConditions) {
-        for (let k = 0; k < andConditions.length; k++) {
-          const andCondition = andConditions[k]
-
-          let conditionValue = ''
-          if (andCondition.outputIndex !== undefined) {
-            conditionValue = `task${andCondition.outputIndex}_outputData['${andCondition.name}']`
-          } else if (andCondition.value) {
-            conditionValue = `\`${andCondition.value}\``
-          }
-
-          const conditionExpression = comparationExpressions[andCondition.type]
-
-          const comparationValue = andCondition.type
-
-          if (conditionValue && andCondition.type)
-            andConditionsString += `${k === 0 ? '' : ' && '}${
-              andCondition.type === ConditionType.donotexists
-                ? `!${conditionValue}`
-                : andCondition.type === ConditionType.exists
-                ? `${conditionValue}`
-                : `${conditionValue} ${conditionExpression} ${comparationValue}`
-            }`
-        }
-      }
-
-      if (andConditionsString) {
-        andConditionsString += `${
-          j === 0 ? '' : ' || '
-        }(${andConditionsString})`
-      }
-    }
-
-  return andConditionsString
 }

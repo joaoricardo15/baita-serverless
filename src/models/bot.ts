@@ -22,27 +22,19 @@ export interface ITaskExecutionResult {
   status: TaskExecutionStatus
 }
 
-export enum ConditionType {
+export enum ConditionOperator {
+  equals = 'equals',
+  notEquals = 'notEquals',
   exists = 'exists',
-  donotexists = 'donotexists',
+  doNotExists = 'doNotExists',
   contains = 'contains',
   startsWith = 'startsWith',
   endsWith = 'endsWith',
 }
 
-export interface ICondition {
-  type: ConditionType
-  name: string
-  label: string
-  value: DataType
-  sampleValue: DataType
-  outputIndex?: number
-}
-
-export interface ITaskCondition {
-  conditionId: number
-  andConditions?: ICondition[]
-  orConditions?: ICondition[]
+export interface ITaskCondition extends IVariable {
+  conditionOperator?: ConditionOperator
+  conditionComparisonValue: DataType
 }
 
 export interface ITask {
@@ -52,8 +44,8 @@ export interface ITask {
   returnData?: boolean
   connectionId?: string
   inputData: IVariable[]
-  conditions?: ITaskCondition[]
   sampleResult?: ITaskExecutionResult
+  conditions?: ITaskCondition[][]
 }
 
 export interface IBot {

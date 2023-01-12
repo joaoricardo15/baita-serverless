@@ -12,9 +12,9 @@ import {
   VariableType,
 } from 'src/models/service'
 import {
-  ConditionType,
+  ConditionOperator,
   ITask,
-  ICondition,
+  ITaskCondition,
   ITaskExecutionResult,
   TaskExecutionStatus,
   ITaskExecutionInput,
@@ -42,6 +42,61 @@ const dataSchema: JSONSchemaType<DataType> = {
       },
     },
   ],
+}
+
+const variableSchema: JSONSchemaType<IVariable> = {
+  type: 'object',
+  properties: {
+    type: {
+      type: 'string',
+      enum: Object.values(VariableType) as readonly VariableType[],
+    },
+    name: {
+      type: 'string',
+    },
+    label: {
+      type: 'string',
+    },
+    value: dataSchema,
+    sampleValue: dataSchema,
+    required: {
+      type: 'boolean',
+      nullable: true,
+    },
+    outputIndex: {
+      type: 'number',
+      nullable: true,
+    },
+    outputPath: {
+      type: 'string',
+      nullable: true,
+    },
+    customFieldId: {
+      type: 'number',
+      nullable: true,
+    },
+    groupName: {
+      type: 'string',
+      nullable: true,
+    },
+    options: {
+      type: 'array',
+      nullable: true,
+      items: {
+        type: 'object',
+        properties: {
+          label: {
+            type: 'string',
+          },
+          value: {
+            type: 'string',
+          },
+        },
+        required: ['label', 'value'],
+      },
+    },
+  },
+  required: ['type', 'name', 'label'],
 }
 
 const appConfigSchema: JSONSchemaType<IAppConfig> = {
@@ -109,7 +164,58 @@ const appSchema: JSONSchemaType<IApp> = {
   required: ['name', 'appId', 'config'],
 }
 
-const variableSchema: JSONSchemaType<IVariable> = {
+const serviceConfigSchema: JSONSchemaType<ISerivceConfig> = {
+  type: 'object',
+  properties: {
+    path: {
+      type: 'string',
+      nullable: true,
+    },
+    method: {
+      type: 'string',
+      nullable: true,
+    },
+    customFields: {
+      type: 'boolean',
+      nullable: true,
+    },
+    inputFields: {
+      type: 'array',
+      nullable: true,
+      items: variableSchema,
+    },
+    outputPath: {
+      type: 'string',
+      nullable: true,
+    },
+    outputMapping: {
+      type: 'object',
+      nullable: true,
+      required: [],
+    },
+  },
+}
+
+const serviceSchema: JSONSchemaType<IService> = {
+  type: 'object',
+  properties: {
+    type: {
+      type: 'string',
+      enum: Object.values(ServiceType) as readonly ServiceType[],
+    },
+    name: {
+      type: 'string',
+      enum: Object.values(ServiceName) as readonly ServiceName[],
+    },
+    label: {
+      type: 'string',
+    },
+    config: serviceConfigSchema,
+  },
+  required: ['type', 'name', 'label', 'config'],
+}
+
+const conditionSchema: JSONSchemaType<ITaskCondition> = {
   type: 'object',
   properties: {
     type: {
@@ -160,82 +266,14 @@ const variableSchema: JSONSchemaType<IVariable> = {
         required: ['label', 'value'],
       },
     },
+    conditionOperator: {
+      type: 'string',
+      nullable: true,
+      enum: Object.values(ConditionOperator) as readonly ConditionOperator[],
+    },
+    conditionComparisonValue: dataSchema,
   },
   required: ['type', 'name', 'label'],
-}
-
-const conditionSchema: JSONSchemaType<ICondition> = {
-  type: 'object',
-  properties: {
-    type: {
-      type: 'string',
-      enum: Object.values(ConditionType) as readonly ConditionType[],
-    },
-    name: {
-      type: 'string',
-    },
-    label: {
-      type: 'string',
-    },
-    value: dataSchema,
-    sampleValue: dataSchema,
-    outputIndex: {
-      type: 'number',
-      nullable: true,
-    },
-  },
-  required: ['type', 'name', 'label'],
-}
-
-const serviceConfigSchema: JSONSchemaType<ISerivceConfig> = {
-  type: 'object',
-  properties: {
-    path: {
-      type: 'string',
-      nullable: true,
-    },
-    method: {
-      type: 'string',
-      nullable: true,
-    },
-    customFields: {
-      type: 'boolean',
-      nullable: true,
-    },
-    inputFields: {
-      type: 'array',
-      nullable: true,
-      items: variableSchema,
-    },
-    outputPath: {
-      type: 'string',
-      nullable: true,
-    },
-    outputMapping: {
-      type: 'object',
-      nullable: true,
-      required: [],
-    },
-  },
-}
-
-const serviceSchema: JSONSchemaType<IService> = {
-  type: 'object',
-  properties: {
-    type: {
-      type: 'string',
-      enum: Object.values(ServiceType) as readonly ServiceType[],
-    },
-    name: {
-      type: 'string',
-      enum: Object.values(ServiceName) as readonly ServiceName[],
-    },
-    label: {
-      type: 'string',
-    },
-    config: serviceConfigSchema,
-  },
-  required: ['type', 'name', 'label', 'config'],
 }
 
 const taskResultSchema: JSONSchemaType<ITaskExecutionResult> = {
@@ -292,23 +330,8 @@ const tasksSchema: JSONSchemaType<ITask[]> = {
         type: 'array',
         nullable: true,
         items: {
-          type: 'object',
-          properties: {
-            conditionId: {
-              type: 'number',
-            },
-            andConditions: {
-              type: 'array',
-              nullable: true,
-              items: conditionSchema,
-            },
-            orConditions: {
-              type: 'array',
-              nullable: true,
-              items: conditionSchema,
-            },
-          },
-          required: ['conditionId'],
+          type: 'array',
+          items: conditionSchema,
         },
       },
     },

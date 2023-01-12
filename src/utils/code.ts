@@ -1,10 +1,11 @@
 'use strict'
 
 import JSZip from 'jszip'
-import { ITask } from 'src/models/bot'
+import { ConditionOperator, ITask, ITaskCondition } from 'src/models/bot'
+import { IVariable } from 'src/models/service'
 import {
-  getConditionsString,
   getInputDataFromService,
+  getVariableValue,
   OUTPUT_SEPARATOR,
 } from './bot'
 
@@ -12,71 +13,123 @@ const zip = new JSZip()
 
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX || ''
 
-const stringifyInputData = (inputData: any) => {
-  return JSON.stringify(inputData, (_, value) => {
-    if (typeof value === 'string' && value.includes(OUTPUT_SEPARATOR)) {
-      const [outputIndex, outputPath] = value.split(OUTPUT_SEPARATOR)
-
-      return (
-        OUTPUT_SEPARATOR +
-        outputPath
-          .split('.')
-          .reduce(
-            (p, c) => p + (c ? `['${c}']` : ''),
-            `task${outputIndex}_outputData`
-          ) +
-        OUTPUT_SEPARATOR
-      )
-    } else {
-      return value
-    }
-  })
+const getInputString = (inputData: IVariable[], inputFields?: IVariable[]) => {
+  return JSON.stringify(getInputDataFromService(inputData, inputFields))
     .replace(new RegExp(`"${OUTPUT_SEPARATOR}`, 'g'), '')
     .replace(new RegExp(`${OUTPUT_SEPARATOR}"`, 'g'), '')
+}
+
+const comparationExpressions: { [key in ConditionOperator]: string } = {
+  [ConditionOperator.exists]: '',
+  [ConditionOperator.doNotExists]: '',
+  [ConditionOperator.equals]: '==',
+  [ConditionOperator.notEquals]: '!=',
+  [ConditionOperator.contains]: '.includes',
+  [ConditionOperator.endsWith]: '.endsWith',
+  [ConditionOperator.startsWith]: '.startsWith',
+}
+
+const getConditionsString = (conditions?: ITaskCondition[][]) => {
+  let conditionsString = ''
+
+  if (conditions)
+    for (let j = 0; j < conditions.length; j++) {
+      const orCondition = conditions[j]
+
+      if (orCondition) {
+        let andConditionString = ''
+
+        for (let k = 0; k < orCondition.length; k++) {
+          const andCondition = orCondition[k]
+
+          if (!andCondition.conditionOperator) {
+            throw Error(`Missing condition operator`)
+          }
+
+          const andConditionValue = (
+            getVariableValue(andCondition) as string
+          ).replace(new RegExp(OUTPUT_SEPARATOR, 'g'), '')
+
+          if (andConditionValue && andCondition.conditionOperator)
+            andConditionString += `${k === 0 ? '' : ' && '}${
+              andCondition.conditionOperator === ConditionOperator.doNotExists
+                ? `!${andConditionValue}`
+                : andCondition.conditionOperator === ConditionOperator.exists
+                ? `${andConditionValue}`
+                : `${andConditionValue} ${
+                    comparationExpressions[andCondition.conditionOperator]
+                  } '${andCondition.conditionComparisonValue}'`
+            }`
+        }
+
+        if (andConditionString) {
+          conditionsString += `${j === 0 ? '' : ' || '}(${andConditionString})`
+        }
+      }
+    }
+
+  return conditionsString
+}
+
+const getParseEventFunctionCode = () => {
+  return `(() => {
+    if (event.body) {
+      try {
+        if (event.isBase64Encoded &&
+            event.headers['Content-type'] &&
+            event.headers['Content-type'] === 'application/x-www-form-urlencoded'
+          ) {
+          const buffer = new Buffer(event.body, 'base64');
+          const bodyString = buffer.toString('ascii').replace(/&/g, ",").replace(/=/g, ":");
+          const jsonBody = JSON.parse('{"' + decodeURI(bodyString) + '"}');
+          outputData = jsonBody;
+        }
+        else {
+          return JSON.parse(event.body);
+        }
+      } catch (error) {
+        return event.body;
+      }
+    } else {
+      return event;
+    }
+  })()`
 }
 
 const getBotInnerCode = (tasks: ITask[]) => {
   let innerCode = ''
 
   for (let i = 1; i < tasks.length; i++) {
-    const task = tasks[i]
-    const app = task.app
-    const service = task.service
-    const conditions = task.conditions
-
-    const inputData = getInputDataFromService(
-      task.inputData,
-      service?.config.inputFields
-    )
-
-    const conditionsString = getConditionsString(conditions)
+    const { app, service, inputData, conditions, returnData, connectionId } =
+      tasks[i]
 
     innerCode += `
     ////////////////////////////////////////////////////////////////////////////////
     // Task ${i}
 
-    const task${i}_inputData = ${stringifyInputData(inputData)};
-    
-    const task${i}_appConfig = ${JSON.stringify(app?.config)};
-
-    const task${i}_serviceConfig = ${JSON.stringify(service?.config)};
-    
-    const task${i}_connectionId = '${task.connectionId || ''}';
-
-    const task${i}_outputPath = '${service?.config.outputPath || ''}';
-
     let task${i}_outputData = {};
+
+    const task${i}_inputData = ${getInputString(
+      inputData,
+      service?.config.inputFields
+    )};
 
     ////////////////////////////////////////////////////////////////////////////////
     // Task ${i} Filter conditions
 
-    if (${conditionsString || true}) {
+    if (${getConditionsString(conditions) || true}) {
       ////////////////////////////////////////////////////////////////////////////////
       // If Task ${i} condition passes, 1. execute operation
 
       const { Payload: task${i}_lambda_payload } = await lambda.invoke({
         FunctionName: '${SERVICE_PREFIX}-task-${service?.name}',
-        Payload: JSON.stringify({ userId, appConfig: task${i}_appConfig, serviceConfig: task${i}_serviceConfig, connectionId: task${i}_connectionId, inputData: task${i}_inputData, outputPath: task${i}_outputPath }),
+        Payload: JSON.stringify({ 
+          userId,
+          connectionId: '${connectionId}',
+          appConfig: ${JSON.stringify(app?.config)},
+          serviceConfig: ${JSON.stringify(service?.config)},
+          inputData: task${i}_inputData
+        }),
       }).promise();
   
 
@@ -108,7 +161,7 @@ const getBotInnerCode = (tasks: ITask[]) => {
       if (task${i}_success) usage += 1;
 
   ${
-    task.returnData
+    returnData
       ? `
       ////////////////////////////////////////////////////////////////////////////////
       // Task ${i}.5 If task property returnData equals true, set outputData to task result
@@ -152,28 +205,7 @@ module.exports.handler = async (event, context, callback) => {
   ////////////////////////////////////////////////////////////////////////////////
   // 2. Get data from event and save it as outputData
 
-  let outputData;
-  if (event.body) {
-    try {
-      if (event.isBase64Encoded &&
-          event.headers['Content-type'] &&
-          event.headers['Content-type'] === 'application/x-www-form-urlencoded'
-        ) {
-        const buffer = new Buffer(event.body, 'base64');
-        const bodyString = buffer.toString('ascii').replace(/&/g, ",").replace(/=/g, ":");
-        const jsonBody = JSON.parse('{"' + decodeURI(bodyString) + '"}');
-        outputData = jsonBody;
-      }
-      else {
-        outputData = JSON.parse(event.body);
-      }
-    } catch (error) {
-      outputData = event.body;
-    }
-  } else {
-    outputData = event;
-  }
-
+  const outputData = ${getParseEventFunctionCode()};
   
   ////////////////////////////////////////////////////////////////////////////////
   // 3. Publish trigger sample
@@ -221,27 +253,7 @@ module.exports.handler = async (event, context, callback) => {
   ////////////////////////////////////////////////////////////////////////////////
   // 2. Get input bot from event, and save it as task0_outputData
 
-  let task0_outputData;
-  if (event.body) {
-    try {
-      if (event.isBase64Encoded &&
-          event.headers['Content-type'] &&
-          event.headers['Content-type'] === 'application/x-www-form-urlencoded'
-        ) {
-        const buffer = new Buffer(event.body, 'base64');
-        const bodyString = buffer.toString('ascii').replace(/&/g, ",").replace(/=/g, ":");
-        const jsonBody = JSON.parse('{"' + decodeURI(bodyString) + '"}');
-        task0_outputData = jsonBody;
-      }
-      else {
-        task0_outputData = JSON.parse(event.body);
-      }
-    } catch (error) {
-      task0_outputData = event.body;
-    }
-  } else {
-    task0_outputData = event;
-  }
+  const task0_outputData = ${getParseEventFunctionCode()};
 
   ////////////////////////////////////////////////////////////////////////////////
   // 3. Register fist log and increment usage
