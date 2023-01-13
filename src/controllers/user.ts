@@ -101,7 +101,7 @@ export class User {
         Key: { userId, sortKey: '#TODO' },
       })
 
-      return result.Item as ITodoTask[]
+      return (result.Item?.tasks || []) as ITodoTask[]
     } catch (err) {
       throw err.message
     }

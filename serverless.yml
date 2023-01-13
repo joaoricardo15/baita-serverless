@@ -75,6 +75,8 @@ functions:
     handler: src/tasks/data-transform/index.handler
   task-queue-publish:
     handler: src/tasks/queue-publish/index.handler
+  task-get-todo:
+    handler: src/tasks/get-todo/index.handler
   # task-scrapper:
   #   handler: src/tasks/scrapper/index.handler
   #   timeout: 60
