@@ -1,10 +1,10 @@
 'use strict'
 
 import { Api, BotStatus } from 'src/utils/api'
+import { validateAppConnection } from 'src/models/app/schema'
+import { Connection } from 'src/controllers/app'
 import { Bot } from 'src/controllers/bot'
-import { Connection } from 'src/controllers/connection'
 import { Pipedrive } from './pipedrive'
-import { validateConnection } from 'src/controllers/connection/schema'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
@@ -38,7 +38,7 @@ exports.handler = async (event, context, callback) => {
       email,
     }
 
-    validateConnection(newConnection)
+    validateAppConnection(newConnection)
 
     await connection.createConnection(newConnection)
 

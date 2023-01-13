@@ -1,5 +1,6 @@
 'use strict'
-import { IVariable, VariableType } from 'src/models/service'
+
+import { IVariable, VariableType } from 'src/models/bot/interface'
 
 export const OUTPUT_SEPARATOR = '###'
 

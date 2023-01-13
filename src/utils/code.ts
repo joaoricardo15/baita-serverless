@@ -1,8 +1,13 @@
 'use strict'
 
 import JSZip from 'jszip'
-import { ConditionOperator, ITask, ITaskCondition } from 'src/models/bot'
-import { IVariable } from 'src/models/service'
+import {
+  ConditionOperator,
+  ITask,
+  ITaskCondition,
+  IVariable,
+} from 'src/models/bot/interface'
+
 import {
   getInputDataFromService,
   getVariableValue,

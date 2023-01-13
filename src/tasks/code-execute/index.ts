@@ -2,7 +2,7 @@
 
 import vm from 'vm'
 import { Api, BotStatus } from 'src/utils/api'
-import { validateOperationInput } from 'src/controllers/bot/schema'
+import { validateOperationInput } from 'src/models/bot/schema'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
