@@ -225,9 +225,14 @@ export class Bot {
         FunctionName: botPrefix,
       })
 
-      await cloudWatchLogs.deleteLogGroup({
-        logGroupName: `/aws/lambda/${botPrefix}`,
-      })
+      // Sometimes the log group does not exists yet
+      try {
+        await cloudWatchLogs.deleteLogGroup({
+          logGroupName: `/aws/lambda/${botPrefix}`,
+        })
+      } catch (err) {
+        console.log(err.message)
+      }
 
       await s3.deleteObject({ Bucket: BOTS_BUCKET, Key: `${botId}.zip` })
     } catch (err) {

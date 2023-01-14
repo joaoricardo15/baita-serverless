@@ -118,7 +118,7 @@ export const getObjectDataFromPath = (data: object, outputPath?: string) => {
     if (key in data) {
       data = data[key]
     } else {
-      return null
+      return
     }
   }
 
