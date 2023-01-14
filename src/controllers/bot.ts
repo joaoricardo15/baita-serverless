@@ -81,13 +81,18 @@ export class Bot {
         else queryString += ` | filter @message like /(?i)${searchTerms}/`
       }
 
-      const startResponse = await cloudWatchLogs.startQuery({
-        limit: 20,
-        queryString,
-        endTime: Date.now(),
-        startTime: Date.now() - 10 * 24 * 60 * 60 * 1000, // last 10 days
-        logGroupName: `/aws/lambda/${botPrefix}`,
-      })
+      let startResponse
+      try {
+        startResponse = await cloudWatchLogs.startQuery({
+          limit: 20,
+          queryString,
+          endTime: Date.now(),
+          startTime: Date.now() - 10 * 24 * 60 * 60 * 1000, // last 10 days
+          logGroupName: `/aws/lambda/${botPrefix}`,
+        })
+      } catch (err) {
+        return []
+      }
 
       let queryResponse
       while (!queryResponse || queryResponse.status !== 'Complete') {
