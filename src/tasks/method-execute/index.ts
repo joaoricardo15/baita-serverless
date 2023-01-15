@@ -2,7 +2,7 @@
 
 import { Api, BotStatus } from 'src/utils/api'
 import { validateOperationInput } from 'src/models/bot/schema'
-import { sendNotification } from 'src/utils/firebase'
+import { sendNotification } from 'src/tasks/method-execute/methods/firebase'
 
 const METHODS = {
   sendNotification,

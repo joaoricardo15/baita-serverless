@@ -29,7 +29,8 @@ provider:
     SERVICE_PREFIX: ${self:service}-${self:provider.stage}
     SERVICE_API: ${self:provider.environment.SERVICE_PREFIX}-serverless
     SERVICE_ROLE: ${self:provider.environment.SERVICE_PREFIX}-serverless
-    SERVICE_PROD_URL: https://mm32a4e7me.execute-api.us-east-1.amazonaws.com/prod
+    SERVICE_API_URL: https://mm32a4e7me.execute-api.us-east-1.amazonaws.com/prod
+    SERVICE_SITE_URL: https://www.baita.help
 
     # Database
     USERS_TABLE: ${self:service}-prod-users

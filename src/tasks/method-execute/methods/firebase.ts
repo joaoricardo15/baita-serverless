@@ -1,7 +1,9 @@
 import admin from 'firebase-admin'
 import { Message } from 'firebase-admin/lib/messaging/messaging-api'
 import { ITaskExecutionInput } from 'src/models/bot/interface'
-import serviceAccount from '../partners/firebase/secrets.json'
+import serviceAccount from 'src/partners/firebase/secrets.json'
+
+const SERVICE_SITE_URL = process.env.SERVICE_SITE_URL || ''
 
 interface ISendNotification {
   token: string
@@ -42,13 +44,12 @@ export const sendNotification = async (
           silent: false,
           renotify: false,
           requireInteraction: true,
-          vibrate: [200, 300, 200, 300],
-          badge: 'https://www.baita.help/logo.png',
-          icon: 'https://www.baita.help/logo.png',
+          badge: `${SERVICE_SITE_URL}/logo.png`,
+          icon: `${SERVICE_SITE_URL}/logo.png`,
           ...inputData.notification,
         },
         fcmOptions: {
-          link: inputData.url || 'https://www.baita.help',
+          link: inputData.url || SERVICE_SITE_URL,
         },
       },
       fcmOptions: {
