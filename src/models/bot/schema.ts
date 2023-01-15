@@ -220,10 +220,13 @@ const tasksSchema: JSONSchemaType<ITask[]> = {
   },
 }
 
-const operationInputSchema: JSONSchemaType<ITaskExecutionInput> = {
+const operationInputSchema: JSONSchemaType<ITaskExecutionInput<DataType>> = {
   type: 'object',
   properties: {
     userId: {
+      type: 'string',
+    },
+    botId: {
       type: 'string',
     },
     connectionId: {
@@ -234,7 +237,7 @@ const operationInputSchema: JSONSchemaType<ITaskExecutionInput> = {
     appConfig: appConfigSchema,
     serviceConfig: serviceConfigSchema,
   },
-  required: ['userId', 'appConfig', 'serviceConfig'],
+  required: ['userId', 'botId', 'appConfig', 'serviceConfig'],
 }
 
 const logSchema: JSONSchemaType<ILog> = {
@@ -299,7 +302,9 @@ export const validateLog = (log: IBotLog) => {
   if (!validate(log)) throw ajv.errorsText(validate.errors)
 }
 
-export const validateOperationInput = (input: ITaskExecutionInput) => {
+export const validateOperationInput = (
+  input: ITaskExecutionInput<DataType>
+) => {
   const validate = ajv.compile(operationInputSchema)
 
   if (!validate(input)) throw ajv.errorsText(validate.errors)

@@ -1,0 +1,29 @@
+{
+    "userId": "",
+    "botId": "",
+    "appConfig": {},
+    "serviceConfig": {
+        "method": "sendNotification"
+    },
+    "inputData": {
+        "token": "cxrRzRQUSGSrAMjUruD-ls:APA91bGVmYXxu-upO1kZxsoCAF3gHuKaTIN2-28z8UIJ5r8_VxypaSB6GB_8IvZH_gKmsRGrSRGXNCiQ3-y6PFgz8lYSiHBAh8nRFAFFWGVmjMcQIFEKOv7SX4wU8uMu547fDTnBSktk",
+        "url": "https://www.baita.help",
+        "notification": {
+            "title": "Portugal vs. Denmark",
+            "body": "5 to 1",
+            "timestamp": 1674405502774,
+            "image": "https://media.giphy.com/media/j0N6NL1s1utfqxpzdc/giphy.gif",
+            "icon": "https://www.baita.help/logo.png",
+            "actions": [
+                {
+                    "action": "like",
+                    "title": "👍 Like"
+                },
+                {
+                    "action": "reply",
+                    "title": "👎 Dislike"
+                }
+            ]
+        }
+    }
+}

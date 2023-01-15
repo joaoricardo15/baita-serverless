@@ -128,7 +128,8 @@ const getBotInnerCode = (tasks: ITask[]) => {
 
       const { Payload: task${i}_lambda_payload } = await lambda.invoke({
         FunctionName: '${SERVICE_PREFIX}-task-${service?.name}',
-        Payload: JSON.stringify({ 
+        Payload: JSON.stringify({
+          botId,
           userId,
           connectionId: '${connectionId}',
           appConfig: ${JSON.stringify(app?.config)},

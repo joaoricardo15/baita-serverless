@@ -387,6 +387,7 @@ export class Bot {
         const testLambdaResult = await lambda.invoke({
           FunctionName: `${SERVICE_PREFIX}-task-${task.service?.name}`,
           Payload: JSON.stringify({
+            botId,
             userId,
             connectionId: task.connectionId,
             appConfig: task.app?.config,

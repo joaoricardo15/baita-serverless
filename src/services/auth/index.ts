@@ -17,11 +17,11 @@ exports.handler = async (event, context, callback) => {
   const options = { audience: AUTH0_AUDIENCE }
 
   try {
-    const { verifyError, decoded } = await jwt.verify(
+    const { verifyError, decoded } = (await jwt.verify(
       tokenValue,
-      AUTH0_CLIENT_PUBLIC_KEY,
+      AUTH0_CLIENT_PUBLIC_KEY as jwt.Secret,
       options
-    )
+    )) as any
 
     if (verifyError) return callback('Unauthorized')
 
