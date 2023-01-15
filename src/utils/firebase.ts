@@ -45,6 +45,7 @@ export const sendNotification = async (
           requireInteraction: true,
           vibrate: [200, 300, 200, 300],
           badge: 'https://www.baita.help/logo.png',
+          icon: 'https://www.baita.help/logo.png',
           ...inputData.notification,
         },
         fcmOptions: {
@@ -57,7 +58,7 @@ export const sendNotification = async (
       data: inputData.data,
     }
 
-    console.log('sendNotification', message)
+    console.log('sendNotification', JSON.stringify(message))
 
     return await admin.messaging().send(message)
   } catch (err) {
