@@ -34,9 +34,8 @@ export const sendNotification = async (
       token: inputData.token,
       webpush: {
         headers: {
-          // TTL: '86400',
           Topic: botId,
-          Urgency: 'high', // 'very-low', 'low', 'normal', 'high'
+          Urgency: 'high',
         },
         notification: {
           tag: botId,
@@ -62,6 +61,6 @@ export const sendNotification = async (
 
     return await admin.messaging().send(message)
   } catch (err) {
-    err.message
+    throw err.message
   }
 }
