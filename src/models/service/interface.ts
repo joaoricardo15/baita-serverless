@@ -10,6 +10,7 @@ export enum ServiceName {
   schedule = 'schedule',
   todo = 'get-todo',
   code = 'code-execute',
+  method = 'method-execute',
   data = 'data-transform',
   http = 'http-request',
   oauth2 = 'oauth2-request',
