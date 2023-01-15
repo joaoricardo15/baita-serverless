@@ -5,6 +5,10 @@ import serviceAccount from 'src/partners/firebase/secrets.json'
 
 const SERVICE_SITE_URL = process.env.SERVICE_SITE_URL || ''
 
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount as any),
+})
+
 interface ISendNotification {
   token: string
   url?: string
@@ -26,10 +30,6 @@ export const sendNotification = async (
   taskInput: ITaskExecutionInput<ISendNotification>
 ) => {
   try {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount as any),
-    })
-
     const { botId, inputData } = taskInput
 
     const message: Message = {
