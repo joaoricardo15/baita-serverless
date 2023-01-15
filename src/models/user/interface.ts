@@ -4,7 +4,7 @@ export interface IUser {
   email: string
 }
 
-export interface IPost {
+export interface IContent {
   body: string
   date: string
   header?: string

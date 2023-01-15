@@ -3,7 +3,7 @@
 import { SQS } from '@aws-sdk/client-sqs'
 import { DynamoDB } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
-import { IPost, ITodoTask, IUser } from 'src/models/user/interface'
+import { IContent, ITodoTask, IUser } from 'src/models/user/interface'
 
 const USERS_TABLE = process.env.USERS_TABLE || ''
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX || ''
@@ -72,7 +72,7 @@ export class User {
     }
   }
 
-  async publishContent(userId: string, posts: IPost[]) {
+  async publishContent(userId: string, content: IContent[]) {
     const sqs = new SQS({})
 
     try {
@@ -82,7 +82,7 @@ export class User {
 
       await sqs.sendMessageBatch({
         QueueUrl: queueResult.QueueUrl,
-        Entries: posts.slice(0, 10).map((entry, index) => ({
+        Entries: content.slice(0, 10).map((entry, index) => ({
           Id: index.toString(),
           MessageBody: JSON.stringify(entry),
         })),

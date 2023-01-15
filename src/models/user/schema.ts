@@ -2,7 +2,7 @@
 
 import Ajv, { JSONSchemaType } from 'ajv'
 import addFormats from 'ajv-formats'
-import { IPost, ITodoTask, IUser } from './interface'
+import { IContent, ITodoTask, IUser } from './interface'
 
 const ajv = new Ajv()
 addFormats(ajv)
@@ -24,7 +24,7 @@ export const userSchema: JSONSchemaType<IUser> = {
   required: ['userId', 'name', 'email'],
 }
 
-export const postsSchema: JSONSchemaType<IPost[]> = {
+export const contentSchema: JSONSchemaType<IContent[]> = {
   type: 'array',
   items: {
     type: 'object',
@@ -126,14 +126,14 @@ export const validateUser = (user: IUser) => {
   if (!validate(user)) throw ajv.errorsText(validate.errors)
 }
 
-export const validatePosts = (post: IPost[]) => {
-  const validate = ajv.compile(postsSchema)
+export const validateContent = (content: IContent[]) => {
+  const validate = ajv.compile(contentSchema)
 
-  if (!validate(post)) throw ajv.errorsText(validate.errors)
+  if (!validate(content)) throw ajv.errorsText(validate.errors)
 }
 
-export const validateTodoTasks = (post: ITodoTask[]) => {
+export const validateTodoTasks = (todoTask: ITodoTask[]) => {
   const validate = ajv.compile(todoTasksSchema)
 
-  if (!validate(post)) throw ajv.errorsText(validate.errors)
+  if (!validate(todoTask)) throw ajv.errorsText(validate.errors)
 }

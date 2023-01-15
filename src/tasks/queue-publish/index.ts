@@ -2,7 +2,7 @@
 
 import { User } from 'src/controllers/user'
 import { validateOperationInput } from 'src/models/bot/schema'
-import { validatePosts } from 'src/models/user/schema'
+import { validateContent } from 'src/models/user/schema'
 
 import { Api, BotStatus } from 'src/utils/api'
 
@@ -17,18 +17,18 @@ exports.handler = async (event, context, callback) => {
 
     const {
       // Required fields
-      posts,
+      content,
 
       // Custom fields
       ...customFields
     } = inputData
 
-    if (Array.isArray(posts)) {
-      validatePosts(posts)
-      await user.publishContent(userId, posts)
+    if (Array.isArray(content)) {
+      validateContent(content)
+      await user.publishContent(userId, content)
     } else {
-      validatePosts([posts])
-      await user.publishContent(userId, [posts])
+      validateContent([content])
+      await user.publishContent(userId, [content])
     }
 
     api.httpOperationResponse(callback, BotStatus.success, undefined, {
