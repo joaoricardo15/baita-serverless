@@ -40,6 +40,10 @@ export const variableSchema: JSONSchemaType<IVariable> = {
     },
     value: dataSchema,
     sampleValue: dataSchema,
+    description: {
+      type: 'string',
+      nullable: true,
+    },
     required: {
       type: 'boolean',
       nullable: true,
