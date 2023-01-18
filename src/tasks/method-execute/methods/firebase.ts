@@ -44,8 +44,8 @@ export const sendNotification = async (
           silent: false,
           renotify: false,
           requireInteraction: true,
-          badge: `${SERVICE_SITE_URL}/logo.png`,
-          icon: `${SERVICE_SITE_URL}/logo.png`,
+          badge: `${SERVICE_SITE_URL}/logo_badge.png`,
+          icon: `${SERVICE_SITE_URL}/logo_background.png`,
           ...inputData.notification,
         },
         fcmOptions: {
