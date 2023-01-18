@@ -45,8 +45,10 @@ export const sendNotification = async (
           renotify: false,
           requireInteraction: true,
           badge: `${SERVICE_SITE_URL}/logo_badge.png`,
-          icon: `${SERVICE_SITE_URL}/logo_background.png`,
           ...inputData.notification,
+          icon:
+            inputData.notification.icon ||
+            `${SERVICE_SITE_URL}/logo_background.png`,
         },
         fcmOptions: {
           link: inputData.url || SERVICE_SITE_URL,
