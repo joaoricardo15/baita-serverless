@@ -115,7 +115,7 @@ export const getObjectDataFromPath = (data: object, outputPath?: string) => {
 
   for (let i = 0; i < paths.length; i++) {
     const key = paths[i]
-    if (key in data) {
+    if (data[key] !== undefined) {
       data = data[key]
     } else {
       return
