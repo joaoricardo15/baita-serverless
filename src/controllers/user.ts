@@ -139,7 +139,9 @@ export class User {
       const tasks = (result.Item?.tasks || []) as ITodoTask[]
 
       const updatedTasks = tasks.map((task) =>
-        task.createdAt === parseInt(createdAt) ? { ...task, done: true } : task
+        task.createdAt === parseInt(createdAt)
+          ? { ...task, done: true, updatedAt: Date.now() }
+          : task
       )
 
       await ddb.update({
