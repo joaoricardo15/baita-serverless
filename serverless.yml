@@ -122,6 +122,13 @@ functions:
           path: user/{userId}/todo
           method: put
           cors: true
+  endpoint-todo-done:
+    handler: src/endpoints/todo/done/index.handler
+    events:
+      - http:
+          path: user/{userId}/todo/{createdAt}/done
+          method: post
+          cors: true
 
   endpoint-bot-list:
     handler: src/endpoints/bot/list/index.handler

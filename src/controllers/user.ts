@@ -126,4 +126,35 @@ export class User {
       throw err.message
     }
   }
+
+  async doneTodo(userId: string, createdAt: string) {
+    const ddb = DynamoDBDocument.from(new DynamoDB({}))
+
+    try {
+      const result = await ddb.get({
+        TableName: USERS_TABLE,
+        Key: { userId, sortKey: '#TODO' },
+      })
+
+      const tasks = (result.Item?.tasks || []) as ITodoTask[]
+
+      const updatedTasks = tasks.map((task) =>
+        task.createdAt === parseInt(createdAt) ? { ...task, done: true } : task
+      )
+
+      await ddb.update({
+        TableName: USERS_TABLE,
+        Key: { userId, sortKey: '#TODO' },
+        UpdateExpression: 'SET tasks = :tasks',
+        ExpressionAttributeValues: {
+          ':tasks': updatedTasks,
+        },
+        ReturnValues: 'NONE',
+      })
+
+      return
+    } catch (err) {
+      throw err.message
+    }
+  }
 }
