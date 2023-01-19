@@ -10,7 +10,7 @@ exports.handler = async (event, context, callback) => {
   try {
     validateOperationInput(event)
 
-    const { inputData } = event
+    const { userId, botId, inputData } = event
 
     const {
       // Required fields
@@ -20,7 +20,7 @@ exports.handler = async (event, context, callback) => {
       ...customFields
     } = inputData
 
-    const codeContext: any = customFields
+    const codeContext: any = { ...customFields, userId, botId }
 
     vm.createContext(codeContext)
 
