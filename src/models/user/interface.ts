@@ -5,7 +5,7 @@ export interface IUser {
 }
 
 export interface IContent {
-  id: string
+  contentId: string
   body: string
   date: string
   header?: string
@@ -25,6 +25,7 @@ export interface IContent {
 }
 
 export interface ITodoTask {
+  taskId: string
   title: string
   body?: string
   done: boolean

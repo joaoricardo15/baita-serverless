@@ -29,7 +29,7 @@ export const contentSchema: JSONSchemaType<IContent[]> = {
   items: {
     type: 'object',
     properties: {
-      id: {
+      contentId: {
         type: 'string',
       },
       body: {
@@ -92,7 +92,7 @@ export const contentSchema: JSONSchemaType<IContent[]> = {
         required: ['name'],
       },
     },
-    required: ['id', 'body', 'date', 'author'],
+    required: ['contentId', 'body', 'date', 'author'],
   },
 }
 
@@ -101,6 +101,9 @@ export const todoTasksSchema: JSONSchemaType<ITodoTask[]> = {
   items: {
     type: 'object',
     properties: {
+      taskId: {
+        type: 'string',
+      },
       title: {
         type: 'string',
       },
@@ -119,7 +122,7 @@ export const todoTasksSchema: JSONSchemaType<ITodoTask[]> = {
         type: 'number',
       },
     },
-    required: ['title', 'done', 'createdAt', 'updatedAt'],
+    required: ['taskId', 'title', 'done', 'createdAt', 'updatedAt'],
   },
 }
 
