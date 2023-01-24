@@ -58,6 +58,10 @@ provider:
     GOOGLE_CLIENT_ID: ${file(./src/partners/google/secrets.json):web.client_id}
     GOOGLE_CLIENT_SECRET: ${file(./src/partners/google/secrets.json):web.client_secret}
 
+    NEWS_API_KEY: ${file(./src/partners/news/secrets.json):api_key}
+    OPENAI_API_KEY: ${file(./src/partners/openAi/secrets.json):api_key}
+    TWITTER_API_KEY: ${file(./src/partners/twitter/secrets.json):api_key}
+
 functions:
   ### internal services ###
   service-auth:
@@ -107,6 +111,13 @@ functions:
       - http:
           path: user/{userId}/content
           method: get
+          cors: true
+  endpoint-content-react:
+    handler: src/endpoints/content/react/index.handler
+    events:
+      - http:
+          path: user/{userId}/content/{contentId}/react
+          method: post
           cors: true
   endpoint-todo-get:
     handler: src/endpoints/todo/get/index.handler

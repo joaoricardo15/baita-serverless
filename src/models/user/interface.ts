@@ -6,13 +6,9 @@ export interface IUser {
 
 export interface IContent {
   contentId: string
+  source: string
   body: string
   date: string
-  header?: string
-  image?: string
-  url?: string
-  likes?: number
-  comments?: number
   author: {
     name: string
     accountName?: string
@@ -22,6 +18,11 @@ export interface IContent {
     location?: string
     followers?: number
   }
+  header?: string
+  image?: string
+  url?: string
+  likes?: number
+  comments?: number
 }
 
 export interface ITodoTask {
