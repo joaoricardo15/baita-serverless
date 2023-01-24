@@ -5,6 +5,7 @@ export interface IUser {
 }
 
 export interface IContent {
+  id: string
   body: string
   date: string
   header?: string

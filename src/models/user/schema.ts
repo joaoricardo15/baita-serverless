@@ -29,6 +29,9 @@ export const contentSchema: JSONSchemaType<IContent[]> = {
   items: {
     type: 'object',
     properties: {
+      id: {
+        type: 'string',
+      },
       body: {
         type: 'string',
       },
@@ -89,7 +92,7 @@ export const contentSchema: JSONSchemaType<IContent[]> = {
         required: ['name'],
       },
     },
-    required: ['body', 'date', 'author'],
+    required: ['id', 'body', 'date', 'author'],
   },
 }
 
