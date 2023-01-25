@@ -139,6 +139,7 @@ export class Bot {
         FunctionName: botPrefix,
         Handler: 'index.handler',
         Runtime: 'nodejs12.x',
+        Timeout: 60,
         Role: BOTS_PERMISSION,
         Code: {
           S3Bucket: BOTS_BUCKET,
