@@ -180,7 +180,7 @@ export class User {
     }
   }
 
-  async doneTodo(userId: string, createdAt: string) {
+  async doneTodo(userId: string, taskId: string) {
     const ddb = DynamoDBDocument.from(new DynamoDB({}))
 
     try {
@@ -192,7 +192,7 @@ export class User {
       const tasks = (result.Item?.tasks || []) as ITodoTask[]
 
       const updatedTasks = tasks.map((task) =>
-        task.createdAt === parseInt(createdAt)
+        task.taskId === taskId
           ? { ...task, done: true, updatedAt: Date.now() }
           : task
       )

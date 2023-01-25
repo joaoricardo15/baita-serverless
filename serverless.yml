@@ -137,7 +137,7 @@ functions:
     handler: src/endpoints/todo/done/index.handler
     events:
       - http:
-          path: user/{userId}/todo/{createdAt}/done
+          path: user/{userId}/todo/{taskId}/done
           method: post
           cors: true
 

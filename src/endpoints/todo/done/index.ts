@@ -8,9 +8,9 @@ exports.handler = async (event, context, callback) => {
   const user = new User()
 
   try {
-    const { userId, createdAt } = event.pathParameters
+    const { userId, taskId } = event.pathParameters
 
-    const data = await user.doneTodo(userId, createdAt)
+    const data = await user.doneTodo(userId, taskId)
 
     api.httpResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {
