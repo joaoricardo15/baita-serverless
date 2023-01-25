@@ -118,7 +118,9 @@ export const getObjectDataFromPath = (data: object, outputPath?: string) => {
     if (typeof key === 'string' && data[key] !== undefined) {
       data = data[key]
     } else if (typeof key === 'string' && key.includes('###')) {
-      return key.split('###')[1]
+      return key.split('###')[1].replace(/{{(.*?)}}/g, (a, inside) => {
+        return getObjectDataFromPath(data, inside)
+      })
     } else if (typeof key === 'number' || typeof key === 'object') {
       return key
     } else {
@@ -126,7 +128,7 @@ export const getObjectDataFromPath = (data: object, outputPath?: string) => {
     }
   }
 
-  return data
+  return data as object | string | number | boolean
 }
 
 export const parseDataFromOutputMapping = (
