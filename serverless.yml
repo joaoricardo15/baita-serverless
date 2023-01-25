@@ -116,7 +116,7 @@ functions:
     handler: src/endpoints/content/react/index.handler
     events:
       - http:
-          path: user/{userId}/content/{contentId}/react
+          path: user/{userId}/content/{contentId}/react/{reaction}
           method: post
           cors: true
   endpoint-todo-get:
