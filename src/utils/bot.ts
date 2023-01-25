@@ -95,7 +95,10 @@ export const getVariableValue = (field: IVariable, testData?: boolean) => {
     : field.value
 }
 
-export const getObjectDataFromPath = (data: object, outputPath?: string) => {
+export const getObjectDataFromPath = (
+  data: object,
+  outputPath?: string | object | number | boolean
+) => {
   /*
     data = { user: { name: 'john' } }
     outputPath = 'user.name'
@@ -107,24 +110,32 @@ export const getObjectDataFromPath = (data: object, outputPath?: string) => {
     return data
   }
 
+  if (
+    typeof outputPath === 'object' ||
+    typeof outputPath === 'number' ||
+    typeof outputPath === 'boolean'
+  ) {
+    return outputPath
+  }
+
+  if (outputPath.includes('###')) {
+    return outputPath
+      .split('###')[1]
+      .replace(/{{(.*?)}}/g, (_, path) => getObjectDataFromPath(data, path))
+  }
+
   const paths = outputPath.split('.')
 
   for (let i = 0; i < paths.length; i++) {
     const key = paths[i]
-    if (typeof key === 'string' && data[key] !== undefined) {
+    if (data[key] !== undefined) {
       data = data[key]
-    } else if (typeof key === 'string' && key.includes('###')) {
-      return key.split('###')[1].replace(/{{(.*?)}}/g, (a, inside) => {
-        return getObjectDataFromPath(data, inside)
-      })
-    } else if (typeof key === 'number' || typeof key === 'object') {
-      return key
     } else {
-      return
+      return null
     }
   }
 
-  return data as object | string | number | boolean
+  return data
 }
 
 export const parseDataFromOutputMapping = (

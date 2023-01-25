@@ -1,0 +1,75 @@
+{
+  "botId": "0d33c847-d76e-4907-954c-863ddb6ae5b0",
+  "userId": "110944657139284874166",
+  "appConfig": {
+    "apiUrl": "https://api.twitter.com/1.1"
+  },
+  "serviceConfig": {
+    "path": "search/tweets.json",
+    "method": "get",
+    "headers": {
+      "Authorization": "Bearer AAAAAAAAAAAAAAAAAAAAAFmCDQEAAAAApOMjYh%2BtAI6UF2UEUg8w4SIjghY%3DT5u51URhC7zQws7L1IOR2u5wzJ5c3rYb63rqEkavUF5ioxnFHl"
+    },
+    "inputFields": [
+      {
+        "name": "queryParams.result_type",
+        "label": "Query term",
+        "type": "constant",
+        "value": "popular",
+        "required": true
+      },
+      {
+        "name": "queryParams.count",
+        "label": "Total results",
+        "type": "constant",
+        "value": "30"
+      },
+      {
+        "name": "queryParams.q",
+        "label": "Key works",
+        "type": "text",
+        "required": true
+      },
+      {
+        "name": "queryParams.lang",
+        "label": "Language",
+        "type": "options",
+        "options": [
+          {
+            "label": "English",
+            "value": "en"
+          },
+          {
+            "label": "Portuguese",
+            "value": "pt"
+          }
+        ]
+      }
+    ],
+    "outputPath": "statuses",
+    "outputMapping": {
+      "source": "###Twitter",
+      "contentId": "id_str",
+      "body": "text",
+      "date": "created_at",
+      "url": "###https://twitter.com/{{user.screen_name}}/status/{{id_str}}",
+      "likes": "favorite_count",
+      "comments": "retweet_count",
+      "author.name": "user.name",
+      "author.accountName": "user.screen_name",
+      "author.descripion": "user.description",
+      "author.image": "user.profile_image_url",
+      "author.url": "user.url",
+      "author.location": "user.location",
+      "author.followers": "user.followers_count"
+    }
+  },
+  "inputData": {
+    "queryParams": {
+      "result_type": "popular",
+      "count": "30",
+      "q": "tech",
+      "lang": "en"
+    }
+  }
+}
