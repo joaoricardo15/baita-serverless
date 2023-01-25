@@ -73,10 +73,6 @@ const geObjectFromOutputMapping = (
   return mappedData
 }
 
-const getVariableInputPath = (field: IVariable) => {
-  return field.groupName ? `${field.groupName}.${field.name}` : field.name
-}
-
 export const getVariableValue = (field: IVariable, testData?: boolean) => {
   /*
     field = { outputIndex: 0, outputPath: 'user.name' } }
@@ -161,11 +157,7 @@ export const getInputDataFromService = (
           throw Error(`Required service field '${label}' is missing.`)
         }
 
-        data = setObjectDataFromPath(
-          data,
-          value,
-          getVariableInputPath(serviceInputField)
-        )
+        data = setObjectDataFromPath(data, value, serviceInputField.name)
       } else {
         const inputDataField = inputData.find((x) => x.name === name)
 
@@ -189,7 +181,7 @@ export const getInputDataFromService = (
           data = setObjectDataFromPath(
             data,
             getVariableValue(inputDataField, testData),
-            getVariableInputPath(inputDataField)
+            inputDataField.name
           )
         }
       }
@@ -203,7 +195,7 @@ export const getInputDataFromService = (
       data = setObjectDataFromPath(
         data,
         getVariableValue(inputDataField, testData),
-        getVariableInputPath(inputDataField)
+        inputDataField.name
       )
     }
   }
