@@ -9,25 +9,23 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount as any),
 })
 
-interface ISendNotification {
-  token: string
-  url?: string
-  notification: {
-    title: string
-    body: string
-    timestamp?: number
-    image?: string
-    icon?: string
-    actions?: {
-      action: string
-      title: string
-    }[]
-  }
-  data?: any
-}
-
 export const sendNotification = async (
-  taskInput: ITaskExecutionInput<ISendNotification>
+  taskInput: ITaskExecutionInput<{
+    token: string
+    url?: string
+    notification: {
+      title: string
+      body: string
+      timestamp?: number
+      image?: string
+      icon?: string
+      actions?: {
+        action: string
+        title: string
+      }[]
+    }
+    data?: any
+  }>
 ) => {
   try {
     const { botId, inputData } = taskInput
