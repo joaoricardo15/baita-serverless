@@ -7,7 +7,6 @@ export interface IUser {
 export interface IContent {
   contentId: string
   source: string
-  body: string
   date: string
   author: {
     name: string
@@ -19,6 +18,7 @@ export interface IContent {
     followers?: number
   }
   header?: string
+  body?: string
   image?: string
   url?: string
   likes?: number

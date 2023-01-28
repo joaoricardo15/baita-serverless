@@ -35,11 +35,12 @@ export const contentSchema: JSONSchemaType<IContent[]> = {
       source: {
         type: 'string',
       },
-      body: {
-        type: 'string',
-      },
       date: {
         type: 'string',
+      },
+      body: {
+        type: 'string',
+        nullable: true,
       },
       header: {
         type: 'string',
@@ -95,7 +96,7 @@ export const contentSchema: JSONSchemaType<IContent[]> = {
         required: ['name'],
       },
     },
-    required: ['contentId', 'source', 'body', 'date', 'author'],
+    required: ['contentId', 'source', 'date', 'author'],
   },
 }
 
