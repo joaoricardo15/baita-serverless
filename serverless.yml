@@ -70,8 +70,8 @@ provider:
     GOOGLE_CLIENT_SECRET: ${file(./src/partners/google/secrets.json):web.client_secret}
 
     NEWS_API_KEY: ${file(./src/partners/news/secrets.json):api_key}
-    OPENAI_API_KEY: ${file(./src/partners/openAi/secrets.json):api_key}
-    TWITTER_API_KEY: ${file(./src/partners/twitter/secrets.json):api_key}
+    OPENAI_API_AUTHORIZATION: ${file(./src/partners/openAi/secrets.json):Authorization}
+    TWITTER_API_AUTHORIZATION: ${file(./src/partners/twitter/secrets.json):Authorization}
 
 functions:
   ### internal services ###

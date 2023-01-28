@@ -163,9 +163,19 @@ export const getInputDataFromService = (
 
       const { type, name, value, label, required } = serviceInputField
 
-      if (type === VariableType.constant) {
-        if (required && !serviceInputField.value) {
-          throw Error(`Required service field '${label}' is missing.`)
+      if (type === VariableType.environment) {
+        if (!((serviceInputField.value as string) in process.env)) {
+          throw Error(`Environment variable '${label}' does not exist.`)
+        }
+
+        data = setObjectDataFromPath(
+          data,
+          process.env[serviceInputField.value as string],
+          serviceInputField.name
+        )
+      } else if (type === VariableType.constant) {
+        if (!serviceInputField.value) {
+          throw Error(`Constant variable '${label}' has no value.`)
         }
 
         data = setObjectDataFromPath(data, value, serviceInputField.name)

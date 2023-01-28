@@ -13,7 +13,7 @@ exports.handler = async (event, context, callback) => {
     const { userId, botId, inputData } = event
 
     const {
-      // Required fields
+      // Required input fields
       code,
 
       // Custom fields

@@ -8,6 +8,7 @@ export enum VariableType {
   options = 'options',
   boolean = 'boolean',
   constant = 'constant',
+  environment = 'environment',
 }
 
 export type DataType =

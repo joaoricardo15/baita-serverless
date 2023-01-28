@@ -31,17 +31,16 @@ exports.handler = async (event, context, callback) => {
           fields: authFields,
         },
       },
-      serviceConfig: { path, method, headers, outputPath, outputMapping },
+      serviceConfig: { method, outputPath, outputMapping },
     } = event
 
     const {
-      // Required fields
+      // Required input fields
+      path,
+      headers,
       urlParams,
       bodyParams,
       queryParams,
-
-      // Custom fields
-      ...customFields
     } = inputData
 
     // Get credentials from connection database
