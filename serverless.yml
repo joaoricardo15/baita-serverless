@@ -167,6 +167,13 @@ functions:
           path: user/{userId}/bots
           method: post
           cors: true
+  endpoint-bot-model:
+    handler: src/endpoints/bot/model/index.handler
+    events:
+      - http:
+          path: user/{userId}/bots/{botId}
+          method: post
+          cors: true
   endpoint-bot-update:
     handler: src/endpoints/bot/update/index.handler
     events:

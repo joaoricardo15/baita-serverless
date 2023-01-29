@@ -110,6 +110,8 @@ export interface IBot {
   userId: string
   apiId: string
   name: string
+  image: string
+  description: string
   active: boolean
   triggerUrl: string
   triggerSamples: ITaskExecutionResult[]

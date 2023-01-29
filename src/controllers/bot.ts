@@ -139,7 +139,7 @@ export class Bot {
         FunctionName: botPrefix,
         Handler: 'index.handler',
         Runtime: 'nodejs12.x',
-        Timeout: 60,
+        Timeout: 300,
         Role: BOTS_PERMISSION,
         Code: {
           S3Bucket: BOTS_BUCKET,
@@ -179,6 +179,8 @@ export class Bot {
         botId,
         userId,
         name: '',
+        description: '',
+        image: '',
         active: false,
         apiId: apiResult.ApiId || '',
         triggerUrl: `${apiResult.ApiEndpoint}${botUrl}`,
@@ -189,6 +191,99 @@ export class Bot {
             inputData: [],
           },
         ],
+      }
+
+      await ddb.put({
+        TableName: USERS_TABLE,
+        Item: {
+          ...bot,
+          sortKey: `#BOT#${bot.botId}`,
+        },
+      })
+
+      return bot
+    } catch (err) {
+      throw err.message
+    }
+  }
+
+  async createBotModel(
+    userId: string,
+    botId: string,
+    name: string,
+    image: string,
+    description: string,
+    tasks: ITask[]
+  ) {
+    const ddb = DynamoDBDocument.from(new DynamoDB({}))
+    const apigateway = new ApiGatewayV2({})
+    const scheduler = new Scheduler({})
+    const lambda = new Lambda({})
+    const s3 = new S3({})
+
+    try {
+      const botPrefix = `${SERVICE_PREFIX}-${botId}`
+
+      const sampleCode = getCompleteBotCode(userId, botId, tasks)
+      const codeFile = await getCodeFile(sampleCode)
+
+      await s3.putObject({
+        Bucket: BOTS_BUCKET,
+        Key: `${botId}.zip`,
+        Body: codeFile,
+      })
+
+      const lambdaResult = await lambda.createFunction({
+        FunctionName: botPrefix,
+        Handler: 'index.handler',
+        Runtime: 'nodejs12.x',
+        Timeout: 300,
+        Role: BOTS_PERMISSION,
+        Code: {
+          S3Bucket: BOTS_BUCKET,
+          S3Key: `${botId}.zip`,
+        },
+      })
+
+      const botUrl = '/bot'
+
+      const apiResult = await apigateway.createApi({
+        Name: botPrefix,
+        ProtocolType: 'HTTP',
+        CredentialsArn: BOTS_PERMISSION,
+        RouteKey: `ANY ${botUrl}`,
+        Target: lambdaResult.FunctionArn,
+        CorsConfiguration: {
+          AllowHeaders: ['*'],
+          AllowOrigins: ['*'],
+          AllowMethods: ['*'],
+        },
+      })
+
+      await scheduler.createSchedule({
+        Name: botPrefix,
+        State: 'DISABLED',
+        ScheduleExpression: 'cron(0 0 1 * ? 2030)',
+        FlexibleTimeWindow: {
+          Mode: 'OFF',
+        },
+        Target: {
+          Arn: lambdaResult.FunctionArn || '',
+          RoleArn: BOTS_PERMISSION,
+        },
+      })
+
+      const bot: IBot = {
+        botId,
+        userId,
+        name,
+        description,
+        image,
+        active: false,
+        apiId: apiResult.ApiId || '',
+        triggerUrl: `${apiResult.ApiEndpoint}${botUrl}`,
+        triggerSamples: [],
+        tasks,
       }
 
       await ddb.put({
