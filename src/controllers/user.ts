@@ -26,6 +26,9 @@ export class User {
 
       await sqs.createQueue({
         QueueName: `${SERVICE_PREFIX}-${user.userId}`,
+        Attributes: {
+          MessageRetentionPeriod: (60 * 60 * 24 * 2).toString(),
+        },
       })
 
       return user
