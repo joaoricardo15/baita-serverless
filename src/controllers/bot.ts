@@ -10,6 +10,7 @@ import { CloudWatchLogs } from '@aws-sdk/client-cloudwatch-logs'
 import { v4 as uuidv4 } from 'uuid'
 import {
   IBot,
+  IBotModel,
   ITask,
   ITaskExecutionResult,
   TaskExecutionStatus,
@@ -207,13 +208,7 @@ export class Bot {
     }
   }
 
-  async createBotModel(
-    userId: string,
-    name: string,
-    image: string,
-    description: string,
-    tasks: ITask[]
-  ) {
+  async deployBotModel(userId: string, model: IBotModel) {
     const ddb = DynamoDBDocument.from(new DynamoDB({}))
     const apigateway = new ApiGatewayV2({})
     const scheduler = new Scheduler({})
@@ -224,7 +219,7 @@ export class Bot {
       const botId = uuidv4()
       const botPrefix = `${SERVICE_PREFIX}-${botId}`
 
-      const sampleCode = getCompleteBotCode(userId, botId, tasks)
+      const sampleCode = getCompleteBotCode(userId, botId, model.tasks)
       const codeFile = await getCodeFile(sampleCode)
 
       await s3.putObject({
@@ -276,14 +271,16 @@ export class Bot {
       const bot: IBot = {
         botId,
         userId,
-        name,
-        description,
-        image,
         active: false,
         apiId: apiResult.ApiId || '',
         triggerUrl: `${apiResult.ApiEndpoint}${botUrl}`,
         triggerSamples: [],
-        tasks,
+
+        name: model.name,
+        image: model.image,
+        tasks: model.tasks,
+        modelId: model.modelId,
+        description: model.description,
       }
 
       await ddb.put({

@@ -3,6 +3,7 @@
 import { DynamoDB } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
 import { IAppConnection } from 'src/models/app/interface'
+import { IBotModel } from 'src/models/bot/interface'
 
 const USERS_TABLE = process.env.USERS_TABLE || ''
 
@@ -57,6 +58,45 @@ export class Connection {
       })
 
       return connection
+    } catch (err) {
+      throw err.message
+    }
+  }
+
+  async getBotModels() {
+    const ddb = DynamoDBDocument.from(new DynamoDB({}))
+
+    try {
+      const result = await ddb.query({
+        TableName: USERS_TABLE,
+        KeyConditionExpression:
+          'userId = :userId and begins_with(sortKey, :sortKey)',
+        ExpressionAttributeValues: {
+          ':userId': 'baita',
+          ':sortKey': '#MODEL',
+        },
+      })
+
+      return result.Items as IAppConnection[]
+    } catch (err) {
+      throw err.message
+    }
+  }
+
+  async publishBotModel(model: IBotModel) {
+    const ddb = DynamoDBDocument.from(new DynamoDB({}))
+
+    try {
+      await ddb.put({
+        TableName: USERS_TABLE,
+        Item: {
+          userId: 'baita',
+          sortKey: `#MODEL#${model.modelId}`,
+          ...model,
+        },
+      })
+
+      return model
     } catch (err) {
       throw err.message
     }

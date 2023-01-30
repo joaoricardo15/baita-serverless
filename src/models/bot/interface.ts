@@ -105,9 +105,18 @@ export interface IBotUsage {
   total: number
 }
 
+export interface IBotModel {
+  modelId: string
+  name: string
+  image: string
+  description: string
+  tasks: ITask[]
+}
+
 export interface IBot {
-  botId: string
   userId: string
+  botId: string
+  modelId?: string
   apiId: string
   name: string
   image: string

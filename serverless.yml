@@ -146,6 +146,21 @@ functions:
           method: post
           cors: true
 
+  endpoint-bot-models:
+    handler: src/endpoints/app/model/index.handler
+    events:
+      - http:
+          path: apps/models
+          method: get
+          cors: true
+  endpoint-app-publish:
+    handler: src/endpoints/app/publish/index.handler
+    events:
+      - http:
+          path: apps/{modelId}
+          method: post
+          cors: true
+
   endpoint-bot-list:
     handler: src/endpoints/bot/list/index.handler
     events:
@@ -167,11 +182,11 @@ functions:
           path: user/{userId}/bots
           method: post
           cors: true
-  endpoint-bot-model:
-    handler: src/endpoints/bot/model/index.handler
+  endpoint-bot-bud:
+    handler: src/endpoints/bot/bud/index.handler
     events:
       - http:
-          path: user/{userId}/bots/{botId}
+          path: user/{userId}/bots/{modelId}/bud
           method: post
           cors: true
   endpoint-bot-update:
