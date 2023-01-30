@@ -5,7 +5,7 @@ import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
 import { IAppConnection } from 'src/models/app/interface'
 import { IBotModel } from 'src/models/bot/interface'
 
-const USERS_TABLE = process.env.USERS_TABLE || ''
+const CORE_TABLE = process.env.CORE_TABLE || ''
 
 export class App {
   async getBotModels() {
@@ -13,7 +13,7 @@ export class App {
 
     try {
       const result = await ddb.query({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         KeyConditionExpression:
           'userId = :userId and begins_with(sortKey, :sortKey)',
         ExpressionAttributeValues: {
@@ -29,11 +29,13 @@ export class App {
   }
 
   async publishBotModel(model: IBotModel) {
-    const ddb = DynamoDBDocument.from(new DynamoDB({}))
+    const ddb = DynamoDBDocument.from(new DynamoDB({}), {
+      marshallOptions: { removeUndefinedValues: true },
+    })
 
     try {
       await ddb.put({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         Item: {
           userId: 'baita',
           sortKey: `#MODEL#${model.modelId}`,
@@ -54,7 +56,7 @@ export class Connection {
 
     try {
       const result = await ddb.get({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         Key: { userId, sortKey: `#CONNECTION#${connectionId}` },
       })
 
@@ -69,7 +71,7 @@ export class Connection {
 
     try {
       const result = await ddb.query({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         KeyConditionExpression:
           'userId = :userId and begins_with(sortKey, :sortKey)',
         ExpressionAttributeValues: {
@@ -91,7 +93,7 @@ export class Connection {
 
     try {
       await ddb.put({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         Item: {
           ...connection,
           sortKey: `#CONNECTION#${connection.connectionId}`,

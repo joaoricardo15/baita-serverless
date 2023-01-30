@@ -46,12 +46,10 @@ provider:
     SERVICE_API_URL: https://api.baita.help
     SERVICE_SITE_URL: https://www.baita.help
 
-    # Database
-    USERS_TABLE: ${self:service}-prod-users
+    # Core Database
+    CORE_TABLE: ${self:provider.environment.SERVICE_PREFIX}
 
     # Bot resources
-    BOTS_ROLE: ${self:provider.environment.SERVICE_PREFIX}
-    BOTS_POLICY: ${self:provider.environment.SERVICE_PREFIX}
     BOTS_BUCKET: ${self:provider.environment.SERVICE_PREFIX}-bots
     BOTS_PERMISSION: arn:aws:iam::514311354050:role/${self:provider.environment.SERVICE_PREFIX}
 
@@ -146,18 +144,18 @@ functions:
           method: post
           cors: true
 
-  endpoint-app-model:
-    handler: src/endpoints/app/model/index.handler
+  endpoint-model-list:
+    handler: src/endpoints/model/list/index.handler
     events:
       - http:
-          path: apps/models
+          path: user/{userId}/models
           method: get
           cors: true
-  endpoint-app-publish:
-    handler: src/endpoints/app/publish/index.handler
+  endpoint-model-create:
+    handler: src/endpoints/model/create/index.handler
     events:
       - http:
-          path: apps/{modelId}
+          path: user/{userId}/models
           method: post
           cors: true
 
@@ -186,7 +184,7 @@ functions:
     handler: src/endpoints/bot/bud/index.handler
     events:
       - http:
-          path: user/{userId}/bots/{modelId}/bud
+          path: user/{userId}/bots/{botId}/bud
           method: post
           cors: true
   endpoint-bot-update:
@@ -247,12 +245,12 @@ resources:
         - prod
   Resources:
     # Database
-    usersTable:
+    coreTable:
       Condition: IsProd
       Type: AWS::DynamoDB::Table
       DeletionPolicy: Retain
       Properties:
-        TableName: ${self:provider.environment.USERS_TABLE}
+        TableName: ${self:provider.environment.CORE_TABLE}
         KeySchema:
           - AttributeName: userId
             KeyType: HASH
@@ -277,7 +275,7 @@ resources:
     botsRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: ${self:provider.environment.BOTS_ROLE}
+        RoleName: ${self:provider.environment.SERVICE_PREFIX}
         AssumeRolePolicyDocument:
           Version: '2012-10-17'
           Statement:
@@ -289,7 +287,7 @@ resources:
                   - scheduler.amazonaws.com
                   - apigateway.amazonaws.com
         Policies:
-          - PolicyName: ${self:provider.environment.BOTS_POLICY}
+          - PolicyName: ${self:provider.environment.SERVICE_PREFIX}
             PolicyDocument:
               Version: '2012-10-17'
               Statement:

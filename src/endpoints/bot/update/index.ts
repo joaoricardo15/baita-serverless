@@ -13,11 +13,19 @@ exports.handler = async (event, context, callback) => {
 
     const body = JSON.parse(event.body)
 
-    const { name, active, tasks } = body
+    const { name, image, description, active, tasks } = body
 
     validateTasks(tasks)
 
-    const data = await bot.updateBot(userId, botId, name, active, tasks)
+    const data = await bot.updateBot(
+      userId,
+      botId,
+      name,
+      image,
+      description,
+      active,
+      tasks
+    )
 
     api.httpResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {

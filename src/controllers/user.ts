@@ -5,7 +5,7 @@ import { DynamoDB } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
 import { IContent, ITodoTask, IUser } from 'src/models/user/interface'
 
-const USERS_TABLE = process.env.USERS_TABLE || ''
+const CORE_TABLE = process.env.CORE_TABLE || ''
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX || ''
 
 export class User {
@@ -17,7 +17,7 @@ export class User {
 
     try {
       await ddb.put({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         Item: {
           ...user,
           sortKey: '#USER',
@@ -85,7 +85,7 @@ export class User {
 
     try {
       await ddb.put({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         Item: {
           userId,
           sortKey: `#CONTENT#${contentId}`,
@@ -112,7 +112,7 @@ export class User {
       console.log(content)
 
       const { Items: alreadySeen } = await ddb.query({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         KeyConditionExpression:
           'userId = :userId and begins_with(sortKey, :sortKey)',
         ExpressionAttributeValues: {
@@ -153,7 +153,7 @@ export class User {
 
     try {
       const result = await ddb.get({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         Key: { userId, sortKey: '#TODO' },
       })
 
@@ -168,7 +168,7 @@ export class User {
 
     try {
       await ddb.update({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         Key: { userId, sortKey: '#TODO' },
         UpdateExpression: 'SET tasks = :tasks',
         ExpressionAttributeValues: {
@@ -188,7 +188,7 @@ export class User {
 
     try {
       const result = await ddb.get({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         Key: { userId, sortKey: '#TODO' },
       })
 
@@ -201,7 +201,7 @@ export class User {
       )
 
       await ddb.update({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         Key: { userId, sortKey: '#TODO' },
         UpdateExpression: 'SET tasks = :tasks',
         ExpressionAttributeValues: {

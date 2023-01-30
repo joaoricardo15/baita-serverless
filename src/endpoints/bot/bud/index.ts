@@ -9,7 +9,7 @@ exports.handler = async (event, context, callback) => {
   const bot = new Bot()
 
   try {
-    const { userId, modelId } = event.pathParameters
+    const { userId, botId } = event.pathParameters
 
     const body = JSON.parse(event.body)
 
@@ -17,14 +17,13 @@ exports.handler = async (event, context, callback) => {
 
     validateTasks(tasks)
 
-    const data = await bot.deployBotModel(
-      userId,
-      modelId,
+    const data = await bot.deployBotModel(userId, {
+      modelId: botId,
       name,
       image,
       description,
-      tasks
-    )
+      tasks,
+    })
 
     api.httpResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {

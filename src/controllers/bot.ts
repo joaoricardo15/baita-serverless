@@ -24,7 +24,7 @@ import {
 import { ServiceName } from 'src/models/service/interface'
 import { getInputDataFromService } from 'src/utils/bot'
 
-const USERS_TABLE = process.env.USERS_TABLE || ''
+const CORE_TABLE = process.env.CORE_TABLE || ''
 const BOTS_BUCKET = process.env.BOTS_BUCKET || ''
 const BOTS_PERMISSION = process.env.BOTS_PERMISSION || ''
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX || ''
@@ -35,7 +35,7 @@ export class Bot {
 
     try {
       const result = await ddb.get({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         Key: { userId, sortKey: `#BOT#${botId}` },
       })
 
@@ -50,7 +50,7 @@ export class Bot {
 
     try {
       const result = await ddb.query({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         KeyConditionExpression:
           'userId = :userId and begins_with(sortKey, :sortKey)',
         ExpressionAttributeValues: {
@@ -195,7 +195,7 @@ export class Bot {
       }
 
       await ddb.put({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         Item: {
           ...bot,
           sortKey: `#BOT#${bot.botId}`,
@@ -284,7 +284,7 @@ export class Bot {
       }
 
       await ddb.put({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         Item: {
           ...bot,
           sortKey: `#BOT#${bot.botId}`,
@@ -309,7 +309,7 @@ export class Bot {
       const botPrefix = `${SERVICE_PREFIX}-${botId}`
 
       await ddb.delete({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         Key: { userId, sortKey: `#BOT#${botId}` },
       })
 
@@ -342,21 +342,28 @@ export class Bot {
     userId: string,
     botId: string,
     name: string,
+    image: string,
+    description: string,
     active: boolean,
     tasks: ITask[]
   ) {
-    const ddb = DynamoDBDocument.from(new DynamoDB({}))
+    const ddb = DynamoDBDocument.from(new DynamoDB({}), {
+      marshallOptions: { removeUndefinedValues: true },
+    })
 
     try {
       const result = await ddb.update({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         Key: { userId, sortKey: `#BOT#${botId}` },
-        UpdateExpression: 'set #name = :name, tasks = :tasks, active = :active',
+        UpdateExpression:
+          'set #name = :name, image = :image, description = :description, tasks = :tasks, active = :active',
         ExpressionAttributeNames: {
           '#name': 'name', // Expression used here bacause 'name' is a reserved word
         },
         ExpressionAttributeValues: {
           ':name': name,
+          ':image': image || '',
+          ':description': description || '',
           ':tasks': tasks,
           ':active': active,
         },
@@ -436,7 +443,7 @@ export class Bot {
       }
 
       const dbResult = await ddb.update({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         Key: { userId, sortKey: `#BOT#${botId}` },
         UpdateExpression: 'set #name = :name, tasks = :tasks, active = :active',
         ExpressionAttributeNames: {
@@ -510,7 +517,7 @@ export class Bot {
       validateTaskResult(sample)
 
       await ddb.update({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         Key: { userId, sortKey: `#BOT#${botId}` },
         ReturnValues: 'ALL_NEW',
         UpdateExpression: `set tasks[${taskIndex}].sampleResult = :sample`,
@@ -536,7 +543,7 @@ export class Bot {
 
     try {
       await ddb.update({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         Key: { userId, sortKey: `#BOT#${botId}` },
         ReturnValues: 'ALL_NEW',
         UpdateExpression:
@@ -561,7 +568,7 @@ export class Bot {
 
     try {
       await ddb.update({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         Key: { userId, sortKey: `#BOT#${botId}` },
         UpdateExpression: `set tasks[${taskIndex}].connectionId = :connectionId`,
         ExpressionAttributeValues: {

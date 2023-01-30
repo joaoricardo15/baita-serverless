@@ -9,11 +9,9 @@ exports.handler = async (event, context, callback) => {
   const app = new App()
 
   try {
-    const { modelId } = event.pathParameters
-
     const body = JSON.parse(event.body)
 
-    const { name, description, image, tasks } = body
+    const { modelId, name, description, image, tasks } = body
 
     validateTasks(tasks)
 
