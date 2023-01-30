@@ -19,7 +19,6 @@ exports.handler = async (event, context, callback) => {
 
     const data = await bot.createBotModel(
       userId,
-      botId,
       name,
       image,
       description,

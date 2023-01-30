@@ -131,7 +131,7 @@ export class Bot {
 
       await s3.putObject({
         Bucket: BOTS_BUCKET,
-        Key: `${botId}.zip`,
+        Key: `${botPrefix}.zip`,
         Body: codeFile,
       })
 
@@ -143,7 +143,7 @@ export class Bot {
         Role: BOTS_PERMISSION,
         Code: {
           S3Bucket: BOTS_BUCKET,
-          S3Key: `${botId}.zip`,
+          S3Key: `${botPrefix}.zip`,
         },
       })
 
@@ -209,7 +209,6 @@ export class Bot {
 
   async createBotModel(
     userId: string,
-    botId: string,
     name: string,
     image: string,
     description: string,
@@ -222,6 +221,7 @@ export class Bot {
     const s3 = new S3({})
 
     try {
+      const botId = uuidv4()
       const botPrefix = `${SERVICE_PREFIX}-${botId}`
 
       const sampleCode = getCompleteBotCode(userId, botId, tasks)
@@ -229,7 +229,7 @@ export class Bot {
 
       await s3.putObject({
         Bucket: BOTS_BUCKET,
-        Key: `${botId}.zip`,
+        Key: `${botPrefix}.zip`,
         Body: codeFile,
       })
 
@@ -241,7 +241,7 @@ export class Bot {
         Role: BOTS_PERMISSION,
         Code: {
           S3Bucket: BOTS_BUCKET,
-          S3Key: `${botId}.zip`,
+          S3Key: `${botPrefix}.zip`,
         },
       })
 
@@ -335,7 +335,7 @@ export class Bot {
         console.log(err.message)
       }
 
-      await s3.deleteObject({ Bucket: BOTS_BUCKET, Key: `${botId}.zip` })
+      await s3.deleteObject({ Bucket: BOTS_BUCKET, Key: `${botPrefix}.zip` })
     } catch (err) {
       throw err.message
     }
@@ -394,14 +394,14 @@ export class Bot {
 
       await s3.putObject({
         Bucket: BOTS_BUCKET,
-        Key: `${botId}.zip`,
+        Key: `${botPrefix}.zip`,
         Body: codeFile,
       })
 
       const lambdaResult = await lambda.updateFunctionCode({
         FunctionName: botPrefix,
         S3Bucket: BOTS_BUCKET,
-        S3Key: `${botId}.zip`,
+        S3Key: `${botPrefix}.zip`,
       })
 
       if (
