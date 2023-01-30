@@ -146,7 +146,7 @@ functions:
           method: post
           cors: true
 
-  endpoint-bot-models:
+  endpoint-app-model:
     handler: src/endpoints/app/model/index.handler
     events:
       - http:
