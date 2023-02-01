@@ -268,6 +268,39 @@ export class Bot {
         },
       })
 
+      if (model.tasks[0].service?.name === ServiceName.schedule) {
+        await scheduler.updateSchedule({
+          Name: botPrefix,
+          State: 'ENABLED',
+          ScheduleExpression: model.tasks[0].inputData.find(
+            (input) => input.name === 'expression'
+          )?.value as string,
+          ScheduleExpressionTimezone: model.tasks[0].inputData.find(
+            (input) => input.name === 'timeZone'
+          )?.value as string,
+          FlexibleTimeWindow: {
+            Mode: 'OFF',
+          },
+          Target: {
+            Arn: lambdaResult.FunctionArn || '',
+            RoleArn: BOTS_PERMISSION,
+          },
+        })
+      } else {
+        await scheduler.updateSchedule({
+          Name: botPrefix,
+          State: 'DISABLED',
+          ScheduleExpression: 'cron(0 0 1 * ? 2030)',
+          FlexibleTimeWindow: {
+            Mode: 'OFF',
+          },
+          Target: {
+            Arn: lambdaResult.FunctionArn || '',
+            RoleArn: BOTS_PERMISSION,
+          },
+        })
+      }
+
       const bot: IBot = {
         botId,
         userId,
@@ -408,16 +441,15 @@ export class Bot {
         S3Key: `${botPrefix}.zip`,
       })
 
-      if (
-        active &&
-        tasks[0].service?.name === ServiceName.schedule &&
-        tasks[0].inputData.find((input) => input.name === 'expression')?.value
-      ) {
+      if (active && tasks[0].service?.name === ServiceName.schedule) {
         await scheduler.updateSchedule({
           Name: botPrefix,
           State: 'ENABLED',
           ScheduleExpression: tasks[0].inputData.find(
             (input) => input.name === 'expression'
+          )?.value as string,
+          ScheduleExpressionTimezone: tasks[0].inputData.find(
+            (input) => input.name === 'timeZone'
           )?.value as string,
           FlexibleTimeWindow: {
             Mode: 'OFF',
