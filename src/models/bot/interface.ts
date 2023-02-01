@@ -2,6 +2,7 @@ import { IApp, IAppConfig } from '../app/interface'
 import { ISerivceConfig, IService } from '../service/interface'
 
 export enum VariableType {
+  user = 'user',
   code = 'code',
   text = 'text',
   output = 'output',
