@@ -48,6 +48,19 @@ export class App {
       throw err.message
     }
   }
+
+  async deleteBotModel(modelId: string) {
+    const ddb = DynamoDBDocument.from(new DynamoDB({}))
+
+    try {
+      await ddb.delete({
+        TableName: CORE_TABLE,
+        Key: { userId: 'baita', sortKey: `#MODEL#${modelId}` },
+      })
+    } catch (err) {
+      throw err.message
+    }
+  }
 }
 
 export class Connection {

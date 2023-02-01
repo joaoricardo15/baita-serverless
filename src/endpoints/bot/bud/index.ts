@@ -13,12 +13,13 @@ exports.handler = async (event, context, callback) => {
 
     const body = JSON.parse(event.body)
 
-    const { name, description, image, tasks } = body
+    const { name, author, description, image, tasks } = body
 
     validateTasks(tasks)
 
     const data = await bot.deployBotModel(userId, {
       modelId: botId,
+      author,
       name,
       image,
       description,

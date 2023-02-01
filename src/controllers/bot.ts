@@ -271,7 +271,7 @@ export class Bot {
       const bot: IBot = {
         botId,
         userId,
-        active: false,
+        active: true,
         apiId: apiResult.ApiId || '',
         triggerUrl: `${apiResult.ApiEndpoint}${botUrl}`,
         triggerSamples: [],

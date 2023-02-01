@@ -107,6 +107,7 @@ export interface IBotUsage {
 
 export interface IBotModel {
   modelId: string
+  author: string
   name: string
   image: string
   description: string

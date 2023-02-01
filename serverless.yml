@@ -158,6 +158,13 @@ functions:
           path: user/{userId}/models
           method: post
           cors: true
+  endpoint-model-delete:
+    handler: src/endpoints/model/delete/index.handler
+    events:
+      - http:
+          path: user/{userId}/models/{modelId}
+          method: delete
+          cors: true
 
   endpoint-bot-list:
     handler: src/endpoints/bot/list/index.handler

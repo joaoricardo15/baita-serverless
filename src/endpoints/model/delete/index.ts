@@ -2,27 +2,15 @@
 
 import { Api, BotStatus } from 'src/utils/api'
 import { App } from 'src/controllers/app'
-import { validateTasks } from 'src/models/bot/schema'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
   const app = new App()
 
   try {
-    const body = JSON.parse(event.body)
+    const { modelId } = event.pathParameters
 
-    const { modelId, name, author, description, image, tasks } = body
-
-    validateTasks(tasks)
-
-    const data = await app.publishBotModel({
-      modelId,
-      author,
-      name,
-      image,
-      description,
-      tasks,
-    })
+    const data = await app.deleteBotModel(modelId)
 
     api.httpResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {
