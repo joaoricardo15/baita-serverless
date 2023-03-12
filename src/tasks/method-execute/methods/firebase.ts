@@ -1,5 +1,5 @@
 import admin from 'firebase-admin'
-import { Message } from 'firebase-admin/lib/messaging/messaging-api'
+import { TokenMessage } from 'firebase-admin/lib/messaging/messaging-api'
 import { ITaskExecutionInput } from 'src/models/bot/interface'
 import serviceAccount from 'src/partners/firebase/secrets.json'
 
@@ -30,7 +30,7 @@ export const sendNotification = async (
   try {
     const { botId, inputData } = taskInput
 
-    const message: Message = {
+    const message: TokenMessage = {
       token: inputData.token,
       webpush: {
         headers: {
@@ -42,7 +42,7 @@ export const sendNotification = async (
           silent: false,
           renotify: false,
           requireInteraction: true,
-          badge: `${SERVICE_SITE_URL}/logo_badge.png`,
+          badge: `${SERVICE_SITE_URL}/badge.png`,
           ...inputData.notification,
           icon: inputData.notification.icon || `${SERVICE_SITE_URL}/logo.png`,
         },
