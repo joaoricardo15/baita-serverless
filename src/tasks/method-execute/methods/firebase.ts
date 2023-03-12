@@ -28,10 +28,14 @@ export const sendNotification = async (
   }>
 ) => {
   try {
-    const { botId, inputData } = taskInput
+    const {
+      botId,
+      inputData: { data, notification, token, url },
+    } = taskInput
 
     const message: TokenMessage = {
-      token: inputData.token,
+      data,
+      token,
       webpush: {
         headers: {
           Topic: botId,
@@ -43,20 +47,20 @@ export const sendNotification = async (
           renotify: false,
           requireInteraction: true,
           badge: `${SERVICE_SITE_URL}/badge.png`,
-          ...inputData.notification,
-          icon: inputData.notification.icon || `${SERVICE_SITE_URL}/logo.png`,
+          ...notification,
+          icon:
+            notification.icon ||
+            notification.image ||
+            `${SERVICE_SITE_URL}/logo.png`,
         },
         fcmOptions: {
-          link: inputData.url || SERVICE_SITE_URL,
+          link: url || SERVICE_SITE_URL,
         },
       },
       fcmOptions: {
         analyticsLabel: botId,
       },
-      data: inputData.data,
     }
-
-    console.log('sendNotification', JSON.stringify(message))
 
     return await admin.messaging().send(message)
   } catch (err) {
