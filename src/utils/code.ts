@@ -87,7 +87,7 @@ const getParseEventFunctionCode = () => {
           const buffer = new Buffer(event.body, 'base64');
           const bodyString = buffer.toString('ascii').replace(/&/g, ",").replace(/=/g, ":");
           const jsonBody = JSON.parse('{"' + decodeURI(bodyString) + '"}');
-          outputData = jsonBody;
+          return jsonBody;
         }
         else {
           return JSON.parse(event.body);
@@ -305,10 +305,7 @@ module.exports.handler = async (event, context, callback) => {
       'Content-type': 'application/json',
       'Access-Control-Allow-Origin': '*'
     },
-    body: JSON.stringify({
-      success: !errorData,
-      data: errorData || outputData
-    })
+    body: JSON.stringify(errorData || outputData)
   });
 };`
 }
