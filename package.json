@@ -3,13 +3,11 @@
   "version": "1.0.0",
   "author": "Joao Ricardo Cardoso",
   "scripts": {
-    "offline": "serverless offline --httpPort 5000",
-    "bundle": "serverless-bundle test",
-    "lint": "eslint . --ext js,ts --cache --fix",
-    "prettier": "prettier --list-different './**/*.{js,ts}'",
-    "typecheck": "tsc --noEmit",
+    "start": "serverless offline --httpPort 5000",
+    "build": "serverless-bundle test",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "format": "prettier --write '**/*.{ts,tsx,js,jsx}'"
+    "lint": "eslint ./src --fix",
+    "format": "prettier ./src --write '**/*.{ts,js}'"
   },
   "dependencies": {
     "@aws-sdk/client-apigatewayv2": "^3.241.0",
@@ -34,8 +32,13 @@
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.10.0",
     "@typescript-eslint/parser": "^5.10.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-prettier": "^4.0.0",
+    "eslint": "^8.30.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-import-resolver-typescript": "^3.5.2",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-react": "^7.31.11",
+    "eslint-plugin-react-hooks": "^4.6.0",
     "prettier": "^2.5.1",
     "serverless-bundle": "^5.3.0",
     "serverless-deployment-bucket": "^1.1.2",
