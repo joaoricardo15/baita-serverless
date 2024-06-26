@@ -1,19 +1,19 @@
 {
+  "config": {
+    "method": "get",
+    "path": "/cnpj",
+    "outputPath": null,
+    "urlParams": [
+      {
+        "value": "06990590000123",
+        "name": "cnpj"
+      }
+    ]
+  },
+  "connection": {
     "config": {
-        "method": "get",
-        "path": "/cnpj",
-        "outputPath": null,
-        "urlParams": [
-            {
-                "value": "06990590000123",
-                "name": "cnpj"
-            }
-        ]
-    },
-    "connection": {
-        "config": {
-            "apiUrl": "https://www.receitaws.com.br/v1"
-        }
-    },
-    "inputData": {}
+      "apiUrl": "https://www.receitaws.com.br/v1"
+    }
+  },
+  "inputData": {}
 }
