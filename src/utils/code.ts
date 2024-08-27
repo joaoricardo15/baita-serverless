@@ -96,105 +96,6 @@ const getConditionsString = (conditions?: ITaskCondition[]) => {
   return andConditionsString
 }
 
-const getBotInnerCode = (tasks: ITask[]) => {
-  let innerCode = ''
-
-  for (let i = 1; i < tasks.length; i++) {
-    const task = tasks[i]
-    const app = task.app
-    const service = task.service
-    const conditions = task.conditions
-
-    const inputDataString = getInputString(
-      task.inputData,
-      service?.config.inputFields
-    )
-
-    const conditionsString = getConditionsString(conditions)
-
-    innerCode += `
-    ////////////////////////////////////////////////////////////////////////////////
-    // 4.1. Collect operation inputs
-
-    const task${i}_inputData = { ${inputDataString} };
-    
-    const task${i}_appConfig = ${JSON.stringify(app?.config)};
-
-    const task${i}_serviceConfig = ${JSON.stringify(service?.config)};
-    
-    const task${i}_connectionId = '${task.connectionId}';
-
-    const task${i}_outputPath = '${service?.config.outputPath || ''}';
-
-    let task${i}_outputData = {};
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // 4.2. Check conditions
-
-    if (${conditionsString || true}) {
-      ////////////////////////////////////////////////////////////////////////////////
-      // 4.2.1 If condition passes, execute operation
-
-      const { Payload: task${i}_lambda_payload } = await lambda.invoke({
-        FunctionName: '${SERVICE_PREFIX}-task-${service?.name}',
-        Payload: JSON.stringify({ userId, appConfig: task${i}_appConfig, serviceConfig: task${i}_serviceConfig, connectionId: task${i}_connectionId, inputData: task${i}_inputData, outputPath: task${i}_outputPath }),
-      }).promise();
-  
-
-      ////////////////////////////////////////////////////////////////////////////////
-      // 4.2.2 Parse results
-
-      const task${i}_result = JSON.parse(task${i}_lambda_payload);
-      
-      const task${i}_success = task${i}_result.success;
-
-      task${i}_outputData = task${i}_success && task${i}_result.data ? task${i}_result.data : { message: task${i}_result.message || task${i}_result.errorMessage || 'nothing for you this time : (' };
-      
-
-      ////////////////////////////////////////////////////////////////////////////////
-      // 4.2.3 Add result to logs
-
-      logs.push({
-        timestamp: Date.now(),
-        name: '${service?.label}',
-        inputData: task${i}_inputData,
-        outputData: task${i}_outputData,
-        status: task${i}_success ? 'success' : 'fail',
-      });
-
-
-      ////////////////////////////////////////////////////////////////////////////////
-      // 4.2.4 If task executed successfully, increment usage
-
-      if (task${i}_success) usage += 1;
-
-  ${
-    task.returnData
-      ? `
-      ////////////////////////////////////////////////////////////////////////////////
-      // 4.2.5 If task property returnData equals true, set outputData to task result
-        
-      if (task${i}_success) outputData = task${i}_outputData;
-      `
-      : ''
-  }
-    } else {
-      ////////////////////////////////////////////////////////////////////////////////
-      // 4.2.1 If condition does not pass, add result to logs
-
-      logs.push({
-        timestamp: Date.now(),
-        name: '${service?.label}',
-        inputData: task${i}_inputData,
-        outputData: task${i}_outputData,
-        status: 'filtered',
-      });
-    }`
-  }
-
-  return innerCode
-}
-
 export const getBotSampleCode = (userId: string, botId: string) => {
   return `
 const AWS = require('aws-sdk');
@@ -353,6 +254,106 @@ module.exports.handler = async (event, context, callback) => {
   });
 };`
 }
+
+const getBotInnerCode = (tasks: ITask[]) => {
+  let innerCode = ''
+
+  for (let i = 1; i < tasks.length; i++) {
+    const task = tasks[i]
+    const app = task.app
+    const service = task.service
+    const conditions = task.conditions
+
+    const inputDataString = getInputString(
+      task.inputData,
+      service?.config.inputFields
+    )
+
+    const conditionsString = getConditionsString(conditions)
+
+    innerCode += `
+    ////////////////////////////////////////////////////////////////////////////////
+    // 4.1. Collect operation inputs
+
+    const task${i}_inputData = { ${inputDataString} };
+    
+    const task${i}_appConfig = ${JSON.stringify(app?.config)};
+
+    const task${i}_serviceConfig = ${JSON.stringify(service?.config)};
+    
+    const task${i}_connectionId = '${task.connectionId}';
+
+    const task${i}_outputPath = '${service?.config.outputPath || ''}';
+
+    let task${i}_outputData = {};
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // 4.2. Check conditions
+
+    if (${conditionsString || true}) {
+      ////////////////////////////////////////////////////////////////////////////////
+      // 4.2.1 If condition passes, execute operation
+
+      const { Payload: task${i}_lambda_payload } = await lambda.invoke({
+        FunctionName: '${SERVICE_PREFIX}-task-${service?.name}',
+        Payload: JSON.stringify({ userId, appConfig: task${i}_appConfig, serviceConfig: task${i}_serviceConfig, connectionId: task${i}_connectionId, inputData: task${i}_inputData, outputPath: task${i}_outputPath }),
+      }).promise();
+  
+
+      ////////////////////////////////////////////////////////////////////////////////
+      // 4.2.2 Parse results
+
+      const task${i}_result = JSON.parse(task${i}_lambda_payload);
+      
+      const task${i}_success = task${i}_result.success;
+
+      task${i}_outputData = task${i}_success && task${i}_result.data ? task${i}_result.data : { message: task${i}_result.message || task${i}_result.errorMessage || 'nothing for you this time : (' };
+      
+
+      ////////////////////////////////////////////////////////////////////////////////
+      // 4.2.3 Add result to logs
+
+      logs.push({
+        timestamp: Date.now(),
+        name: '${service?.label}',
+        inputData: task${i}_inputData,
+        outputData: task${i}_outputData,
+        status: task${i}_success ? 'success' : 'fail',
+      });
+
+
+      ////////////////////////////////////////////////////////////////////////////////
+      // 4.2.4 If task executed successfully, increment usage
+
+      if (task${i}_success) usage += 1;
+
+  ${
+    task.returnData
+      ? `
+      ////////////////////////////////////////////////////////////////////////////////
+      // 4.2.5 If task property returnData equals true, set outputData to task result
+        
+      if (task${i}_success) outputData = task${i}_outputData;
+      `
+      : ''
+  }
+    } else {
+      ////////////////////////////////////////////////////////////////////////////////
+      // 4.2.1 If condition does not pass, add result to logs
+
+      logs.push({
+        timestamp: Date.now(),
+        name: '${service?.label}',
+        inputData: task${i}_inputData,
+        outputData: task${i}_outputData,
+        status: 'filtered',
+      });
+    }`
+  }
+
+  return innerCode
+}
+
 
 export const getCodeFile = async (code: string) => {
   zip.file('index.js', code)
