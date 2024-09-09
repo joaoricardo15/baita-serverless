@@ -1,18 +1,8 @@
 'use strict'
 
 import { IAppConfig } from 'src/models/app'
-import { InputSource, ISerivceConfig, IVariable } from 'src/models/service'
-
-export const getDataFromService = (
-  data: any,
-  serviceConfig: ISerivceConfig
-) => {
-  return Array.isArray(data)
-    ? data
-        .map((item) => getDataFromObject(item, serviceConfig))
-        .filter((item) => item)
-    : getDataFromObject(data, serviceConfig)
-}
+import { ISerivceConfig, IVariable } from 'src/models/service'
+import { InputSource } from 'src/models/service'
 
 export const getDataFromPath = (data: any, outputPath?: string) => {
   if (!outputPath) return data
@@ -44,6 +34,17 @@ export const getDataFromObject = (data: any, serviceConfig: ISerivceConfig) => {
   }
 
   return mappedData
+}
+
+export const getDataFromService = (
+  data: any,
+  serviceConfig: ISerivceConfig
+) => {
+  return Array.isArray(data)
+    ? data
+        .map((item) => getDataFromObject(item, serviceConfig))
+        .filter((item) => item)
+    : getDataFromObject(data, serviceConfig)
 }
 
 export const getBodyFromService = (
