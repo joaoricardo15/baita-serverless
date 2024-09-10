@@ -1,3 +1,5 @@
+import { IApp } from "./app"
+
 export enum ServiceType {
   invoke = 'invoke',
   trigger = 'trigger',
@@ -13,7 +15,7 @@ export enum ServiceName {
 }
 
 export enum InputSource {
-  auth = 'authFields',
+  // auth = 'authFields',
   input = 'inputFields',
   value = 'valueFields',
   service = 'serviceFields',
@@ -21,9 +23,13 @@ export enum InputSource {
 
 export enum VariableType {
   code = 'code',
-  input = 'input',
+  user = 'user',
+  text = 'text',
   output = 'output',
   options = 'options',
+  boolean = 'boolean',
+  constant = 'constant',
+  environment = 'environment',
 }
 
 export type DataType =
@@ -40,6 +46,8 @@ export interface IVariable {
   label: string
   value: DataType
   sampleValue: DataType
+  description?: string
+  required?: boolean
   outputIndex?: number
   outputPath?: string
   customFieldId?: number
@@ -50,7 +58,7 @@ export interface IVariable {
   }[]
 }
 
-export interface ISerivceConfig {
+export interface IServiceConfig {
   path?: string
   method?: string
   customFields?: boolean
@@ -82,5 +90,10 @@ export interface IService {
   type: ServiceType
   name: ServiceName
   label: string
-  config: ISerivceConfig
+  config: IServiceConfig
+}
+
+export interface IServiceApp {
+  service: IService
+  app: IApp
 }
