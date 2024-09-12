@@ -1,8 +1,8 @@
 'use strict'
 
 import { IAppConfig } from 'src/models/app'
-import { ISerivceConfig, IVariable } from 'src/models/service'
 import { InputSource } from 'src/models/service'
+import { IServiceConfig, IVariable } from 'src/models/service'
 
 export const getDataFromPath = (data: any, outputPath?: string) => {
   if (!outputPath) return data
@@ -10,19 +10,22 @@ export const getDataFromPath = (data: any, outputPath?: string) => {
   const paths = outputPath.split('.')
 
   for (let i = 0; i < paths.length; i++) {
-    const key = paths[i]
-    const intKey = parseInt(key)
-    data = data[isNaN(intKey) ? key : intKey]
+    const key = isNaN(Number(paths[i])) ? paths[i] : Number(paths[i])
+
+    if (!data || typeof data !== 'object' || !Object.hasOwn(data, key)) return
+
+    data = data[key]
   }
 
   return data
 }
 
-export const getDataFromObject = (data: any, serviceConfig: ISerivceConfig) => {
-  const { outputMapping } = serviceConfig
-
-  if (!outputMapping || typeof data !== 'object') return data
-
+export const getDataFromMapping = (
+  data: any,
+  outputMapping: {
+    [key: string]: string
+  }
+) => {
   const mappedData = {}
   const outputKeys = Object.keys(outputMapping)
 
@@ -36,44 +39,48 @@ export const getDataFromObject = (data: any, serviceConfig: ISerivceConfig) => {
   return mappedData
 }
 
-export const getDataFromService = (
+export const getMappedData = (
   data: any,
-  serviceConfig: ISerivceConfig
+  outputMapping?: {
+    [key: string]: string
+  }
 ) => {
+  if (!outputMapping) return data
+
   return Array.isArray(data)
     ? data
-        .map((item) => getDataFromObject(item, serviceConfig))
+        .map((item) => getDataFromMapping(item, outputMapping))
         .filter((item) => item)
-    : getDataFromObject(data, serviceConfig)
+    : getDataFromMapping(data, outputMapping)
 }
 
 export const getBodyFromService = (
   appConfig: IAppConfig,
-  serviceConfig: ISerivceConfig,
+  serviceConfig: IServiceConfig,
   inputData: any
 ) => {
   const { bodyParams } = serviceConfig
 
-  const { auth = {} } = appConfig
+  if (!bodyParams) return {}
+
+  // const { auth = {} } = appConfig // TODO
 
   const data = {}
-  if (bodyParams) {
-    for (let i = 0; i < bodyParams.length; i++) {
-      const { paramName, source, fieldName = '', value } = bodyParams[i]
+  for (let i = 0; i < bodyParams.length; i++) {
+    const { paramName, source, value, fieldName = '' } = bodyParams[i]
 
-      const fieldValue =
-        source === InputSource.value
-          ? value
-          : source === InputSource.auth
-          ? auth[fieldName]
-          : source === InputSource.service
-          ? serviceConfig[fieldName]
-          : source === InputSource.input
-          ? inputData[fieldName]
-          : ''
+    const fieldValue =
+      source === InputSource.value
+        ? value
+        : // : source === InputSource.auth // TODO
+        // ? auth[fieldName]
+        source === InputSource.service
+        ? serviceConfig[fieldName]
+        : source === InputSource.input
+        ? inputData[fieldName]
+        : ''
 
-      data[paramName] = fieldValue
-    }
+    data[paramName] = fieldValue
   }
 
   return data
@@ -81,12 +88,13 @@ export const getBodyFromService = (
 
 export const getUrlFromService = (
   appConfig: IAppConfig,
-  serviceConfig: ISerivceConfig,
+  serviceConfig: IServiceConfig,
   inputData: any
 ) => {
-  const { path, urlParams } = serviceConfig
+  // TODO
+  const { apiUrl /*auth = {}*/ } = appConfig
 
-  const { apiUrl, auth = {} } = appConfig
+  const { path, urlParams } = serviceConfig
 
   let url = `${apiUrl}${path}`
 
@@ -98,9 +106,9 @@ export const getUrlFromService = (
       const fieldValue =
         source === InputSource.value
           ? value
-          : source === InputSource.auth
-          ? auth[fieldName]
-          : source === InputSource.service
+          : // : source === InputSource.auth // TODO
+          // ? auth[fieldName]
+          source === InputSource.service
           ? serviceConfig[fieldName]
           : source === InputSource.input
           ? inputData[fieldName]
@@ -120,12 +128,12 @@ export const getUrlFromService = (
 
 export const getQueryParamsFromService = (
   appConfig: IAppConfig,
-  serviceConfig: ISerivceConfig,
+  serviceConfig: IServiceConfig,
   inputData: any
 ) => {
   const { queryParams } = serviceConfig
 
-  const { auth = {} } = appConfig
+  // const { auth = {} } = appConfig // TODO
 
   const params = {}
   if (queryParams) {
@@ -135,9 +143,9 @@ export const getQueryParamsFromService = (
       const fieldValue =
         source === InputSource.value
           ? value
-          : source === InputSource.auth
-          ? auth[fieldName]
-          : source === InputSource.service
+          : // : source === InputSource.auth // TODO
+          // ? auth[fieldName]
+          source === InputSource.service
           ? serviceConfig[fieldName]
           : source === InputSource.input
           ? inputData[fieldName]

@@ -1,99 +1,91 @@
 'use strict'
 
 import JSZip from 'jszip'
-import { ConditionType, ITask, ITaskCondition } from 'src/models/bot'
-import { IVariable } from 'src/models/service'
+import { ConditionOperator, ITask, ITaskCondition } from 'src/models/bot'
+import { IVariable, VariableType } from 'src/models/service'
 
 const zip = new JSZip()
 
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX || ''
 
-const comparationExpressions = {
-  equals: '==',
-  diferent: '!=',
-  exists: '',
-  donotexists: '',
+const getOutputVariableString = (index: number = 0, path: string = '') =>
+  `task${index}_outputData${path
+    .split('.')
+    .map((x) => x && (!isNaN(Number(x)) ? `[${x}]` : `[\`${x}\`]`))
+    .join('')}`
+
+const getStringifiedVariable = (variable: IVariable) => {
+  const { type, value, outputPath, outputIndex } = variable
+
+  if (type === VariableType.output)
+    return getOutputVariableString(outputIndex, outputPath)
+
+  switch (typeof value) {
+    case 'number':
+    case 'boolean':
+      return `${value}`
+    case 'string':
+      return `\`${value}\``
+    case 'object':
+      return `{ ${value} }`
+    case 'undefined':
+      return '``'
+  }
 }
 
-const getInputString = (
+export const getInputString = (
   inputData: IVariable[],
   serviceFields?: IVariable[]
 ) => {
-  let inputString = ''
+  if (!serviceFields) return ''
 
-  if (serviceFields)
-    for (let j = 0; j < serviceFields.length; j++) {
-      const fieldName = serviceFields[j].name
-      const inputField = inputData.find((x) => x.name === fieldName)
-      if (!inputField) throw `Input field ${fieldName} not found.`
-      if (
-        inputField.outputIndex !== undefined &&
-        inputField.outputPath !== undefined
-      ) {
-        inputString += `'${inputField.name}': task${
-          inputField.outputIndex
-        }_outputData${inputField.outputPath
-          .split('.')
-          .reduce(
-            (prev, curr) =>
-              `${prev}${
-                !curr
-                  ? ''
-                  : !isNaN(parseInt(curr))
-                  ? `[${curr}]`
-                  : `['${curr}']`
-              }`,
-            ''
-          )},`
-      } else if (inputField.value) {
-        inputString += `'${inputField.name}': \`${inputField.value}\`,`
-      }
-    }
+  return serviceFields
+    .map((serviceField) => {
+      const inputField = inputData.find((x) => x.name === serviceField.name)
+      if (!inputField) throw `Input field ${serviceField.name} not found.`
 
-  return inputString
+      return `'${serviceField.name}': ${getStringifiedVariable(inputField)},`
+    })
+    .join('')
 }
 
-const getConditionsString = (conditions?: ITaskCondition[]) => {
-  let andConditionsString = ''
+const decodeCondition = (condition: ITaskCondition): string => {
+  const {
+    operator,
+    operand,
+    comparisonOperand = { name: '', label: '', type: VariableType.constant },
+  } = condition
 
-  if (conditions)
-    for (let j = 0; j < conditions.length; j++) {
-      const andConditions = conditions[j].andConditions
+  const stringOperand = getStringifiedVariable(operand)
+  const stringComparison = getStringifiedVariable(comparisonOperand)
 
-      if (andConditions) {
-        for (let k = 0; k < andConditions.length; k++) {
-          const andCondition = andConditions[k]
+  switch (operator) {
+    case ConditionOperator.equals:
+      return `${stringOperand} == ${stringComparison}`
+    case ConditionOperator.notEquals:
+      return `${stringOperand} != ${stringComparison}`
+    case ConditionOperator.contains:
+      return `${stringOperand}.includes(${stringComparison})`
+    case ConditionOperator.startsWith:
+      return `${stringOperand}.startsWith(${stringComparison})`
+    case ConditionOperator.endsWith:
+      return `${stringOperand}.endsWith(${stringComparison})`
+    case ConditionOperator.exists:
+      return `!!${stringOperand}`
+    case ConditionOperator.doNotExists:
+      return `!${stringOperand}`
+  }
+}
 
-          let conditionValue = ''
-          if (andCondition.outputIndex !== undefined) {
-            conditionValue = `task${andCondition.outputIndex}_outputData['${andCondition.name}']`
-          } else if (andCondition.value) {
-            conditionValue = `\`${andCondition.value}\``
-          }
-
-          const conditionExpression = comparationExpressions[andCondition.type]
-
-          const comparationValue = andCondition.type
-
-          if (conditionValue && andCondition.type)
-            andConditionsString += `${k === 0 ? '' : ' && '}${
-              andCondition.type === ConditionType.donotexists
-                ? `!${conditionValue}`
-                : andCondition.type === ConditionType.exists
-                ? `${conditionValue}`
-                : `${conditionValue} ${conditionExpression} ${comparationValue}`
-            }`
-        }
-      }
-
-      if (andConditionsString) {
-        andConditionsString += `${
-          j === 0 ? '' : ' || '
-        }(${andConditionsString})`
-      }
-    }
-
-  return andConditionsString
+export const getConditionsString = (conditions?: ITaskCondition[][]) => {
+  return conditions
+    ?.map((orConditions) =>
+      orConditions
+        .map((andCondition) => decodeCondition(andCondition))
+        .join(' && ')
+    )
+    .map((x) => `(${x})`)
+    .join(' || ')
 }
 
 export const getBotSampleCode = (userId: string, botId: string) => {
@@ -353,7 +345,6 @@ const getBotInnerCode = (tasks: ITask[]) => {
 
   return innerCode
 }
-
 
 export const getCodeFile = async (code: string) => {
   zip.file('index.js', code)

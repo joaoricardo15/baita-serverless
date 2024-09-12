@@ -23,18 +23,19 @@ export interface ITaskExecutionResult {
 }
 
 export enum ConditionOperator {
-  equals = 'equals',
-  notEquals = 'notEquals',
-  exists = 'exists',
-  doNotExists = 'doNotExists',
-  contains = 'contains',
-  startsWith = 'startsWith',
-  endsWith = 'endsWith',
+  equals = 'Equals',
+  notEquals = 'Not equals',
+  exists = 'Exists',
+  doNotExists = 'Do not exists',
+  contains = 'Contains',
+  startsWith = 'Starts with',
+  endsWith = 'Ends with',
 }
 
-export interface ITaskCondition extends IVariable {
-  conditionOperator: ConditionOperator
-  conditionComparisonValue: DataType
+export interface ITaskCondition {
+  operator: ConditionOperator
+  operand: IVariable,
+  comparisonOperand?: IVariable
 }
 
 export interface ITask {
