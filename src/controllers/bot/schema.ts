@@ -5,7 +5,7 @@ import addFormats from 'ajv-formats'
 import {
   DataType,
   InputSource,
-  ISerivceConfig,
+  IServiceConfig,
   IService,
   IVariable,
   ServiceName,
@@ -13,12 +13,12 @@ import {
   VariableType,
 } from 'src/models/service'
 import {
-  ConditionType,
   ITask,
-  ICondition,
+  ITaskCondition,
   ITaskExecutionResult,
-  TaskExecutionStatus,
   ITaskExecutionInput,
+  TaskExecutionStatus,
+  ConditionOperator,
 } from 'src/models/bot'
 import { IApp, IAppConfig } from 'src/models/app'
 
@@ -123,8 +123,22 @@ const variableSchema: JSONSchemaType<IVariable> = {
     label: {
       type: 'string',
     },
-    value: dataSchema,
-    sampleValue: dataSchema,
+    value: {
+      ...dataSchema,
+      nullable: true,
+    },
+    sampleValue: {
+      ...dataSchema,
+      nullable: true,
+    },
+    description: {
+      type: 'string',
+      nullable: true,
+    },
+    required: {
+      type: 'boolean',
+      nullable: true,
+    },
     outputIndex: {
       type: 'number',
       nullable: true,
@@ -161,30 +175,28 @@ const variableSchema: JSONSchemaType<IVariable> = {
   required: ['type', 'name', 'label'],
 }
 
-const conditionSchema: JSONSchemaType<ICondition> = {
+const taskConditionSchema: JSONSchemaType<ITaskCondition> = {
   type: 'object',
-  properties: {
-    type: {
-      type: 'string',
-      enum: Object.values(ConditionType) as readonly ConditionType[],
+  allOf: [
+    variableSchema,
+    {
+      type: 'object',
+      properties: {
+        conditionOperator: {
+          type: 'string',
+          enum: Object.values(
+            ConditionOperator
+          ) as readonly ConditionOperator[],
+        },
+        conditionComparisonValue: dataSchema,
+      },
+      required: ['conditionOperator', 'conditionComparisonValue'],
     },
-    name: {
-      type: 'string',
-    },
-    label: {
-      type: 'string',
-    },
-    value: dataSchema,
-    sampleValue: dataSchema,
-    outputIndex: {
-      type: 'number',
-      nullable: true,
-    },
-  },
-  required: ['type', 'name', 'label'],
+  ],
+  required: ['type', 'name', 'label', 'conditionOperator', 'conditionComparisonValue'],
 }
 
-const serviceConfigSchema: JSONSchemaType<ISerivceConfig> = {
+const serviceConfigSchema: JSONSchemaType<IServiceConfig> = {
   type: 'object',
   properties: {
     path: {
@@ -330,6 +342,9 @@ const tasksSchema: JSONSchemaType<ITask[]> = {
   items: {
     type: 'object',
     properties: {
+      taskId: {
+        type: 'number',
+      },
       app: {
         nullable: true,
         ...appSchema,
@@ -338,8 +353,9 @@ const tasksSchema: JSONSchemaType<ITask[]> = {
         nullable: true,
         ...serviceSchema,
       },
-      taskId: {
-        type: 'number',
+      returnData: {
+        type: 'boolean',
+        nullable: true,
       },
       connectionId: {
         type: 'string',
@@ -349,36 +365,17 @@ const tasksSchema: JSONSchemaType<ITask[]> = {
         type: 'array',
         items: variableSchema,
       },
-      sampleResult: {
-        nullable: true,
-        ...taskResultSchema,
-      },
-      returnData: {
-        type: 'boolean',
-        nullable: true,
-      },
       conditions: {
         type: 'array',
         nullable: true,
         items: {
-          type: 'object',
-          properties: {
-            conditionId: {
-              type: 'number',
-            },
-            andConditions: {
-              type: 'array',
-              nullable: true,
-              items: conditionSchema,
-            },
-            orConditions: {
-              type: 'array',
-              nullable: true,
-              items: conditionSchema,
-            },
-          },
-          required: ['conditionId'],
+          type: 'array',
+          items: taskConditionSchema,
         },
+      },
+      sampleResult: {
+        nullable: true,
+        ...taskResultSchema,
       },
     },
     required: ['taskId', 'inputData'],
@@ -395,9 +392,9 @@ const operationInputSchema: JSONSchemaType<ITaskExecutionInput> = {
       type: 'string',
       nullable: true,
     },
-    inputData: dataSchema,
     appConfig: appConfigSchema,
     serviceConfig: serviceConfigSchema,
+    inputData: dataSchema,
   },
   required: ['userId', 'appConfig', 'serviceConfig'],
 }

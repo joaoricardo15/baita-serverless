@@ -44,8 +44,8 @@ export interface IVariable {
   type: VariableType
   name: string
   label: string
-  value: DataType
-  sampleValue: DataType
+  value?: DataType
+  sampleValue?: DataType
   description?: string
   required?: boolean
   outputIndex?: number
