@@ -2,11 +2,13 @@
 
 import Axios from 'axios'
 import { validateOperationInput } from 'src/controllers/bot/schema'
+import { IServiceConfig } from 'src/models/service'
+import { IAppConfig } from 'src/models/app'
 import { Api, BotStatus } from 'src/utils/api'
 import {
   getBodyFromService,
   getDataFromPath,
-  getDataFromService,
+  getMappedData,
   getQueryParamsFromService,
   getUrlFromService,
 } from 'src/utils/bot'
@@ -17,23 +19,24 @@ exports.handler = async (event, context, callback) => {
   try {
     validateOperationInput(event)
 
-    const { appConfig, serviceConfig, inputData } = event
+    const { appConfig, serviceConfig, inputData } = event as {
+      appConfig: IAppConfig,
+      serviceConfig: IServiceConfig,
+      inputData: any
+    }
 
-    console.log({
+    const axiosInput = {
       method: serviceConfig.method,
-      headers: serviceConfig.headers,
+      // TODO delete
+      // headers: serviceConfig.headers,
       url: getUrlFromService(appConfig, serviceConfig, inputData),
       data: getBodyFromService(appConfig, serviceConfig, inputData),
       params: getQueryParamsFromService(appConfig, serviceConfig, inputData),
-    })
+    }
 
-    const response = await Axios({
-      method: serviceConfig.method,
-      headers: serviceConfig.headers,
-      url: getUrlFromService(appConfig, serviceConfig, inputData),
-      data: getBodyFromService(appConfig, serviceConfig, inputData),
-      params: getQueryParamsFromService(appConfig, serviceConfig, inputData),
-    })
+    console.log(axiosInput)
+
+    const response = await Axios(axiosInput)
 
     console.log(response.data)
 
@@ -41,7 +44,7 @@ exports.handler = async (event, context, callback) => {
 
     console.log(initialData)
 
-    const mappedData = getDataFromService(initialData, serviceConfig)
+    const mappedData = getMappedData(initialData, serviceConfig.outputMapping)
 
     api.httpOperationResponse(
       callback,

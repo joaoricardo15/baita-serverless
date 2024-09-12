@@ -9,7 +9,7 @@ import {
   getBodyFromService,
   getAuthDataFromApp,
   getDataFromPath,
-  getDataFromService,
+  getMappedData,
   getUrlFromService,
   getQueryParamsFromService,
 } from 'src/utils/bot'
@@ -51,7 +51,7 @@ exports.handler = async (event, context, callback) => {
       data: getAuthDataFromApp(type, headers, fields, refresh_token),
     })
 
-    console.log({
+    const axiosInput = {
       method: serviceConfig.method,
       headers: {
         ...serviceConfig.headers,
@@ -60,19 +60,12 @@ exports.handler = async (event, context, callback) => {
       url: getUrlFromService(appConfig, serviceConfig, inputData),
       data: getBodyFromService(appConfig, serviceConfig, inputData),
       params: getQueryParamsFromService(appConfig, serviceConfig, inputData),
-    })
+    }
+
+    console.log(axiosInput)
 
     // Http request
-    const response = await Axios({
-      method: serviceConfig.method,
-      headers: {
-        ...serviceConfig.headers,
-        Authorization: `Bearer ${access_token}`,
-      },
-      url: getUrlFromService(appConfig, serviceConfig, inputData),
-      data: getBodyFromService(appConfig, serviceConfig, inputData),
-      params: getQueryParamsFromService(appConfig, serviceConfig, inputData),
-    })
+    const response = await Axios(axiosInput)
 
     console.log(response.data)
 
@@ -80,7 +73,7 @@ exports.handler = async (event, context, callback) => {
 
     console.log(initialData)
 
-    const mappedData = getDataFromService(initialData, serviceConfig)
+    const mappedData = getMappedData(initialData, serviceConfig.outputMapping)
 
     api.httpOperationResponse(
       callback,
