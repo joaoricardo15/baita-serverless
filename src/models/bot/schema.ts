@@ -131,7 +131,13 @@ const taskConditionSchema: JSONSchemaType<ITaskCondition> = {
       required: ['conditionOperator', 'conditionComparisonValue'],
     },
   ],
-  required: ['type', 'name', 'label', 'conditionOperator', 'conditionComparisonValue'],
+  required: [
+    'type',
+    'name',
+    'label',
+    'conditionOperator',
+    'conditionComparisonValue',
+  ],
 }
 
 const serviceConfigSchema: JSONSchemaType<IServiceConfig> = {
