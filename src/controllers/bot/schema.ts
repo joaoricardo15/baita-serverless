@@ -177,23 +177,18 @@ const variableSchema: JSONSchemaType<IVariable> = {
 
 const taskConditionSchema: JSONSchemaType<ITaskCondition> = {
   type: 'object',
-  allOf: [
-    variableSchema,
-    {
-      type: 'object',
-      properties: {
-        conditionOperator: {
-          type: 'string',
-          enum: Object.values(
-            ConditionOperator
-          ) as readonly ConditionOperator[],
-        },
-        conditionComparisonValue: dataSchema,
-      },
-      required: ['conditionOperator', 'conditionComparisonValue'],
+  properties: {
+    operator: {
+      type: 'string',
+      enum: Object.values(ConditionOperator) as readonly ConditionOperator[],
     },
-  ],
-  required: ['type', 'name', 'label', 'conditionOperator', 'conditionComparisonValue'],
+    operand: variableSchema,
+    comparisonOperand: {
+      nullable: true,
+      ...variableSchema,
+    },
+  },
+  required: ['operator', 'operand'],
 }
 
 const serviceConfigSchema: JSONSchemaType<IServiceConfig> = {
