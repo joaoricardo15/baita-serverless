@@ -36,14 +36,8 @@ export const variableSchema: JSONSchemaType<IVariable> = {
     label: {
       type: 'string',
     },
-    value: {
-      nullable: true,
-      ...dataSchema,
-    },
-    sampleValue: {
-      nullable: true, 
-      ...dataSchema,
-    },
+    value: dataSchema,
+    sampleValue: dataSchema,
     description: {
       type: 'string',
       nullable: true,
@@ -86,7 +80,7 @@ export const variableSchema: JSONSchemaType<IVariable> = {
     },
   },
   required: ['type', 'name', 'label'],
-}
+} as any // any added here as a workararound for the 'nullable cannot be used without type' issue
 
 export const serviceConfigSchema: JSONSchemaType<IServiceConfig> = {
   type: 'object',
