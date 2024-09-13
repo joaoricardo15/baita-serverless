@@ -1,6 +1,6 @@
 'use strict'
 
-import { DataType } from 'aws-sdk/clients/frauddetector'
+import { DataType } from "src/models/service/interface"
 
 export enum BotStatus {
   fail = 'fail',

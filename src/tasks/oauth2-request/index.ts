@@ -1,7 +1,7 @@
 'use strict'
 
 import Axios from 'axios'
-import { validateOperationInput } from 'src/controllers/bot/schema'
+import { validateOperationInput } from 'src/models/bot/schema'
 import { Connection } from 'src/controllers/connection'
 import { Api, BotStatus } from 'src/utils/api'
 import {

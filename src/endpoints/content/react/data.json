@@ -1,0 +1,7 @@
+{
+    "pathParameters": {
+        "userId": "google-oauth2%7C110121804349224987489",
+        "contentId": "123"
+    },
+    "body": "{\n            \"contentId\": \"123\",\n            \"date\": \"Mon Jan 23 21:01:02 +0000 2023\",\n            \"author\": {\n                \"name\": \"Genevieve Roch-Decter, CFA\",\n                \"accountName\": \"GRDecter\",\n                \"followers\": 305834,\n                \"image\": \"http://pbs.twimg.com/profile_images/1585989786518650882/T94N3Hd6_normal.jpg\",\n                \"descripion\": \"Former $100MM+ Money Manager • Seen on Bloomberg, FOX & VICE • CEO @grit_capital • Write #1 Finance newsletter on Substack\",\n                \"location\": \"Not Financial Advice\",\n                \"url\": \"https://t.co/b5hxKDZt7n\"\n            },\n            \"comments\": 6756,\n            \"body\": \"Apple is the only major tech company that hasn’t done a big layoff.\\n\\nInstead the CEO took a $50 million pay cut.\",\n            \"likes\": 75795\n        }"
+}

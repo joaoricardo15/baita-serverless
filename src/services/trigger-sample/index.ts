@@ -1,8 +1,8 @@
 'use strict'
 
+import { validateTaskResult } from 'src/models/bot/schema'
 import { Api, BotStatus } from 'src/utils/api'
 import { Bot } from 'src/controllers/bot'
-import { validateTaskResult } from 'src/controllers/bot/schema'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)

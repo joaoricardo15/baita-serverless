@@ -1,6 +1,6 @@
-import { VariableType } from 'src/models/service'
+import { VariableType } from 'src/models/service/interface'
 import { getConditionsString, getInputString } from '../code'
-import { ConditionOperator } from 'src/models/bot'
+import { ConditionOperator } from 'src/models/bot/interface'
 
 describe('getInputString', () => {
   test('should return an empty string when there is no service fields', () => {

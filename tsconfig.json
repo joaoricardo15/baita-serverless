@@ -16,6 +16,10 @@
 		"esModuleInterop": true,
 
 		// Issue https://github.com/dividab/tsconfig-paths-webpack-plugin/issues/32
-		"baseUrl": "."
+		"baseUrl": ".",
+
+		// Tip from https://stackoverflow.com/questions/44220327/firebase-admin-with-typescript-in-firebase-cloud-functions
+		"resolveJsonModule": true,
+		"allowSyntheticDefaultImports": true
 	}
 }

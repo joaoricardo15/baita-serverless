@@ -21,6 +21,7 @@
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "axios": "^1.7.7",
+    "firebase-admin": "^12.5.0",
     "jsonwebtoken": "^9.0.2",
     "jszip": "^3.10.1",
     "qs": "^6.13.0",

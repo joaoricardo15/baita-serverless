@@ -1,8 +1,7 @@
 'use strict'
 
-import { IAppConfig } from 'src/models/app'
-import { InputSource } from 'src/models/service'
-import { IServiceConfig, IVariable } from 'src/models/service'
+import { IAppConfig } from "src/models/app/interface"
+import { IServiceConfig, IVariable } from "src/models/service/interface"
 
 export const getDataFromPath = (data: any, outputPath?: string) => {
   if (!outputPath) return data

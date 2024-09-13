@@ -1,9 +1,9 @@
 'use strict'
 
 import Axios from 'axios'
-import { validateOperationInput } from 'src/controllers/bot/schema'
-import { IServiceConfig } from 'src/models/service'
-import { IAppConfig } from 'src/models/app'
+import { validateOperationInput } from 'src/models/bot/schema'
+import { IServiceConfig } from 'src/models/service/interface'
+import { IAppConfig } from 'src/models/app/interface'
 import { Api, BotStatus } from 'src/utils/api'
 import {
   getBodyFromService,

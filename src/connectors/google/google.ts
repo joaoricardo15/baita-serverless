@@ -3,7 +3,7 @@
 import Axios from 'axios'
 import qs from 'qs'
 
-const SERVICE_PROD_URL = process.env.SERVICE_PROD_URL || ''
+const SERVICE_API_URL = process.env.SERVICE_API_URL || ''
 const GOOGLE_AUTH_URL = process.env.GOOGLE_AUTH_URL || ''
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || ''
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || ''
@@ -18,7 +18,7 @@ export class Google {
       const data = qs.stringify({
         code: code,
         grant_type: 'authorization_code',
-        redirect_uri: `${SERVICE_PROD_URL}/connectors/google`,
+        redirect_uri: `${SERVICE_API_URL}/connectors/google`,
         client_id: GOOGLE_CLIENT_ID,
         client_secret: GOOGLE_CLIENT_SECRET,
         access_type: 'offline',

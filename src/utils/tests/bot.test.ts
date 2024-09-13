@@ -1,4 +1,4 @@
-import { InputSource } from 'src/models/service'
+import { InputSource } from 'src/models/service/interface'
 import { getDataFromPath, getDataFromMapping, getMappedData, getBodyFromService } from '../bot'
 
 describe('getDataFromPath', () => {

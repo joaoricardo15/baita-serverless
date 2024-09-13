@@ -2,7 +2,7 @@
 
 import vm from 'vm'
 import { Api, BotStatus } from 'src/utils/api'
-import { validateOperationInput } from 'src/controllers/bot/schema'
+import { validateOperationInput } from 'src/models/bot/schema'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
@@ -10,22 +10,23 @@ exports.handler = async (event, context, callback) => {
   try {
     validateOperationInput(event)
 
-    const { inputData } = event
+    const { userId, botId, inputData } = event
 
-    const code = `${inputData.code}`
+    const {
+      // Required input fields
+      code,
 
-    const codeInput: any = {}
+      // Custom fields
+      ...customFields
+    } = inputData
 
-    for (const varName in inputData)
-      if (varName !== 'code') codeInput[varName] = inputData[varName]
+    const codeContext: any = { ...customFields, userId, botId }
 
-    const script = new vm.Script(code)
+    vm.createContext(codeContext)
 
-    vm.createContext(codeInput)
+    vm.runInContext(code, codeContext, { displayErrors: true, timeout: 5000 })
 
-    script.runInContext(codeInput, { displayErrors: true, timeout: 5000 })
-
-    const { output: data } = codeInput
+    const { output: data } = codeContext
 
     api.httpOperationResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {

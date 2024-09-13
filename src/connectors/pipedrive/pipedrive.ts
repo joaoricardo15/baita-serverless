@@ -2,7 +2,7 @@
 
 import Axios from 'axios'
 
-const SERVICE_PROD_URL = process.env.SERVICE_PROD_URL || ''
+const SERVICE_API_URL = process.env.SERVICE_API_URL || ''
 const PIPEDRIVE_AUTH_URL = process.env.PIPEDRIVE_AUTH_URL || ''
 const PIPEDRIVE_CLIENT_ID = process.env.PIPEDRIVE_CLIENT_ID || ''
 const PIPEDRIVE_CLIENT_SECRET = process.env.PIPEDRIVE_CLIENT_SECRET || ''
@@ -24,7 +24,7 @@ export class Pipedrive {
       const data = new URLSearchParams({
         code,
         grant_type: 'authorization_code',
-        redirect_uri: `${SERVICE_PROD_URL}/connectors/pipedrive`,
+        redirect_uri: `${SERVICE_API_URL}/connectors/pipedrive`,
       })
 
       const credentialsResult = await Axios({
