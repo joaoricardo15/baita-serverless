@@ -53,10 +53,6 @@ provider:
     BOTS_BUCKET: ${self:provider.environment.SERVICE_PREFIX}-bots
     BOTS_PERMISSION: arn:aws:iam::514311354050:role/${self:provider.environment.SERVICE_PREFIX}
 
-    # Auth0
-    AUTH0_AUDIENCE: ${file(./src/partners/auth0/secrets.json):audience}
-    AUTH0_CLIENT_PUBLIC_KEY: ${file(./src/partners/auth0/key.pem)}
-
     # Pipedrive
     PIPEDRIVE_AUTH_URL: ${file(./src/partners/pipedrive/secrets.json):auth_uri}
     PIPEDRIVE_CLIENT_ID: ${file(./src/partners/pipedrive/secrets.json):client_id}
@@ -73,8 +69,6 @@ provider:
 
 functions:
   ### internal services ###
-  service-auth:
-    handler: src/services/auth/index.handler
   service-trigger-sample:
     handler: src/services/trigger-sample/index.handler
 

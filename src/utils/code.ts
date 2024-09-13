@@ -1,198 +1,91 @@
 'use strict'
 
 import JSZip from 'jszip'
-import {
-  ConditionOperator,
-  ITask,
-  ITaskCondition,
-  IVariable,
-} from 'src/models/bot/interface'
-
-import {
-  getInputDataFromService,
-  getVariableValue,
-  OUTPUT_SEPARATOR,
-} from './bot'
+import { ConditionOperator, ITask, ITaskCondition } from 'src/models/bot'
+import { IVariable, VariableType } from 'src/models/service'
 
 const zip = new JSZip()
 
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX || ''
 
-const getInputString = (inputData: IVariable[], inputFields?: IVariable[]) => {
-  return JSON.stringify(getInputDataFromService(inputData, inputFields))
-    .replace(new RegExp(`"${OUTPUT_SEPARATOR}`, 'g'), '')
-    .replace(new RegExp(`${OUTPUT_SEPARATOR}"`, 'g'), '')
-}
+const getOutputVariableString = (index: number = 0, path: string = '') =>
+  `task${index}_outputData${path
+    .split('.')
+    .map((x) => x && (!isNaN(Number(x)) ? `[${x}]` : `[\`${x}\`]`))
+    .join('')}`
 
-const comparationExpressions: { [key in ConditionOperator]: string } = {
-  [ConditionOperator.exists]: '',
-  [ConditionOperator.doNotExists]: '',
-  [ConditionOperator.equals]: '==',
-  [ConditionOperator.notEquals]: '!=',
-  [ConditionOperator.contains]: '.includes',
-  [ConditionOperator.endsWith]: '.endsWith',
-  [ConditionOperator.startsWith]: '.startsWith',
-}
+const getStringifiedVariable = (variable: IVariable) => {
+  const { type, value, outputPath, outputIndex } = variable
 
-const getConditionsString = (conditions?: ITaskCondition[][]) => {
-  let conditionsString = ''
+  if (type === VariableType.output)
+    return getOutputVariableString(outputIndex, outputPath)
 
-  if (conditions)
-    for (let j = 0; j < conditions.length; j++) {
-      const orCondition = conditions[j]
-
-      if (orCondition) {
-        let andConditionString = ''
-
-        for (let k = 0; k < orCondition.length; k++) {
-          const andCondition = orCondition[k]
-
-          if (!andCondition.conditionOperator) {
-            throw Error(`Missing condition operator`)
-          }
-
-          const andConditionValue = (
-            getVariableValue(andCondition) as string
-          ).replace(new RegExp(OUTPUT_SEPARATOR, 'g'), '')
-
-          if (andConditionValue && andCondition.conditionOperator)
-            andConditionString += `${k === 0 ? '' : ' && '}${
-              andCondition.conditionOperator === ConditionOperator.doNotExists
-                ? `!${andConditionValue}`
-                : andCondition.conditionOperator === ConditionOperator.exists
-                ? `${andConditionValue}`
-                : `${andConditionValue} ${
-                    comparationExpressions[andCondition.conditionOperator]
-                  } '${andCondition.conditionComparisonValue}'`
-            }`
-        }
-
-        if (andConditionString) {
-          conditionsString += `${j === 0 ? '' : ' || '}(${andConditionString})`
-        }
-      }
-    }
-
-  return conditionsString
-}
-
-const getParseEventFunctionCode = () => {
-  return `(() => {
-    if (event.body) {
-      try {
-        if (event.isBase64Encoded &&
-            event.headers['Content-type'] &&
-            event.headers['Content-type'] === 'application/x-www-form-urlencoded'
-          ) {
-          const buffer = new Buffer(event.body, 'base64');
-          const bodyString = buffer.toString('ascii').replace(/&/g, ",").replace(/=/g, ":");
-          const jsonBody = JSON.parse('{"' + decodeURI(bodyString) + '"}');
-          return jsonBody;
-        }
-        else {
-          return JSON.parse(event.body);
-        }
-      } catch (error) {
-        return event.body;
-      }
-    } else {
-      return event;
-    }
-  })()`
-}
-
-const getBotInnerCode = (tasks: ITask[]) => {
-  let innerCode = ''
-
-  for (let i = 1; i < tasks.length; i++) {
-    const { app, service, inputData, conditions, returnData, connectionId } =
-      tasks[i]
-
-    innerCode += `
-    ////////////////////////////////////////////////////////////////////////////////
-    // Task ${i}
-
-    let task${i}_outputData = {};
-
-    const task${i}_inputData = ${getInputString(
-      inputData,
-      service?.config.inputFields
-    )};
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // Task ${i} Filter conditions
-
-    if (${getConditionsString(conditions) || true}) {
-      ////////////////////////////////////////////////////////////////////////////////
-      // If Task ${i} condition passes, 1. execute operation
-
-      const { Payload: task${i}_lambda_payload } = await lambda.invoke({
-        FunctionName: '${SERVICE_PREFIX}-task-${service?.name}',
-        Payload: JSON.stringify({
-          botId,
-          userId,
-          connectionId: '${connectionId}',
-          appConfig: ${JSON.stringify(app?.config)},
-          serviceConfig: ${JSON.stringify(service?.config)},
-          inputData: task${i}_inputData
-        }),
-      }).promise();
-  
-
-      ////////////////////////////////////////////////////////////////////////////////
-      // Task ${i}.2 Parse results
-
-      const task${i}_result = JSON.parse(task${i}_lambda_payload);
-      
-      const task${i}_success = task${i}_result.success;
-
-      task${i}_outputData = task${i}_success && task${i}_result.data ? task${i}_result.data : { message: task${i}_result.message || task${i}_result.errorMessage || 'nothing for you this time : (' };
-      
-
-      ////////////////////////////////////////////////////////////////////////////////
-      // Task ${i}.3 Add result to logs
-
-      logs.push({
-        timestamp: Date.now(),
-        name: '${service?.label}',
-        inputData: task${i}_inputData,
-        outputData: task${i}_outputData,
-        status: task${i}_success ? 'success' : 'fail',
-      });
-
-
-      ////////////////////////////////////////////////////////////////////////////////
-      // Task ${i}.4 If task executed successfully, increment usage
-
-      if (task${i}_success) usage += 1;
-
-  ${
-    returnData
-      ? `
-      ////////////////////////////////////////////////////////////////////////////////
-      // Task ${i}.5 If task property returnData equals true, set outputData to task result
-        
-      if (task${i}_success) outputData = task${i}_outputData;
-      `
-      : ''
+  switch (typeof value) {
+    case 'number':
+    case 'boolean':
+      return `${value}`
+    case 'string':
+      return `\`${value}\``
+    case 'object':
+      return `{ ${value} }`
+    case 'undefined':
+      return '``'
   }
-    } else {
-      ////////////////////////////////////////////////////////////////////////////////
-      // If Task ${i} condition does not pass, 1. add result to logs
+}
 
-      logs.push({
-        timestamp: Date.now(),
-        name: '${service?.label}',
-        inputData: task${i}_inputData,
-        outputData: task${i}_outputData,
-        status: 'filtered',
-      });
-    }
-  
-  `
+export const getInputString = (
+  inputData: IVariable[],
+  serviceFields?: IVariable[]
+) => {
+  if (!serviceFields) return ''
+
+  return serviceFields
+    .map((serviceField) => {
+      const inputField = inputData.find((x) => x.name === serviceField.name)
+      if (!inputField) throw `Input field ${serviceField.name} not found.`
+
+      return `'${serviceField.name}': ${getStringifiedVariable(inputField)},`
+    })
+    .join('')
+}
+
+const decodeCondition = (condition: ITaskCondition): string => {
+  const {
+    operator,
+    operand,
+    comparisonOperand = { name: '', label: '', type: VariableType.constant },
+  } = condition
+
+  const stringOperand = getStringifiedVariable(operand)
+  const stringComparison = getStringifiedVariable(comparisonOperand)
+
+  switch (operator) {
+    case ConditionOperator.equals:
+      return `${stringOperand} == ${stringComparison}`
+    case ConditionOperator.notEquals:
+      return `${stringOperand} != ${stringComparison}`
+    case ConditionOperator.contains:
+      return `${stringOperand}.includes(${stringComparison})`
+    case ConditionOperator.startsWith:
+      return `${stringOperand}.startsWith(${stringComparison})`
+    case ConditionOperator.endsWith:
+      return `${stringOperand}.endsWith(${stringComparison})`
+    case ConditionOperator.exists:
+      return `!!${stringOperand}`
+    case ConditionOperator.doNotExists:
+      return `!${stringOperand}`
   }
+}
 
-  return innerCode
+export const getConditionsString = (conditions?: ITaskCondition[][]) => {
+  return conditions
+    ?.map((orConditions) =>
+      orConditions
+        .map((andCondition) => decodeCondition(andCondition))
+        .join(' && ')
+    )
+    .map((x) => `(${x})`)
+    .join(' || ')
 }
 
 export const getBotSampleCode = (userId: string, botId: string) => {
@@ -308,6 +201,105 @@ module.exports.handler = async (event, context, callback) => {
     body: JSON.stringify(errorData || outputData)
   });
 };`
+}
+
+const getBotInnerCode = (tasks: ITask[]) => {
+  let innerCode = ''
+
+  for (let i = 1; i < tasks.length; i++) {
+    const task = tasks[i]
+    const app = task.app
+    const service = task.service
+    const conditions = task.conditions
+
+    const inputDataString = getInputString(
+      task.inputData,
+      service?.config.inputFields
+    )
+
+    const conditionsString = getConditionsString(conditions)
+
+    innerCode += `
+    ////////////////////////////////////////////////////////////////////////////////
+    // 4.1. Collect operation inputs
+
+    const task${i}_inputData = { ${inputDataString} };
+    
+    const task${i}_appConfig = ${JSON.stringify(app?.config)};
+
+    const task${i}_serviceConfig = ${JSON.stringify(service?.config)};
+    
+    const task${i}_connectionId = '${task.connectionId}';
+
+    const task${i}_outputPath = '${service?.config.outputPath || ''}';
+
+    let task${i}_outputData = {};
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // 4.2. Check conditions
+
+    if (${conditionsString || true}) {
+      ////////////////////////////////////////////////////////////////////////////////
+      // 4.2.1 If condition passes, execute operation
+
+      const { Payload: task${i}_lambda_payload } = await lambda.invoke({
+        FunctionName: '${SERVICE_PREFIX}-task-${service?.name}',
+        Payload: JSON.stringify({ userId, appConfig: task${i}_appConfig, serviceConfig: task${i}_serviceConfig, connectionId: task${i}_connectionId, inputData: task${i}_inputData, outputPath: task${i}_outputPath }),
+      }).promise();
+  
+
+      ////////////////////////////////////////////////////////////////////////////////
+      // 4.2.2 Parse results
+
+      const task${i}_result = JSON.parse(task${i}_lambda_payload);
+      
+      const task${i}_success = task${i}_result.success;
+
+      task${i}_outputData = task${i}_success && task${i}_result.data ? task${i}_result.data : { message: task${i}_result.message || task${i}_result.errorMessage || 'nothing for you this time : (' };
+      
+
+      ////////////////////////////////////////////////////////////////////////////////
+      // 4.2.3 Add result to logs
+
+      logs.push({
+        timestamp: Date.now(),
+        name: '${service?.label}',
+        inputData: task${i}_inputData,
+        outputData: task${i}_outputData,
+        status: task${i}_success ? 'success' : 'fail',
+      });
+
+
+      ////////////////////////////////////////////////////////////////////////////////
+      // 4.2.4 If task executed successfully, increment usage
+
+      if (task${i}_success) usage += 1;
+
+  ${
+    task.returnData
+      ? `
+      ////////////////////////////////////////////////////////////////////////////////
+      // 4.2.5 If task property returnData equals true, set outputData to task result
+        
+      if (task${i}_success) outputData = task${i}_outputData;
+      `
+      : ''
+  }
+    } else {
+      ////////////////////////////////////////////////////////////////////////////////
+      // 4.2.1 If condition does not pass, add result to logs
+
+      logs.push({
+        timestamp: Date.now(),
+        name: '${service?.label}',
+        inputData: task${i}_inputData,
+        outputData: task${i}_outputData,
+        status: 'filtered',
+      });
+    }`
+  }
+
+  return innerCode
 }
 
 export const getCodeFile = async (code: string) => {

@@ -1,18 +1,8 @@
 'use strict'
 
-import { IVariable, VariableType } from 'src/models/bot/interface'
-
-export const OUTPUT_SEPARATOR = '###'
-
-const setObjectDataFromPath = (
-  data: object,
-  value: any,
-  inputPath?: string
-) => {
-  /*
-    data = { id: '123' }
-    value = 'john'
-    inputPath = 'user.name'
+import { IAppConfig } from 'src/models/app'
+import { InputSource } from 'src/models/service'
+import { IServiceConfig, IVariable } from 'src/models/service'
 
     => { id: '123', user: { name: 'john' } }
   */
@@ -25,40 +15,24 @@ const setObjectDataFromPath = (
   const paths = inputPath.split('.')
 
   for (let i = 0; i < paths.length; i++) {
-    const key = paths[i]
+    const key = isNaN(Number(paths[i])) ? paths[i] : Number(paths[i])
 
-    if (i === paths.length - 1) {
-      currentData[key] = value
-    } else if (!(key in currentData)) {
-      const nextIntKey = parseInt(paths[i + 1])
-      if (isNaN(nextIntKey)) {
-        currentData[key] = {}
-      } else {
-        currentData[key] = []
-      }
-    }
+    if (!data || typeof data !== 'object' || !Object.hasOwn(data, key)) return
 
-    currentData = currentData[key]
+    data = data[key]
   }
 
   return data
 }
 
-const geObjectFromOutputMapping = (
+export const getDataFromMapping = (
   data: any,
-  outputMapping?: { [key: string]: string }
+  outputMapping: {
+    [key: string]: string
+  }
 ) => {
-  /*
-    data = { user: { name: 'john' } }
-    outputMapping = { 'author.name': 'user.name' }
-
-    => { author: { name: 'john' } }
-  */
-
-  if (!outputMapping || typeof data !== 'object') return data
-
-  let mappedData = {}
-  const inputPaths = Object.keys(outputMapping)
+  const mappedData = {}
+  const outputKeys = Object.keys(outputMapping)
 
   for (let i = 0; i < inputPaths.length; i++) {
     const inputPath = inputPaths[i]
@@ -73,83 +47,128 @@ const geObjectFromOutputMapping = (
   return mappedData
 }
 
-export const getVariableValue = (field: IVariable, testData?: boolean) => {
-  /*
-    field = { outputIndex: 0, outputPath: 'user.name' } }
-    testData = false
+export const getMappedData = (
+  data: any,
+  outputMapping?: {
+    [key: string]: string
+  }
+) => {
+  if (!outputMapping) return data
 
-    => '###task0_outputData['user']['name']###'
-  */
-
-  return testData
-    ? field.sampleValue
-    : field.outputIndex !== undefined && field.outputPath !== undefined
-    ? OUTPUT_SEPARATOR +
-      field.outputPath
-        .split('.')
-        .reduce(
-          (p, c) => p + (c ? `['${c}']` : ''),
-          `task${field.outputIndex}_outputData`
-        ) +
-      OUTPUT_SEPARATOR
-    : field.value
+  return Array.isArray(data)
+    ? data
+        .map((item) => getDataFromMapping(item, outputMapping))
+        .filter((item) => item)
+    : getDataFromMapping(data, outputMapping)
 }
 
-export const getObjectDataFromPath = (
-  data: object,
-  outputPath?: string | object | number | boolean
+export const getBodyFromService = (
+  appConfig: IAppConfig,
+  serviceConfig: IServiceConfig,
+  inputData: any
 ) => {
   /*
     data = { user: { name: 'john' } }
     outputPath = 'user.name'
 
-    => 'john'
-  */
+  if (!bodyParams) return {}
 
-  if (!outputPath) {
-    return data
-  }
+  // const { auth = {} } = appConfig // TODO
 
-  if (
-    typeof outputPath === 'object' ||
-    typeof outputPath === 'number' ||
-    typeof outputPath === 'boolean'
-  ) {
-    return outputPath
-  }
+  const data = {}
+  for (let i = 0; i < bodyParams.length; i++) {
+    const { paramName, source, value, fieldName = '' } = bodyParams[i]
 
-  if (outputPath.includes('###')) {
-    return outputPath
-      .split('###')[1]
-      .replace(/{{(.*?)}}/g, (_, path) => getObjectDataFromPath(data, path))
-  }
+    const fieldValue =
+      source === InputSource.value
+        ? value
+        : // : source === InputSource.auth // TODO
+        // ? auth[fieldName]
+        source === InputSource.service
+        ? serviceConfig[fieldName]
+        : source === InputSource.input
+        ? inputData[fieldName]
+        : ''
 
-  const paths = outputPath.split('.')
-
-  for (let i = 0; i < paths.length; i++) {
-    const key = paths[i]
-    if (data[key] !== undefined) {
-      data = data[key]
-    } else {
-      return null
-    }
+    data[paramName] = fieldValue
   }
 
   return data
 }
 
-export const parseDataFromOutputMapping = (
-  data: any,
-  outputMapping: { [key: string]: string }
+export const getUrlFromService = (
+  appConfig: IAppConfig,
+  serviceConfig: IServiceConfig,
+  inputData: any
 ) => {
-  return Array.isArray(data)
-    ? data
-        .map((item) => geObjectFromOutputMapping(item, outputMapping))
-        .filter((item) => item)
-    : geObjectFromOutputMapping(data, outputMapping)
+  // TODO
+  const { apiUrl /*auth = {}*/ } = appConfig
+
+  const { path, urlParams } = serviceConfig
+
+  let url = `${apiUrl}${path}`
+
+  if (urlParams) {
+    url += '/'
+    for (let i = 0; i < urlParams.length; i++) {
+      const { source, fieldName = '', value } = urlParams[i]
+
+      const fieldValue =
+        source === InputSource.value
+          ? value
+          : // : source === InputSource.auth // TODO
+          // ? auth[fieldName]
+          source === InputSource.service
+          ? serviceConfig[fieldName]
+          : source === InputSource.input
+          ? inputData[fieldName]
+          : ''
+
+      const encodedSource = encodeURIComponent(fieldValue).replace(
+        /[!'()*]/g,
+        (c) => '%' + c.charCodeAt(0).toString(16)
+      )
+
+      url += `${encodedSource}/`
+    }
+  }
+
+  return url
 }
 
-export const getInputDataFromService = (
+export const getQueryParamsFromService = (
+  appConfig: IAppConfig,
+  serviceConfig: IServiceConfig,
+  inputData: any
+) => {
+  const { queryParams } = serviceConfig
+
+  // const { auth = {} } = appConfig // TODO
+
+  const params = {}
+  if (queryParams) {
+    for (let i = 0; i < queryParams.length; i++) {
+      const { paramName, source, fieldName = '', value } = queryParams[i]
+
+      const fieldValue =
+        source === InputSource.value
+          ? value
+          : // : source === InputSource.auth // TODO
+          // ? auth[fieldName]
+          source === InputSource.service
+          ? serviceConfig[fieldName]
+          : source === InputSource.input
+          ? inputData[fieldName]
+          : ''
+
+      params[paramName] = fieldValue
+    }
+  }
+
+  return params
+}
+
+export const getTestDataFromService = (
   inputData: IVariable[],
   serviceFields?: IVariable[],
   testData?: boolean

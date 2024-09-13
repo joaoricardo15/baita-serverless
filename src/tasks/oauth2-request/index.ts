@@ -5,8 +5,13 @@ import { validateOperationInput } from 'src/models/bot/schema'
 import { Connection } from 'src/controllers/app'
 import { Api, BotStatus } from 'src/utils/api'
 import {
-  getObjectDataFromPath,
-  parseDataFromOutputMapping,
+  getAuthParamsFromApp,
+  getBodyFromService,
+  getAuthDataFromApp,
+  getDataFromPath,
+  getMappedData,
+  getUrlFromService,
+  getQueryParamsFromService,
 } from 'src/utils/bot'
 import { parseUrlFromTask } from '../http-request'
 
@@ -77,28 +82,21 @@ exports.handler = async (event, context, callback) => {
       ),
     })
 
-    console.log({
-      url: parseUrlFromTask(apiUrl, path, urlParams),
-      method,
+    const axiosInput = {
+      method: serviceConfig.method,
       headers: {
         ...headers,
         Authorization: `Bearer ${access_token}`,
       },
-      data: bodyParams,
-      params: queryParams,
-    })
+      url: getUrlFromService(appConfig, serviceConfig, inputData),
+      data: getBodyFromService(appConfig, serviceConfig, inputData),
+      params: getQueryParamsFromService(appConfig, serviceConfig, inputData),
+    }
+
+    console.log(axiosInput)
 
     // Http request
-    const response = await Axios({
-      url: parseUrlFromTask(apiUrl, path, urlParams),
-      method,
-      headers: {
-        ...headers,
-        Authorization: `Bearer ${access_token}`,
-      },
-      data: bodyParams,
-      params: queryParams,
-    })
+    const response = await Axios(axiosInput)
 
     console.log(response.data)
 
@@ -106,7 +104,14 @@ exports.handler = async (event, context, callback) => {
 
     const data = parseDataFromOutputMapping(initialData, outputMapping)
 
-    api.httpOperationResponse(callback, BotStatus.success, undefined, data)
+    const mappedData = getMappedData(initialData, serviceConfig.outputMapping)
+
+    api.httpOperationResponse(
+      callback,
+      BotStatus.success,
+      undefined,
+      mappedData
+    )
   } catch (err) {
     api.httpOperationResponse(callback, BotStatus.fail, err)
   }

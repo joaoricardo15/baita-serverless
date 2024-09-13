@@ -1,11 +1,16 @@
 'use strict'
 
 import Axios from 'axios'
-import { validateOperationInput } from 'src/models/bot/schema'
+import { validateOperationInput } from 'src/controllers/bot/schema'
+import { IServiceConfig } from 'src/models/service'
+import { IAppConfig } from 'src/models/app'
 import { Api, BotStatus } from 'src/utils/api'
 import {
-  getObjectDataFromPath,
-  parseDataFromOutputMapping,
+  getBodyFromService,
+  getDataFromPath,
+  getMappedData,
+  getQueryParamsFromService,
+  getUrlFromService,
 } from 'src/utils/bot'
 
 exports.handler = async (event, context, callback) => {
@@ -14,36 +19,24 @@ exports.handler = async (event, context, callback) => {
   try {
     validateOperationInput(event)
 
-    const {
-      inputData,
-      appConfig: { apiUrl },
-      serviceConfig: { method, outputPath, outputMapping },
-    } = event
+    const { appConfig, serviceConfig, inputData } = event as {
+      appConfig: IAppConfig,
+      serviceConfig: IServiceConfig,
+      inputData: any
+    }
 
-    const {
-      // Required input fields
-      path,
-      headers,
-      urlParams,
-      bodyParams,
-      queryParams,
-    } = inputData
+    const axiosInput = {
+      method: serviceConfig.method,
+      // TODO delete
+      // headers: serviceConfig.headers,
+      url: getUrlFromService(appConfig, serviceConfig, inputData),
+      data: getBodyFromService(appConfig, serviceConfig, inputData),
+      params: getQueryParamsFromService(appConfig, serviceConfig, inputData),
+    }
 
-    console.log({
-      url: parseUrlFromTask(apiUrl, path, urlParams),
-      method: method,
-      headers: headers,
-      data: bodyParams,
-      params: queryParams,
-    })
+    console.log(axiosInput)
 
-    const response = await Axios({
-      url: parseUrlFromTask(apiUrl, path, urlParams),
-      method,
-      headers,
-      data: bodyParams,
-      params: queryParams,
-    })
+    const response = await Axios(axiosInput)
 
     console.log(response.data)
 
@@ -51,7 +44,14 @@ exports.handler = async (event, context, callback) => {
 
     const data = parseDataFromOutputMapping(initialData, outputMapping)
 
-    api.httpOperationResponse(callback, BotStatus.success, undefined, data)
+    const mappedData = getMappedData(initialData, serviceConfig.outputMapping)
+
+    api.httpOperationResponse(
+      callback,
+      BotStatus.success,
+      undefined,
+      mappedData
+    )
   } catch (err) {
     api.httpOperationResponse(callback, BotStatus.fail, err)
   }

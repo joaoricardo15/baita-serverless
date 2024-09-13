@@ -1,81 +1,81 @@
 {
-    "connection": {
-        "userId": "google-oauth2|110121804349224987489",
-        "connectionId": "11696187",
-        "config": {
-            "apiUrl": "https://api.pipedrive.com/v1",
-            "auth": {
-                "headers": {
-                    "Content-type": "application/x-www-form-urlencoded"
-                },
-                "method": "post",
-                "type": "basic",
-                "fields": {
-                    "password": "PIPEDRIVE_CLIENT_SECRET",
-                    "username": "PIPEDRIVE_CLIENT_ID"
-                },
-                "url": "https://oauth.pipedrive.com/oauth/token"
-            },
-            "authorizeUrl": "https://oauth.pipedrive.com/oauth/authorize?client_id=987a469172b3ac62&redirect_uri=https://mm32a4e7me.execute-api.us-east-1.amazonaws.com/prod/connectors/pipedrive&state="
-        }
-    },
+  "connection": {
+    "userId": "google-oauth2|110121804349224987489",
+    "connectionId": "11696187",
     "config": {
-        "inputFields": [
-            {
-                "name": "fieldName",
-                "options": [
-                    {
-                        "value": "name",
-                        "label": "Name"
-                    },
-                    {
-                        "value": "email",
-                        "label": "E-mail"
-                    },
-                    {
-                        "value": "phone",
-                        "label": "Phone"
-                    },
-                    {
-                        "value": "notes",
-                        "label": "Notes"
-                    },
-                    {
-                        "value": "customFields",
-                        "label": "Custom fields"
-                    }
-                ],
-                "label": "search field name",
-                "type": "options"
-            },
-            {
-                "name": "searchTerm",
-                "type": "output",
-                "label": "search term"
-            }
+      "apiUrl": "https://api.pipedrive.com/v1",
+      "auth": {
+        "headers": {
+          "Content-type": "application/x-www-form-urlencoded"
+        },
+        "method": "post",
+        "type": "basic",
+        "fields": {
+          "password": "PIPEDRIVE_CLIENT_SECRET",
+          "username": "PIPEDRIVE_CLIENT_ID"
+        },
+        "url": "https://oauth.pipedrive.com/oauth/token"
+      },
+      "authorizeUrl": "https://oauth.pipedrive.com/oauth/authorize?client_id=987a469172b3ac62&redirect_uri=https://mm32a4e7me.execute-api.us-east-1.amazonaws.com/prod/connectors/pipedrive&state="
+    }
+  },
+  "config": {
+    "inputFields": [
+      {
+        "name": "fieldName",
+        "options": [
+          {
+            "value": "name",
+            "label": "Name"
+          },
+          {
+            "value": "email",
+            "label": "E-mail"
+          },
+          {
+            "value": "phone",
+            "label": "Phone"
+          },
+          {
+            "value": "notes",
+            "label": "Notes"
+          },
+          {
+            "value": "customFields",
+            "label": "Custom fields"
+          }
         ],
-        "path": "/persons/search",
-        "inputSource": "serviceFields",
-        "method": "get",
-        "queryParams": [
-            {
-                "name": "start",
-                "value": 0
-            },
-            {
-                "name": "term",
-                "inputField": "searchTerm"
-            },
-            {
-                "name": "fields",
-                "inputField": "fieldName"
-            }
-        ],
-        "outputPath": "string:data.string:items.number:0.string:item"
-    },
-    "inputData": {
-        "fieldName": "notes",
-        "searchTerm": "joao"
-    },
+        "label": "search field name",
+        "type": "options"
+      },
+      {
+        "name": "searchTerm",
+        "type": "output",
+        "label": "search term"
+      }
+    ],
+    "path": "/persons/search",
+    "inputSource": "serviceFields",
+    "method": "get",
+    "queryParams": [
+      {
+        "name": "start",
+        "value": 0
+      },
+      {
+        "name": "term",
+        "inputField": "searchTerm"
+      },
+      {
+        "name": "fields",
+        "inputField": "fieldName"
+      }
+    ],
     "outputPath": "string:data.string:items.number:0.string:item"
+  },
+  "inputData": {
+    "fieldName": "notes",
+    "searchTerm": "joao"
+  },
+  "outputPath": "string:data.string:items.number:0.string:item"
 }

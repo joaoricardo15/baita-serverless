@@ -1,28 +1,28 @@
 {
-    "connection": {
-        "userId": "110121804349224987489",
-        "connectionId": "110121804349224987489",
-        "config": {
-            "apiUrl": "https://gmail.googleapis.com",
-            "loginUrl": "https://www.wix.com/app-oauth-installation/consent?appId=7543e177-c467-445e-87bc-70ee9123626c&redirectUrl=https://1yp22xgyt1.execute-api.us-east-1.amazonaws.com/prod/wix/connect&state=",
-            "auth": {
-                "type": "body",
-                "method": "POST",
-                "url": "https://accounts.google.com/o/oauth2/token",
-                "headers": {
-                    "Content-type": "application/x-www-form-urlencoded"
-                },
-                "fields": {
-                    "username": "GOOGLE_CLIENT_ID",
-                    "password": "GOOGLE_CLIENT_SECRET"
-                }
-            }
-        }
-    },
+  "connection": {
+    "userId": "110121804349224987489",
+    "connectionId": "110121804349224987489",
     "config": {
-        "method": "get",
-        "path": "/gmail/v1/users/me/profile",
-        "outputPath": ""
-    },
-    "inputData": {}
+      "apiUrl": "https://gmail.googleapis.com",
+      "loginUrl": "https://www.wix.com/app-oauth-installation/consent?appId=7543e177-c467-445e-87bc-70ee9123626c&redirectUrl=https://1yp22xgyt1.execute-api.us-east-1.amazonaws.com/prod/wix/connect&state=",
+      "auth": {
+        "type": "body",
+        "method": "POST",
+        "url": "https://accounts.google.com/o/oauth2/token",
+        "headers": {
+          "Content-type": "application/x-www-form-urlencoded"
+        },
+        "fields": {
+          "username": "GOOGLE_CLIENT_ID",
+          "password": "GOOGLE_CLIENT_SECRET"
+        }
+      }
+    }
+  },
+  "config": {
+    "method": "get",
+    "path": "/gmail/v1/users/me/profile",
+    "outputPath": ""
+  },
+  "inputData": {}
 }
