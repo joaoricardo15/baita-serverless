@@ -3,11 +3,9 @@
 import Ajv, { JSONSchemaType } from 'ajv'
 import addFormats from 'ajv-formats'
 import { appConfigSchema, appSchema } from '../app/schema'
-import { serviceSchema } from '../service/schema'
+import { dataSchema, serviceSchema, variableSchema } from '../service/schema'
 import {
   DataType,
-  IVariable,
-  VariableType,
   IServiceConfig,
 } from 'src/models/service/interface'
 import {
@@ -23,91 +21,6 @@ import {
 
 const ajv = new Ajv()
 addFormats(ajv)
-
-export const dataSchema: JSONSchemaType<DataType> = {
-  anyOf: [
-    { type: 'string' },
-    { type: 'number' },
-    { type: 'boolean' },
-    { type: 'object' },
-    {
-      type: 'array',
-      items: {
-        anyOf: [
-          { type: 'string' },
-          { type: 'number' },
-          { type: 'boolean' },
-          { type: 'object' },
-        ],
-      },
-    },
-  ],
-}
-
-export const variableSchema: JSONSchemaType<IVariable> = {
-  type: 'object',
-  properties: {
-    type: {
-      type: 'string',
-      enum: Object.values(VariableType) as readonly VariableType[],
-    },
-    name: {
-      type: 'string',
-    },
-    label: {
-      type: 'string',
-    },
-    value: {
-      ...dataSchema,
-      nullable: true,
-    },
-    sampleValue: {
-      ...dataSchema,
-      nullable: true,
-    },
-    description: {
-      type: 'string',
-      nullable: true,
-    },
-    required: {
-      type: 'boolean',
-      nullable: true,
-    },
-    outputIndex: {
-      type: 'number',
-      nullable: true,
-    },
-    outputPath: {
-      type: 'string',
-      nullable: true,
-    },
-    customFieldId: {
-      type: 'number',
-      nullable: true,
-    },
-    groupName: {
-      type: 'string',
-      nullable: true,
-    },
-    options: {
-      type: 'array',
-      nullable: true,
-      items: {
-        type: 'object',
-        properties: {
-          label: {
-            type: 'string',
-          },
-          value: {
-            type: 'string',
-          },
-        },
-        required: ['label', 'value'],
-      },
-    },
-  },
-  required: ['type', 'name', 'label'],
-}
 
 const taskConditionSchema: JSONSchemaType<ITaskCondition> = {
   type: 'object',

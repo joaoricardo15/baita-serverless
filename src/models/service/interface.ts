@@ -33,7 +33,6 @@ export enum VariableType {
 }
 
 export type DataType =
-  | null
   | string
   | number
   | boolean

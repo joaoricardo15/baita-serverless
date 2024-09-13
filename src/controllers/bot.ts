@@ -231,7 +231,7 @@ export class Bot {
       const lambdaResult = await lambda.createFunction({
         FunctionName: botPrefix,
         Handler: 'index.handler',
-        Runtime: 'nodejs12.x',
+        Runtime: 'nodejs20.x',
         Timeout: 300,
         Role: BOTS_PERMISSION,
         Code: {
