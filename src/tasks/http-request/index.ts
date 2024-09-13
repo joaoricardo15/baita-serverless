@@ -40,9 +40,9 @@ exports.handler = async (event, context, callback) => {
 
     console.log(response.data)
 
-    const initialData = getDataFromPath(response.data, serviceConfig.outputPath)
+    const initialData = getObjectDataFromPath(response.data, outputPath)
 
-    console.log(initialData)
+    const data = parseDataFromOutputMapping(initialData, outputMapping)
 
     const mappedData = getMappedData(initialData, serviceConfig.outputMapping)
 
@@ -55,4 +55,18 @@ exports.handler = async (event, context, callback) => {
   } catch (err) {
     api.httpOperationResponse(callback, BotStatus.fail, err)
   }
+}
+
+export const parseUrlFromTask = (
+  url,
+  path,
+  urlParams?: { [key: string]: string }
+) => {
+  const initialUrl = `${url}/${path}`
+
+  return !urlParams
+    ? initialUrl
+    : encodeURIComponent(
+        Object.values(urlParams).reduce((p, c) => `${p}/${c}`, initialUrl)
+      )
 }

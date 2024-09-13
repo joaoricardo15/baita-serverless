@@ -4,10 +4,15 @@ import { IAppConfig } from 'src/models/app'
 import { InputSource } from 'src/models/service'
 import { IServiceConfig, IVariable } from 'src/models/service'
 
-export const getDataFromPath = (data: any, outputPath?: string) => {
-  if (!outputPath) return data
+    => { id: '123', user: { name: 'john' } }
+  */
 
-  const paths = outputPath.split('.')
+  if (!inputPath) {
+    return data
+  }
+
+  let currentData = data
+  const paths = inputPath.split('.')
 
   for (let i = 0; i < paths.length; i++) {
     const key = isNaN(Number(paths[i])) ? paths[i] : Number(paths[i])
@@ -29,11 +34,14 @@ export const getDataFromMapping = (
   const mappedData = {}
   const outputKeys = Object.keys(outputMapping)
 
-  for (let i = 0; i < outputKeys.length; i++) {
-    const outputKey = outputKeys[i]
-    const outputValue = getDataFromPath(data, outputMapping[outputKey])
-    if (!outputValue) return
-    mappedData[outputKey] = outputValue
+  for (let i = 0; i < inputPaths.length; i++) {
+    const inputPath = inputPaths[i]
+
+    mappedData = setObjectDataFromPath(
+      mappedData,
+      getObjectDataFromPath(data, outputMapping[inputPath]),
+      inputPath
+    )
   }
 
   return mappedData
@@ -59,7 +67,9 @@ export const getBodyFromService = (
   serviceConfig: IServiceConfig,
   inputData: any
 ) => {
-  const { bodyParams } = serviceConfig
+  /*
+    data = { user: { name: 'john' } }
+    outputPath = 'user.name'
 
   if (!bodyParams) return {}
 
@@ -160,61 +170,73 @@ export const getQueryParamsFromService = (
 
 export const getTestDataFromService = (
   inputData: IVariable[],
-  serviceFields?: IVariable[]
+  serviceFields?: IVariable[],
+  testData?: boolean
 ) => {
-  const input = {}
+  let data = {}
 
+  // Get all service fields
   if (serviceFields)
     for (let j = 0; j < serviceFields.length; j++) {
-      const fieldName = serviceFields[j].name
-      const inputField = inputData.find((x) => x.name === fieldName)
-      if (!inputField) throw `Input field '${fieldName}' not found.`
-      input[fieldName] = inputField.sampleValue
+      const serviceInputField = serviceFields[j]
+
+      const { type, name, value, label, required } = serviceInputField
+
+      if (type === VariableType.environment) {
+        if (!((serviceInputField.value as string) in process.env)) {
+          throw Error(`Environment variable '${label}' does not exist.`)
+        }
+
+        data = setObjectDataFromPath(
+          data,
+          process.env[serviceInputField.value as string],
+          serviceInputField.name
+        )
+      } else if (type === VariableType.constant) {
+        if (!serviceInputField.value) {
+          throw Error(`Constant variable '${label}' has no value.`)
+        }
+
+        data = setObjectDataFromPath(data, value, serviceInputField.name)
+      } else {
+        const inputDataField = inputData.find((x) => x.name === name)
+
+        if (!inputDataField) {
+          if (required) {
+            throw Error(`Required input field '${label}' is missing.`)
+          }
+        } else {
+          const { sampleValue, value, outputIndex } = inputDataField
+
+          if (required) {
+            if (testData) {
+              if (sampleValue === undefined)
+                throw Error(`Required input field '${label}' is empty.`)
+            } else {
+              if (outputIndex === undefined && value === undefined)
+                throw Error(`Required input field '${label}' is empty.`)
+            }
+          }
+
+          data = setObjectDataFromPath(
+            data,
+            getVariableValue(inputDataField, testData),
+            inputDataField.name
+          )
+        }
+      }
     }
 
-  return input
-}
+  // Get all custom fields
+  for (let i = 0; i < inputData.length; i++) {
+    const inputDataField = inputData[i]
 
-export const getAuthParamsFromApp = (type: string, authFields) => {
-  if (type === 'basic')
-    return {
-      username: process.env[authFields.username] || '',
-      password: process.env[authFields.password] || '',
-    }
-}
-
-export const getAuthDataFromApp = (
-  type: string,
-  headers,
-  authFields,
-  refreshToken
-) => {
-  let data
-  if (
-    headers &&
-    headers['Content-type'] &&
-    headers['Content-type'] === 'application/x-www-form-urlencoded'
-  ) {
-    const rawData = {
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken,
-    }
-
-    if (type === 'body') {
-      rawData['client_id'] = process.env[authFields.username]
-      rawData['client_secret'] = process.env[authFields.password]
-    }
-
-    data = new URLSearchParams(rawData)
-  } else {
-    data = {
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken,
-    }
-
-    if (type === 'body') {
-      data['client_id'] = process.env[authFields.username]
-      data['client_secret'] = process.env[authFields.password]
+    if (inputDataField.customFieldId) {
+      data = setObjectDataFromPath(
+        data,
+        getVariableValue(inputDataField, testData),
+        inputDataField.name
+      )
     }
   }
 

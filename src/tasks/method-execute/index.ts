@@ -1,8 +1,15 @@
 'use strict'
 
-import vm from 'vm'
 import { Api, BotStatus } from 'src/utils/api'
 import { validateOperationInput } from 'src/models/bot/schema'
+import { getTodo, publishToFeed } from 'src/tasks/method-execute/methods/user'
+import { sendNotification } from 'src/tasks/method-execute/methods/firebase'
+
+const METHODS = {
+  getTodo,
+  publishToFeed,
+  sendNotification,
+}
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
@@ -10,23 +17,11 @@ exports.handler = async (event, context, callback) => {
   try {
     validateOperationInput(event)
 
-    const { userId, botId, inputData } = event
-
     const {
-      // Required input fields
-      code,
+      serviceConfig: { method },
+    } = event
 
-      // Custom fields
-      ...customFields
-    } = inputData
-
-    const codeContext: any = { ...customFields, userId, botId }
-
-    vm.createContext(codeContext)
-
-    vm.runInContext(code, codeContext, { displayErrors: true, timeout: 5000 })
-
-    const { output: data } = codeContext
+    const data = await METHODS[method as string](event)
 
     api.httpOperationResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {

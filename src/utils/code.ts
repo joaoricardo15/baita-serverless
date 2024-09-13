@@ -104,28 +104,7 @@ module.exports.handler = async (event, context, callback) => {
   ////////////////////////////////////////////////////////////////////////////////
   // 2. Get data from event and save it as outputData
 
-  let outputData;
-  if (event.body) {
-    try {
-      if (event.isBase64Encoded &&
-          event.headers['Content-type'] &&
-          event.headers['Content-type'] === 'application/x-www-form-urlencoded'
-        ) {
-        const buffer = new Buffer(event.body, 'base64');
-        const bodyString = buffer.toString('ascii').replace(/&/g, ",").replace(/=/g, ":");
-        const jsonBody = JSON.parse('{"' + decodeURI(bodyString) + '"}');
-        outputData = jsonBody;
-      }
-      else {
-        outputData = JSON.parse(event.body);
-      }
-    } catch (error) {
-      outputData = event.body;
-    }
-  } else {
-    outputData = event;
-  }
-
+  const outputData = ${getParseEventFunctionCode()};
   
   ////////////////////////////////////////////////////////////////////////////////
   // 3. Publish trigger sample
@@ -173,27 +152,7 @@ module.exports.handler = async (event, context, callback) => {
   ////////////////////////////////////////////////////////////////////////////////
   // 2. Get input bot from event, and save it as task0_outputData
 
-  let task0_outputData;
-  if (event.body) {
-    try {
-      if (event.isBase64Encoded &&
-          event.headers['Content-type'] &&
-          event.headers['Content-type'] === 'application/x-www-form-urlencoded'
-        ) {
-        const buffer = new Buffer(event.body, 'base64');
-        const bodyString = buffer.toString('ascii').replace(/&/g, ",").replace(/=/g, ":");
-        const jsonBody = JSON.parse('{"' + decodeURI(bodyString) + '"}');
-        task0_outputData = jsonBody;
-      }
-      else {
-        task0_outputData = JSON.parse(event.body);
-      }
-    } catch (error) {
-      task0_outputData = event.body;
-    }
-  } else {
-    task0_outputData = event;
-  }
+  const task0_outputData = ${getParseEventFunctionCode()};
 
   ////////////////////////////////////////////////////////////////////////////////
   // 3. Register fist log and increment usage
@@ -239,10 +198,7 @@ module.exports.handler = async (event, context, callback) => {
       'Content-type': 'application/json',
       'Access-Control-Allow-Origin': '*'
     },
-    body: JSON.stringify({
-      success: !errorData,
-      data: errorData || outputData
-    })
+    body: JSON.stringify(errorData || outputData)
   });
 };`
 }

@@ -1,6 +1,6 @@
 'use strict'
 
-import { validateTaskResult } from 'src/models/bot/schema'
+import { validateTasks } from 'src/models/bot/schema'
 import { Api, BotStatus } from 'src/utils/api'
 import { Bot } from 'src/controllers/bot'
 
@@ -9,18 +9,13 @@ exports.handler = async (event, context, callback) => {
   const bot = new Bot()
 
   try {
-    const { userId, botId, status, inputData, outputData } = event
+    const { userId, botId, taskIndex } = event.pathParameters
 
-    const sample = {
-      status,
-      inputData,
-      outputData,
-      timestamp: Date.now(),
-    }
+    const task = JSON.parse(event.body)
 
-    validateTaskResult(sample)
+    validateTasks([task])
 
-    const data = await bot.addTriggerSample(userId, botId, sample)
+    const data = await bot.testBot(userId, botId, task, taskIndex)
 
     api.httpResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {
