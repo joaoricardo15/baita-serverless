@@ -18,7 +18,7 @@ exports.handler = async (event, context, callback) => {
     validateOperationInput(event)
 
     const {
-      serviceConfig: { method },
+      inputData: { method }
     } = event
 
     const data = await METHODS[method as string](event)

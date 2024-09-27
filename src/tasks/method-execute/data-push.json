@@ -1,0 +1,37 @@
+{
+  "botId": "de8710d6-73f2-4e50-9688-d6186d96d4ac",
+  "userId": "110944657139284874166",
+  "appConfig": {},
+  "serviceConfig": {
+    "inputFields": [
+      {
+        "name": "method",
+        "label": "Method",
+        "type": "constant",
+        "value": "sendNotification"
+      },
+      { "name": "token", "label": "Token", "type": "user", "required": true },
+      {
+        "name": "notification.title",
+        "label": "Title",
+        "type": "output",
+        "required": true
+      },
+      { "name": "notification.body", "type": "output", "label": "Body" },
+      { "name": "notification.icon", "type": "output", "label": "Icon" },
+      { "name": "notification.image", "type": "output", "label": "Image" },
+      {
+        "name": "notification.timestamp",
+        "type": "output",
+        "label": "Timestamp"
+      },
+      { "name": "notification.actions", "type": "output", "label": "Actions" },
+      { "name": "url", "type": "output", "label": "On click Url" }
+    ]
+  },
+  "inputData": {
+    "method": "sendNotification",
+    "token": "eCtjmp0y_DyWVbThAfMo2G:APA91bEch4SNfp1_LXhO-3x1gGXvzJlKgtk55mL7BnSSeZy5nntdsD5sxT7Oh5FkSdw_Hcx0wrJN4gjcjkO8SlQz9g-cJ35jCUdUz5hTNrnlbT7d4Yd5lHbSLnGEjwyP-2tXKLMkWhxO",
+    "notification": { "title": "testing Push" }
+  }
+}
