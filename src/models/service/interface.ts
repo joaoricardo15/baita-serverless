@@ -16,7 +16,6 @@ export enum ServiceName {
 }
 
 export enum InputSource {
-  // auth = 'authFields',
   input = 'inputFields',
   value = 'valueFields',
   service = 'serviceFields',
