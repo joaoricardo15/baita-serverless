@@ -9,8 +9,8 @@ export enum ServiceName {
   code = 'code-execute',
   http = 'http-request',
   queue = 'queue-publish',
-  method = 'method-execute',
   oauth2 = 'oauth2-request',
+  method = 'method-execute',
   webhook = 'webhook',
   schedule = 'schedule',
 }
@@ -67,24 +67,6 @@ export interface IServiceConfig {
   outputMapping?: {
     [key: string]: string
   }
-  // TODO review
-  // queryParams?: {
-  //   paramName: string
-  //   source: InputSource
-  //   fieldName?: string
-  //   value?: string | number
-  // }[]
-  // bodyParams?: {
-  //   paramName: string
-  //   source: InputSource
-  //   fieldName?: string
-  //   value?: string | number
-  // }[]
-  // urlParams?: {
-  //   source: InputSource
-  //   fieldName?: string
-  //   value?: string | number
-  // }[]
 }
 
 export interface IService {
