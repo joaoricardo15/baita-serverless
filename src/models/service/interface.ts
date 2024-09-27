@@ -9,6 +9,7 @@ export enum ServiceName {
   code = 'code-execute',
   http = 'http-request',
   queue = 'queue-publish',
+  method = 'method-execute',
   oauth2 = 'oauth2-request',
   webhook = 'webhook',
   schedule = 'schedule',
