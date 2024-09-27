@@ -15,12 +15,6 @@ export enum ServiceName {
   schedule = 'schedule',
 }
 
-export enum InputSource {
-  input = 'inputFields',
-  value = 'valueFields',
-  service = 'serviceFields',
-}
-
 export enum VariableType {
   code = 'code',
   user = 'user',
