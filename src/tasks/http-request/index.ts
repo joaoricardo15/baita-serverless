@@ -2,16 +2,8 @@
 
 import Axios from 'axios'
 import { validateOperationInput } from 'src/models/bot/schema'
-import { IServiceConfig } from 'src/models/service/interface'
-import { IAppConfig } from 'src/models/app/interface'
+import { getDataFromPath, getMappedData } from 'src/utils/bot'
 import { Api, BotStatus } from 'src/utils/api'
-import {
-  getBodyFromService,
-  getDataFromPath,
-  getMappedData,
-  getQueryParamsFromService,
-  getUrlFromService,
-} from 'src/utils/bot'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
@@ -19,19 +11,18 @@ exports.handler = async (event, context, callback) => {
   try {
     validateOperationInput(event)
 
-    const { appConfig, serviceConfig, inputData } = event as {
-      appConfig: IAppConfig,
-      serviceConfig: IServiceConfig,
-      inputData: any
-    }
+    const {
+      appConfig: { apiUrl },
+      serviceConfig: { outputPath, outputMapping },
+      inputData: { path, method, headers, queryParams, bodyParams },
+    } = event
 
     const axiosInput = {
-      method: serviceConfig.method,
-      // TODO delete
-      // headers: serviceConfig.headers,
-      url: getUrlFromService(appConfig, serviceConfig, inputData),
-      data: getBodyFromService(appConfig, serviceConfig, inputData),
-      params: getQueryParamsFromService(appConfig, serviceConfig, inputData),
+      url: apiUrl + (path ? `/${path}` : ''),
+      method,
+      headers,
+      data: bodyParams,
+      params: queryParams,
     }
 
     console.log(axiosInput)
@@ -40,11 +31,11 @@ exports.handler = async (event, context, callback) => {
 
     console.log(response.data)
 
-    const initialData = getDataFromPath(response.data, serviceConfig.outputPath)
+    const initialData = getDataFromPath(response.data, outputPath)
 
     console.log(initialData)
 
-    const mappedData = getMappedData(initialData, serviceConfig.outputMapping)
+    const mappedData = getMappedData(initialData, outputMapping)
 
     api.httpOperationResponse(
       callback,

@@ -4,15 +4,7 @@ import Axios from 'axios'
 import { validateOperationInput } from 'src/models/bot/schema'
 import { Connection } from 'src/controllers/connection'
 import { Api, BotStatus } from 'src/utils/api'
-import {
-  getAuthParamsFromApp,
-  getBodyFromService,
-  getAuthDataFromApp,
-  getDataFromPath,
-  getMappedData,
-  getUrlFromService,
-  getQueryParamsFromService,
-} from 'src/utils/bot'
+import { getDataFromPath, getMappedData } from 'src/utils/bot'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
@@ -21,45 +13,57 @@ exports.handler = async (event, context, callback) => {
   try {
     validateOperationInput(event)
 
-    const { userId, connectionId, appConfig, serviceConfig, inputData } = event
-
     const {
-      auth: { url, type, method, headers, fields },
-    } = appConfig
+      userId,
+      connectionId,
+      appConfig: {
+        apiUrl,
+        auth: {
+          url: authUrl,
+          method: authMethod,
+          headers: authHeaders,
+          type: authType,
+          fields: authFields,
+        },
+      },
+      serviceConfig: { outputPath, outputMapping },
+      inputData: { path, method, headers, queryParams, bodyParams },
+    } = event
 
     // Get credentials from connection database
     const {
       credentials: { refresh_token },
     } = await connectionClient.getConnection(userId, connectionId)
 
-    console.log({
-      url,
-      method,
-      headers,
-      auth: getAuthParamsFromApp(type, fields),
-      data: getAuthDataFromApp(type, headers, fields, refresh_token),
-    })
+    const axiosAuthInput = {
+      url: authUrl,
+      method: authMethod,
+      headers: authHeaders,
+      auth: getAuthParamsFromApp(authType, authFields),
+      data: getAuthDataFromApp(
+        authType,
+        authFields,
+        authHeaders,
+        refresh_token
+      ),
+    }
 
-    // Get token from app's oauth2 authenticator server
+    console.log(axiosAuthInput)
+
+    // // Get token from app's oauth2 authenticator server
     const {
       data: { access_token },
-    } = await Axios({
-      url,
-      method,
-      headers,
-      auth: getAuthParamsFromApp(type, fields),
-      data: getAuthDataFromApp(type, headers, fields, refresh_token),
-    })
+    } = await Axios(axiosAuthInput)
 
     const axiosInput = {
-      method: serviceConfig.method,
+      url: apiUrl + (path ? `/${path}` : ''),
+      method,
       headers: {
-        ...serviceConfig.headers,
+        ...headers,
         Authorization: `Bearer ${access_token}`,
       },
-      url: getUrlFromService(appConfig, serviceConfig, inputData),
-      data: getBodyFromService(appConfig, serviceConfig, inputData),
-      params: getQueryParamsFromService(appConfig, serviceConfig, inputData),
+      data: bodyParams,
+      params: queryParams,
     }
 
     console.log(axiosInput)
@@ -69,11 +73,11 @@ exports.handler = async (event, context, callback) => {
 
     console.log(response.data)
 
-    const initialData = getDataFromPath(response.data, serviceConfig.outputPath)
+    const initialData = getDataFromPath(response.data, outputPath)
 
     console.log(initialData)
 
-    const mappedData = getMappedData(initialData, serviceConfig.outputMapping)
+    const mappedData = getMappedData(initialData, outputMapping)
 
     api.httpOperationResponse(
       callback,
@@ -84,4 +88,50 @@ exports.handler = async (event, context, callback) => {
   } catch (err) {
     api.httpOperationResponse(callback, BotStatus.fail, err)
   }
+}
+
+const getAuthParamsFromApp = (authType: string, authFields) => {
+  if (authType === 'basic')
+    return {
+      username: process.env[authFields.username] || '',
+      password: process.env[authFields.password] || '',
+    }
+}
+
+const getAuthDataFromApp = (
+  authType: string,
+  authFields,
+  authHeaders,
+  refreshToken
+) => {
+  let data
+  if (
+    authHeaders &&
+    authHeaders['Content-type'] &&
+    authHeaders['Content-type'] === 'application/x-www-form-urlencoded'
+  ) {
+    const rawData = {
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+    }
+
+    if (authType === 'body') {
+      rawData['client_id'] = process.env[authFields.username]
+      rawData['client_secret'] = process.env[authFields.password]
+    }
+
+    data = new URLSearchParams(rawData)
+  } else {
+    data = {
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+    }
+
+    if (authType === 'body') {
+      data['client_id'] = process.env[authFields.username]
+      data['client_secret'] = process.env[authFields.password]
+    }
+  }
+
+  return data
 }

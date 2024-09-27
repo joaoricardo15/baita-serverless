@@ -1,7 +1,6 @@
 'use strict'
 
-import { IAppConfig } from "src/models/app/interface"
-import { IServiceConfig, IVariable } from "src/models/service/interface"
+import { IVariable } from "src/models/service/interface"
 
 export const getDataFromPath = (data: any, outputPath?: string) => {
   if (!outputPath) return data
@@ -53,109 +52,6 @@ export const getMappedData = (
     : getDataFromMapping(data, outputMapping)
 }
 
-export const getBodyFromService = (
-  appConfig: IAppConfig,
-  serviceConfig: IServiceConfig,
-  inputData: any
-) => {
-  const { bodyParams } = serviceConfig
-
-  if (!bodyParams) return {}
-
-  // const { auth = {} } = appConfig // TODO
-
-  const data = {}
-  for (let i = 0; i < bodyParams.length; i++) {
-    const { paramName, source, value, fieldName = '' } = bodyParams[i]
-
-    const fieldValue =
-      source === InputSource.value
-        ? value
-        : // : source === InputSource.auth // TODO
-        // ? auth[fieldName]
-        source === InputSource.service
-        ? serviceConfig[fieldName]
-        : source === InputSource.input
-        ? inputData[fieldName]
-        : ''
-
-    data[paramName] = fieldValue
-  }
-
-  return data
-}
-
-export const getUrlFromService = (
-  appConfig: IAppConfig,
-  serviceConfig: IServiceConfig,
-  inputData: any
-) => {
-  // TODO
-  const { apiUrl /*auth = {}*/ } = appConfig
-
-  const { path, urlParams } = serviceConfig
-
-  let url = `${apiUrl}${path}`
-
-  if (urlParams) {
-    url += '/'
-    for (let i = 0; i < urlParams.length; i++) {
-      const { source, fieldName = '', value } = urlParams[i]
-
-      const fieldValue =
-        source === InputSource.value
-          ? value
-          : // : source === InputSource.auth // TODO
-          // ? auth[fieldName]
-          source === InputSource.service
-          ? serviceConfig[fieldName]
-          : source === InputSource.input
-          ? inputData[fieldName]
-          : ''
-
-      const encodedSource = encodeURIComponent(fieldValue).replace(
-        /[!'()*]/g,
-        (c) => '%' + c.charCodeAt(0).toString(16)
-      )
-
-      url += `${encodedSource}/`
-    }
-  }
-
-  return url
-}
-
-export const getQueryParamsFromService = (
-  appConfig: IAppConfig,
-  serviceConfig: IServiceConfig,
-  inputData: any
-) => {
-  const { queryParams } = serviceConfig
-
-  // const { auth = {} } = appConfig // TODO
-
-  const params = {}
-  if (queryParams) {
-    for (let i = 0; i < queryParams.length; i++) {
-      const { paramName, source, fieldName = '', value } = queryParams[i]
-
-      const fieldValue =
-        source === InputSource.value
-          ? value
-          : // : source === InputSource.auth // TODO
-          // ? auth[fieldName]
-          source === InputSource.service
-          ? serviceConfig[fieldName]
-          : source === InputSource.input
-          ? inputData[fieldName]
-          : ''
-
-      params[paramName] = fieldValue
-    }
-  }
-
-  return params
-}
 
 export const getTestDataFromService = (
   inputData: IVariable[],
