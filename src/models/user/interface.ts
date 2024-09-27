@@ -7,9 +7,9 @@ export interface IUser {
 
 export interface IContent {
   contentId: string
-  source: string
   body: string
   date: string
+  source?: string
   header?: string
   image?: string
   url?: string
