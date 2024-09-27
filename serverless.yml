@@ -9,6 +9,9 @@ plugins:
 package:
   individually: true
 
+build:
+  esbuild: false
+
 custom:
   serverless-offline:
     useChildProcesses: true
@@ -21,7 +24,6 @@ provider:
   timeout: 10
   region: us-east-1
   memorySize: 512
-  role: serviceRole
   runtime: nodejs18.x
   versionFunctions: false
   stage: ${opt:stage, 'dev'}
@@ -43,7 +45,7 @@ provider:
         - 'iam:PassRole'
       Resource: '*'
   environment:
-    SERVICE_PREFIX: ${self:service}-prod #${self:provider.stage}
+    SERVICE_PREFIX: ${self:service}-prod
     SERVICE_API_URL: https://api.baita.help
     SERVICE_SITE_URL: https://www.baita.help
 
