@@ -348,9 +348,11 @@ export class Bot {
 
       await apigateway.deleteApi({ ApiId: apiId })
 
-      await scheduler.deleteSchedule({
-        Name: botPrefix,
-      }).catch(err => console.error(err))
+      await scheduler
+        .deleteSchedule({
+          Name: botPrefix,
+        })
+        .catch((err) => console.error(err))
 
       await lambda.deleteFunction({
         FunctionName: botPrefix,
@@ -559,7 +561,7 @@ export class Bot {
 
       return sample
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
