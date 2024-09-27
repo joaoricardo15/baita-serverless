@@ -1,8 +1,15 @@
 'use strict'
 
-import { IVariable } from "src/models/service/interface"
+import { IVariable, VariableType } from 'src/models/service/interface'
 
 export const getDataFromPath = (data: any, outputPath?: string) => {
+  /*
+    data = [{ person: { age: '35' }]
+    outputPath = '0.person.age'
+    
+    => 35
+  */
+
   if (!outputPath) return data
 
   const paths = outputPath.split('.')
@@ -24,13 +31,26 @@ export const getDataFromMapping = (
     [key: string]: string
   }
 ) => {
+  /*
+    data = { 
+      firstName: 'Baita',
+      secondName: 'Help',
+      hobbies: [{ name: 'reading' }]
+    }
+    outputMapping = {
+        name: 'firstName',
+        hobby: 'hobbies.0.name'
+    }
+    
+    => { name: 'Baita', hobby: 'reading' }
+  */
+
   const mappedData = {}
   const outputKeys = Object.keys(outputMapping)
 
   for (let i = 0; i < outputKeys.length; i++) {
     const outputKey = outputKeys[i]
     const outputValue = getDataFromPath(data, outputMapping[outputKey])
-    if (!outputValue) return
     mappedData[outputKey] = outputValue
   }
 
@@ -43,6 +63,12 @@ export const getMappedData = (
     [key: string]: string
   }
 ) => {
+  /*
+    data = { personalInfo: { name: 'Baita' } }
+    outputMapping = { name: 'personalInfo.name' }
+    
+    => { name: 'Baita' }
+  */
   if (!outputMapping) return data
 
   return Array.isArray(data)
@@ -52,64 +78,101 @@ export const getMappedData = (
     : getDataFromMapping(data, outputMapping)
 }
 
+export const setObjectDataFromPath = (
+  data: object,
+  value: any,
+  inputPath?: string
+) => {
+  /*
+    data = { id: '123' }
+    value = 'john'
+    inputPath = 'user.name'
+
+    => { id: '123', user: { name: 'john' } }
+  */
+
+  if (!inputPath) {
+    return data
+  }
+
+  let currentData = data
+  const paths = inputPath.split('.')
+
+  for (let i = 0; i < paths.length; i++) {
+    const key = paths[i]
+
+    if (i === paths.length - 1) {
+      currentData[key] = value
+    } else if (!(key in currentData)) {
+      const nextIntKey = parseInt(paths[i + 1])
+      if (isNaN(nextIntKey)) {
+        currentData[key] = {}
+      } else {
+        currentData[key] = []
+      }
+    }
+
+    currentData = currentData[key]
+  }
+
+  return data
+}
 
 export const getTestDataFromService = (
   inputData: IVariable[],
   serviceFields?: IVariable[]
 ) => {
-  const input = {}
+  let data = {}
 
-  if (serviceFields)
+  // Get all service fields
+  if (serviceFields) {
     for (let j = 0; j < serviceFields.length; j++) {
-      const fieldName = serviceFields[j].name
-      const inputField = inputData.find((x) => x.name === fieldName)
-      if (!inputField) throw `Input field '${fieldName}' not found.`
-      input[fieldName] = inputField.sampleValue
+      const serviceInputField = serviceFields[j]
+
+      const { type, name, value, label, required } = serviceInputField
+
+      if (type === VariableType.environment) {
+        if (!((value as string) in process.env)) {
+          throw Error(`Environment variable '${label}' does not exist.`)
+        }
+
+        data = setObjectDataFromPath(data, process.env[value as string], name)
+      } else if (type === VariableType.constant) {
+        if (!value) {
+          throw Error(`Constant variable '${label}' has no value.`)
+        }
+
+        data = setObjectDataFromPath(data, value, name)
+      } else {
+        const inputDataField = inputData.find((x) => x.name === name)
+
+        if (!inputDataField) {
+          if (required) {
+            throw Error(`Required input field '${label}' is missing.`)
+          }
+        } else {
+          const { sampleValue } = inputDataField
+
+          if (sampleValue === undefined) {
+            if (required) {
+              throw Error(`Required input field '${label}' is empty.`)
+            }
+          }
+
+          data = setObjectDataFromPath(data, sampleValue, name)
+        }
+      }
     }
+  }
 
-  return input
-}
+  // Get all custom fields
+  for (let i = 0; i < inputData.length; i++) {
+    const inputDataField = inputData[i]
 
-export const getAuthParamsFromApp = (type: string, authFields) => {
-  if (type === 'basic')
-    return {
-      username: process.env[authFields.username] || '',
-      password: process.env[authFields.password] || '',
-    }
-}
-
-export const getAuthDataFromApp = (
-  type: string,
-  headers,
-  authFields,
-  refreshToken
-) => {
-  let data
-  if (
-    headers &&
-    headers['Content-type'] &&
-    headers['Content-type'] === 'application/x-www-form-urlencoded'
-  ) {
-    const rawData = {
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken,
-    }
-
-    if (type === 'body') {
-      rawData['client_id'] = process.env[authFields.username]
-      rawData['client_secret'] = process.env[authFields.password]
-    }
-
-    data = new URLSearchParams(rawData)
-  } else {
-    data = {
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken,
-    }
-
-    if (type === 'body') {
-      data['client_id'] = process.env[authFields.username]
-      data['client_secret'] = process.env[authFields.password]
+    if (inputDataField.customFieldId) {
+      const { name, sampleValue } = inputDataField
+  
+      data = setObjectDataFromPath(data, sampleValue, name)
     }
   }
 
