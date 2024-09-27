@@ -45,13 +45,13 @@ export const getDataFromMapping = (
     => { name: 'Baita', hobby: 'reading' }
   */
 
-  const mappedData = {}
+  let mappedData = {}
   const outputKeys = Object.keys(outputMapping)
 
   for (let i = 0; i < outputKeys.length; i++) {
     const outputKey = outputKeys[i]
     const outputValue = getDataFromPath(data, outputMapping[outputKey])
-    mappedData[outputKey] = outputValue
+    mappedData = setObjectDataFromPath(mappedData, outputValue, outputKey)
   }
 
   return mappedData

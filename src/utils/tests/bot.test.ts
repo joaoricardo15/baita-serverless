@@ -133,6 +133,23 @@ describe('getDataFromService', () => {
       },
     ])
   })
+
+  test('should return mapped object when data is object', () => {
+    const data = {
+      personalInfo: { firstName: 'Baita' },
+      demographicInfo: { age: 35 },
+      geographicIngo: { city: 'Help' },
+    }
+    const outputMapping = {
+      'person.name': 'personalInfo.firstName',
+      'person.age': 'demographicInfo.age',
+      city: 'geographicIngo.city',
+    }
+    expect(getMappedData(data, outputMapping)).toStrictEqual({
+      person: { name: 'Baita', age: 35 },
+      city: 'Help',
+    })
+  })
 })
 
 describe('setObjectDataFromPath', () => {
