@@ -4,7 +4,7 @@ import { DynamoDB } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
 import { IAppConnection } from 'src/models/connection/interface'
 
-const USERS_TABLE = process.env.USERS_TABLE || ''
+const CORE_TABLE = process.env.CORE_TABLE || ''
 
 export class Connection {
   async getConnection(userId: string, connectionId: string) {
@@ -12,7 +12,7 @@ export class Connection {
 
     try {
       const result = await ddb.get({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         Key: { userId, sortKey: `#CONNECTION#${connectionId}` },
       })
 
@@ -27,7 +27,7 @@ export class Connection {
 
     try {
       const result = await ddb.query({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         KeyConditionExpression:
           'userId = :userId and begins_with(sortKey, :sortKey)',
         ExpressionAttributeValues: {
@@ -49,7 +49,7 @@ export class Connection {
 
     try {
       await ddb.put({
-        TableName: USERS_TABLE,
+        TableName: CORE_TABLE,
         Item: {
           ...connection,
           sortKey: `#CONNECTION#${connection.connectionId}`,
