@@ -7,13 +7,13 @@ export enum TaskExecutionStatus {
   success = 'success',
 }
 
-export interface ITaskExecutionInput<T> {
+export interface ITaskExecutionInput {
   userId: string
   botId: string
   connectionId?: string
   appConfig: IAppConfig
   serviceConfig: IServiceConfig
-  inputData: T
+  inputData: DataType
 }
 
 export interface ITaskExecutionResult {
