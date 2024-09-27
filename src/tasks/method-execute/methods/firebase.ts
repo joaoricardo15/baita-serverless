@@ -64,6 +64,6 @@ export const sendNotification = async (
 
     return await admin.messaging().send(message)
   } catch (err) {
-    throw err.message
+    throw err.message || err
   }
 }

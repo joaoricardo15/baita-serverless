@@ -18,7 +18,7 @@ export class Connection {
 
       return result.Item as IAppConnection
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
@@ -38,7 +38,7 @@ export class Connection {
 
       return result.Items as Array<IAppConnection>
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
@@ -58,7 +58,7 @@ export class Connection {
 
       return connection
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 }

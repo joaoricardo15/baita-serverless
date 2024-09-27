@@ -13,7 +13,7 @@ export const getTodo = async (taskInput: ITaskExecutionInput<undefined>) => {
 
     return data
   } catch (err) {
-    throw err.message
+    throw err.message || err
   }
 }
 
@@ -39,6 +39,6 @@ export const publishToFeed = async (
       message: 'Content published successfully.',
     }
   } catch (err) {
-    throw err.message
+    throw err.message || err
   }
 }

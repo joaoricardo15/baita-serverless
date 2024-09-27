@@ -33,7 +33,7 @@ export class User {
 
       return user
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
@@ -71,7 +71,7 @@ export class User {
           }
       }).filter((message) => message)
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
@@ -95,7 +95,7 @@ export class User {
       })
       return content
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
@@ -106,7 +106,7 @@ export class User {
     try {
       // TODO: Workaround to get the queue url
       const queueResult = await sqs.getQueueUrl({
-        QueueName: `${SERVICE_PREFIX.replace('dev', 'prod')}-${userId}`,
+        QueueName: `${SERVICE_PREFIX}-${userId}`,
       })
 
       console.log(content)
@@ -144,7 +144,7 @@ export class User {
         })
       }
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
@@ -159,7 +159,7 @@ export class User {
 
       return (result.Item?.tasks || []) as ITodoTask[]
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
@@ -179,7 +179,7 @@ export class User {
 
       return tasks
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
@@ -212,7 +212,7 @@ export class User {
 
       return
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 }

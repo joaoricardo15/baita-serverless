@@ -24,7 +24,7 @@ export class App {
 
       return result.Items as IBotModel[]
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
@@ -45,7 +45,7 @@ export class App {
 
       return model
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
@@ -58,7 +58,7 @@ export class App {
         Key: { userId: 'baita', sortKey: `#MODEL#${modelId}` },
       })
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 }
@@ -75,7 +75,7 @@ export class Connection {
 
       return result.Item as IAppConnection
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
@@ -95,7 +95,7 @@ export class Connection {
 
       return result.Items as IAppConnection[]
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
@@ -115,7 +115,7 @@ export class Connection {
 
       return connection
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 }

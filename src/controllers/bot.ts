@@ -41,7 +41,7 @@ export class Bot {
 
       return result.Item as IBot
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
@@ -61,7 +61,7 @@ export class Bot {
 
       return result.Items
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
@@ -112,7 +112,7 @@ export class Bot {
         )
       )
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
@@ -204,7 +204,7 @@ export class Bot {
 
       return bot
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
@@ -326,7 +326,7 @@ export class Bot {
 
       return bot
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
@@ -369,7 +369,7 @@ export class Bot {
 
       await s3.deleteObject({ Bucket: BOTS_BUCKET, Key: `${botPrefix}.zip` })
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
@@ -407,7 +407,7 @@ export class Bot {
 
       return result.Attributes
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
@@ -493,7 +493,7 @@ export class Bot {
 
       return dbResult.Attributes
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
@@ -587,7 +587,7 @@ export class Bot {
         },
       })
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 
@@ -610,7 +610,7 @@ export class Bot {
         ReturnValues: 'ALL_NEW',
       })
     } catch (err) {
-      throw err.message
+      throw err.message || err
     }
   }
 }
