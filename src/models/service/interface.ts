@@ -52,8 +52,6 @@ export interface IVariable {
 }
 
 export interface IServiceConfig {
-  path?: string
-  method?: string
   customFields?: boolean
   inputFields?: IVariable[]
   outputPath?: string

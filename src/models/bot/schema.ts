@@ -41,14 +41,6 @@ const taskConditionSchema: JSONSchemaType<ITaskCondition> = {
 const serviceConfigSchema: JSONSchemaType<IServiceConfig> = {
   type: 'object',
   properties: {
-    path: {
-      type: 'string',
-      nullable: true,
-    },
-    method: {
-      type: 'string',
-      nullable: true,
-    },
     customFields: {
       type: 'boolean',
       nullable: true,
