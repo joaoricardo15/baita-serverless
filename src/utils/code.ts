@@ -1,7 +1,11 @@
 'use strict'
 
 import JSZip from 'jszip'
-import { ConditionOperator, ITask, ITaskCondition } from 'src/models/bot/interface'
+import {
+  ITask,
+  ITaskCondition,
+  ConditionOperator,
+} from 'src/models/bot/interface'
 import { IVariable, VariableType } from 'src/models/service/interface'
 
 const zip = new JSZip()
@@ -115,8 +119,8 @@ const getParseEventFunctionCode = () => {
 
 export const getBotSampleCode = (userId: string, botId: string) => {
   return `
-const AWS = require('aws-sdk');
-const lambda = new AWS.Lambda();
+const { Lambda } = require('@aws-sdk/client-lambda');
+const lambda = new Lambda();
 
 module.exports.handler = async (event, context, callback) => {
   ////////////////////////////////////////////////////////////////////////////////
@@ -137,7 +141,7 @@ module.exports.handler = async (event, context, callback) => {
   await lambda.invoke({
     FunctionName: '${SERVICE_PREFIX}-service-trigger-sample',
     Payload: JSON.stringify({ userId, botId, outputData, status: 'success' })
-  }).promise();
+  });
 
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -163,8 +167,8 @@ export const getCompleteBotCode = (
   tasks: ITask[]
 ) => {
   return `
-const AWS = require('aws-sdk');
-const lambda = new AWS.Lambda();
+const { Lambda } = require('@aws-sdk/client-lambda');
+const lambda = new Lambda();
 
 module.exports.handler = async (event, context, callback) => {
   ////////////////////////////////////////////////////////////////////////////////
@@ -273,8 +277,7 @@ const getBotInnerCode = (tasks: ITask[]) => {
       const { Payload: task${i}_lambda_payload } = await lambda.invoke({
         FunctionName: '${SERVICE_PREFIX}-task-${service?.name}',
         Payload: JSON.stringify({ userId, appConfig: task${i}_appConfig, serviceConfig: task${i}_serviceConfig, connectionId: task${i}_connectionId, inputData: task${i}_inputData, outputPath: task${i}_outputPath }),
-      }).promise();
-  
+      });
 
       ////////////////////////////////////////////////////////////////////////////////
       // 4.2.2 Parse results
@@ -284,7 +287,6 @@ const getBotInnerCode = (tasks: ITask[]) => {
       const task${i}_success = task${i}_result.success;
 
       task${i}_outputData = task${i}_success && task${i}_result.data ? task${i}_result.data : { message: task${i}_result.message || task${i}_result.errorMessage || 'nothing for you this time : (' };
-      
 
       ////////////////////////////////////////////////////////////////////////////////
       // 4.2.3 Add result to logs
@@ -296,7 +298,6 @@ const getBotInnerCode = (tasks: ITask[]) => {
         outputData: task${i}_outputData,
         status: task${i}_success ? 'success' : 'fail',
       });
-
 
       ////////////////////////////////////////////////////////////////////////////////
       // 4.2.4 If task executed successfully, increment usage
