@@ -36,7 +36,7 @@ export const getInputString = (input: object) => {
     .join(',')
 }
 
-const decodeCondition = (condition: ITaskCondition): string => {
+export const decodeCondition = (condition: ITaskCondition): string => {
   const {
     operator,
     operand,
@@ -77,7 +77,7 @@ export const getConditionsString = (conditions?: ITaskCondition[][]) => {
     .join(' || ')
 }
 
-const getParseEventFunctionCode = () => {
+export const getParseEventFunctionCode = () => {
   return `(() => {
     if (event.body) {
       try {
@@ -124,7 +124,12 @@ module.exports.handler = async (event, context, callback) => {
 
   await lambda.invoke({
     FunctionName: '${SERVICE_PREFIX}-service-trigger-sample',
-    Payload: JSON.stringify({ userId, botId, outputData, status: 'success' })
+    Payload: JSON.stringify({
+      botId,
+      userId,
+      outputData,
+      status: 'success'
+    })
   });
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -223,42 +228,36 @@ const getBotInnerCode = (tasks: ITask[]) => {
     const app = task.app
     const service = task.service
     const conditions = task.conditions
-
     const inputData = getDataFromService(
       service?.config.inputFields || [],
       task.inputData
     )
 
-    const inputDataString = getInputString(inputData)
-
-    const conditionsString = getConditionsString(conditions)
-
     innerCode += `
     ////////////////////////////////////////////////////////////////////////////////
     // 4.1. Collect operation inputs
 
-    const task${i}_inputData = { ${inputDataString} };
-    
-    const task${i}_appConfig = ${JSON.stringify(app?.config)};
-
-    const task${i}_serviceConfig = ${JSON.stringify(service?.config)};
-    
-    const task${i}_connectionId = ${task.connectionId || 'undefined'};
-
-    const task${i}_outputPath = ${service?.config.outputPath || '``'};
+    const task${i}_inputData = { ${getInputString(inputData)} };
 
     let task${i}_outputData = {};
 
     ////////////////////////////////////////////////////////////////////////////////
     // 4.2. Check conditions
 
-    if (${conditionsString || true}) {
+    if (${getConditionsString(conditions) || true}) {
       ////////////////////////////////////////////////////////////////////////////////
       // 4.2.1 If condition passes, execute operation
 
       const { Payload: task${i}_lambda_payload } = await lambda.invoke({
         FunctionName: '${SERVICE_PREFIX}-task-${service?.name}',
-        Payload: JSON.stringify({ userId, appConfig: task${i}_appConfig, serviceConfig: task${i}_serviceConfig, connectionId: task${i}_connectionId, inputData: task${i}_inputData, outputPath: task${i}_outputPath }),
+        Payload: JSON.stringify({ 
+          botId,
+          userId,
+          inputData: task${i}_inputData,
+          appConfig: ${JSON.stringify(app?.config)},
+          serviceConfig: ${JSON.stringify(service?.config)},
+          connectionId: ${task.connectionId || 'undefined'}
+        }),
       });
 
       ////////////////////////////////////////////////////////////////////////////////
