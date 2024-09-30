@@ -22,7 +22,7 @@ import {
   getCompleteBotCode,
 } from 'src/utils/code'
 import { ServiceName } from 'src/models/service/interface'
-import { getTestDataFromService } from 'src/utils/bot'
+import { getDataFromService } from 'src/utils/bot'
 
 const CORE_TABLE = process.env.CORE_TABLE || ''
 const BOTS_BUCKET = process.env.BOTS_BUCKET || ''
@@ -507,9 +507,10 @@ export class Bot {
       let sample: ITaskExecutionResult
 
       // Get input data from service in both cases to check input data validity
-      const inputData = getTestDataFromService(
+      const inputData = getDataFromService(
         task.inputData,
-        task.service?.config.inputFields
+        task.service?.config.inputFields || [],
+        true
       )
 
       if (parseInt(taskIndex) === 0) {

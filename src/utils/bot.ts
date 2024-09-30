@@ -2,6 +2,8 @@
 
 import { IVariable, VariableType } from 'src/models/service/interface'
 
+export const OUTPUT_CODE = '###baita.help###'
+
 export const getDataFromPath = (data: any, outputPath?: string) => {
   /*
     data = [{ person: { age: '35' }]
@@ -65,9 +67,9 @@ export const getMappedData = (
 ) => {
   /*
     data = { personalInfo: { name: 'Baita' } }
-    outputMapping = { name: 'personalInfo.name' }
+    outputMapping = { 'person.name': 'personalInfo.name' }
     
-    => { name: 'Baita' }
+    => { person: { name: 'Baita' } }
   */
   if (!outputMapping) return data
 
@@ -118,50 +120,123 @@ export const setObjectDataFromPath = (
   return data
 }
 
-export const getTestDataFromService = (
+export const getValueFromServiceVariable = (variable: IVariable) => {
+  const { label, value, type } = variable
+
+  // Is it a constant variable?
+  if (type === VariableType.constant) {
+    if (value === undefined) {
+      throw Error(`Constant variable '${label}' has no value`)
+    }
+
+    return value
+  }
+
+  // Is it an environment variable?
+  if (type === VariableType.environment) {
+    if (process.env[value as string] === undefined) {
+      throw Error(`Environment variable '${label}' does not exist`)
+    }
+
+    return process.env[value as string]
+  }
+
+  return
+}
+
+export const getValueFromInputVariable = (
+  variable: IVariable,
+  testData: boolean
+) => {
+  const { label, value, sampleValue, type, outputIndex, outputPath } = variable
+
+  // Is it a test case?
+  if (testData) {
+    if (sampleValue === undefined) {
+      throw Error(`Variable '${label}' has no sample value`)
+    }
+
+    return sampleValue
+  }
+
+  // If not, is it an output variable?
+  if (type === VariableType.output) {
+    if (outputIndex === undefined || outputPath === undefined) {
+      throw Error(`Variable '${label}' has no outputIndex or outputPath`)
+    }
+
+    return (
+      OUTPUT_CODE +
+      getOutputVariableString(outputIndex, outputPath)
+    )
+  }
+
+  return value
+}
+
+export const getOutputVariableString = (index: number, path: string) =>
+  `task${index}_outputData${path
+    .split('.')
+    .map((x) => x && (!isNaN(Number(x)) ? `[${x}]` : `[\`${x}\`]`))
+    .join('')}`
+
+export const getDataFromService = (
+  serviceFields: IVariable[],
   inputData: IVariable[],
-  serviceFields?: IVariable[]
+  testData: boolean = false
 ) => {
   let data = {}
 
-  // Get all service fields
-  if (serviceFields) {
-    for (let j = 0; j < serviceFields.length; j++) {
-      const serviceInputField = serviceFields[j]
+  // Loop over all service fields
+  for (let j = 0; j < serviceFields.length; j++) {
+    const serviceVariable = serviceFields[j]
+    const serviceVariableValue = getValueFromServiceVariable(serviceVariable)
 
-      const { type, name, value, label, required } = serviceInputField
+    // If there is no value in the service variable
+    if (serviceVariableValue == undefined) {
+      // Let's find a corresponding input variable
+      const inputVariable = inputData.find(
+        (x) => x.name === serviceVariable.name
+      )
 
-      if (type === VariableType.environment) {
-        if (!((value as string) in process.env)) {
-          throw Error(`Environment variable '${label}' does not exist.`)
-        }
-
-        data = setObjectDataFromPath(data, process.env[value as string], name)
-      } else if (type === VariableType.constant) {
-        if (!value) {
-          throw Error(`Constant variable '${label}' has no value.`)
-        }
-
-        data = setObjectDataFromPath(data, value, name)
-      } else {
-        const inputDataField = inputData.find((x) => x.name === name)
-
-        if (!inputDataField) {
-          if (required) {
-            throw Error(`Required input field '${label}' is missing.`)
-          }
-        } else {
-          const { sampleValue } = inputDataField
-
-          if (sampleValue === undefined) {
-            if (required) {
-              throw Error(`Required input field '${label}' is empty.`)
-            }
-          }
-
-          data = setObjectDataFromPath(data, sampleValue, name)
+      // If there is no corresponding input variable
+      if (inputVariable === undefined) {
+        // And it is a required variable
+        if (serviceVariable.required) {
+          throw Error(
+            `Required input field '${serviceVariable.label}' is missing`
+          )
         }
       }
+      // If there is a corresponding input variable
+      else {
+        const inputVariableValue = getValueFromInputVariable(
+          inputVariable,
+          testData
+        )
+
+        if (inputVariableValue === undefined) {
+          if (serviceVariable.required) {
+            throw Error(
+              `Required input field '${serviceVariable.label}' has no value`
+            )
+          }
+        }
+
+        data = setObjectDataFromPath(
+          data,
+          inputVariableValue,
+          serviceVariable.name
+        )
+      }
+    }
+    // If there is value in the service variable
+    else {
+      data = setObjectDataFromPath(
+        data,
+        serviceVariableValue,
+        serviceVariable.name
+      )
     }
   }
 
@@ -170,9 +245,16 @@ export const getTestDataFromService = (
     const inputDataField = inputData[i]
 
     if (inputDataField.customFieldId) {
-      const { name, sampleValue } = inputDataField
+      const inputDataVariableValue = getValueFromInputVariable(
+        inputDataField,
+        testData
+      )
   
-      data = setObjectDataFromPath(data, sampleValue, name)
+      data = setObjectDataFromPath(
+        data,
+        inputDataVariableValue,
+        inputDataField.name
+      )
     }
   }
 

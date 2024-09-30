@@ -4,7 +4,9 @@ import {
   getDataFromMapping,
   getMappedData,
   setObjectDataFromPath,
-  getTestDataFromService,
+  getValueFromServiceVariable,
+  getValueFromInputVariable,
+  getDataFromService,
 } from '../bot'
 
 describe('getDataFromPath', () => {
@@ -61,7 +63,7 @@ describe('getDataFromPath', () => {
   })
 })
 
-describe('getDataFromObject', () => {
+describe('getDataFromMapping', () => {
   test('should return an empty object for an empty mapping', () => {
     const data = { firstName: 'Baita', age: 35 }
     const outputMapping = {}
@@ -100,7 +102,7 @@ describe('getDataFromObject', () => {
   })
 })
 
-describe('getDataFromService', () => {
+describe('getMappedData', () => {
   test('should return data when there is no outputMapping', () => {
     const data = { id: '123' }
     expect(getMappedData(data)).toStrictEqual(data)
@@ -170,49 +172,239 @@ describe('setObjectDataFromPath', () => {
   })
 })
 
-describe('getTestDataFromService', () => {
-  test('should return sample values when there are only custom input variables', () => {
-    const inputData = [
+describe('getValueFromServiceVariable', () => {
+  test('should throw error when there is no value in constant variable', () => {
+    const variable = {
+      name: 'constProperty',
+      label: 'ConstProperty',
+      type: VariableType.constant,
+    }
+
+    expect(() => getValueFromServiceVariable(variable)).toThrow()
+  })
+
+  test('should return value from variable', () => {
+    const variable = {
+      name: 'constProperty',
+      label: 'ConstProperty',
+      type: VariableType.constant,
+      value: 'constPropertyValue',
+    }
+
+    expect(getValueFromServiceVariable(variable)).toBe('constPropertyValue')
+  })
+
+  test('should throw error when there is no environment value in environment variable', () => {
+    const variable = {
+      name: 'envProperty',
+      label: 'EnvProperty',
+      type: VariableType.environment,
+    }
+
+    expect(() => getValueFromServiceVariable(variable)).toThrow()
+  })
+
+  test('should return environment value from environment variable', () => {
+    process.env['envPropertyName'] = 'envPropertyValue'
+    const variable = {
+      name: 'envProperty',
+      label: 'EnvProperty',
+      type: VariableType.environment,
+      value: 'envPropertyName',
+    }
+
+    expect(getValueFromServiceVariable(variable)).toBe('envPropertyValue')
+  })
+
+  test('should return undefined for all other variable types', () => {
+    Object.values(VariableType)
+      .filter(
+        (type) => type in [VariableType.constant, VariableType.environment]
+      )
+      .forEach((type) => {
+        const variable = {
+          name: 'property',
+          label: 'Property',
+          type,
+        }
+
+        expect(getValueFromServiceVariable(variable)).toBeUndefined()
+      })
+  })
+})
+
+describe('getValueFromInputVariable', () => {
+  test('should throw error when it is a test case and there is no sample value', () => {
+    const variable = {
+      name: 'property',
+      label: 'Property',
+      type: VariableType.constant,
+    }
+
+    expect(() => getValueFromInputVariable(variable, true)).toThrow()
+  })
+
+  test('should return sample value when it is a test case', () => {
+    const variable = {
+      name: 'property',
+      label: 'Property',
+      type: VariableType.constant,
+      sampleValue: 'sampleValue',
+    }
+
+    expect(getValueFromInputVariable(variable, true)).toBe('sampleValue')
+  })
+
+  test('should throw error when it is an output variable and there is no outputIndex or outputPath', () => {
+    const variable1 = {
+      name: 'property',
+      label: 'Property',
+      type: VariableType.output,
+      outputIndex: 123,
+    }
+
+    expect(() => getValueFromInputVariable(variable1, false)).toThrow()
+
+    const variable2 = {
+      name: 'property',
+      label: 'Property',
+      type: VariableType.output,
+      outputPath: 'asd',
+    }
+
+    expect(() => getValueFromInputVariable(variable2, false)).toThrow()
+  })
+
+  test('should return output variable string when it is a output variable', () => {
+    const variable = {
+      name: 'property',
+      label: 'Property',
+      type: VariableType.output,
+      outputIndex: 123,
+      outputPath: 'asd',
+    }
+
+    expect(getValueFromInputVariable(variable, false)).toBe(
+      '###baita.help###task123_outputData[`asd`]'
+    )
+  })
+
+  test('should return value when it is a output variable', () => {
+    Object.values(VariableType)
+      .filter((type) => type !== VariableType.output)
+      .forEach((type) => {
+        const variable = {
+          name: 'property',
+          label: 'Property',
+          required: true,
+          value: 'constValue',
+          type,
+        }
+
+        expect(getValueFromInputVariable(variable, false)).toBe('constValue')
+      })
+  })
+})
+
+describe('getDataFromService', () => {
+  test('should throw error if there is no corresponding input variable from required service variable', () => {
+    const serviceVariables = [
       {
-        name: 'method',
-        label: 'Method',
-        type: VariableType.constant,
-        customFieldId: 123,
-        sampleValue: 'sampleMethod',
-      },
-      {
-        name: 'path',
-        label: 'Path',
+        name: 'textProperty',
+        label: 'TextProperty',
         type: VariableType.text,
-        customFieldId: 456,
-        sampleValue: 'samplePath',
+        required: true,
+      },
+    ]
+    const inputVariables = []
+
+    expect(() => getDataFromService(serviceVariables, inputVariables)).toThrow()
+  })
+
+  test('should throw error if there is no value in corresponding input variable from required service variable', () => {
+    const serviceVariables = [
+      {
+        name: 'textProperty',
+        label: 'TextProperty',
+        type: VariableType.text,
+        required: true,
+      },
+    ]
+    const inputVariables = [
+      {
+        name: 'textProperty',
+        label: 'TextProperty',
+        type: VariableType.text,
       },
     ]
 
-    expect(getTestDataFromService(inputData)).toStrictEqual({
-      method: 'sampleMethod',
-      path: 'samplePath',
+    expect(() => getDataFromService(serviceVariables, inputVariables)).toThrow()
+  })
+
+  test('should return value of corresponding input variable from service variable', () => {
+    const serviceVariables = [
+      {
+        name: 'textProperty',
+        label: 'TextProperty',
+        type: VariableType.text,
+      },
+    ]
+    const inputVariables = [
+      {
+        name: 'textProperty',
+        label: 'TextProperty',
+        type: VariableType.text,
+        value: 'textPropertyValue',
+      },
+    ]
+
+    expect(getDataFromService(serviceVariables, inputVariables)).toStrictEqual({
+      textProperty: 'textPropertyValue',
     })
   })
 
-  test('should return both sample values, enviroment and constant values when there are service variables plus custom input variables', () => {
-    const inputData = [
+  test('should return sample value of corresponding input variable from service variable', () => {
+    const serviceVariables = [
       {
-        name: 'inputProperty',
-        label: 'InputProperty',
+        name: 'textProperty',
+        label: 'TextProperty',
         type: VariableType.text,
-        sampleValue: 'inputPropertyValue',
       },
+    ]
+    const inputVariables = [
       {
-        name: 'inputCustomProperty',
-        label: 'InputCustomProperty',
+        name: 'textProperty',
+        label: 'TextProperty',
         type: VariableType.text,
-        sampleValue: 'inputCustomPropertyValue',
-        customFieldId: 123,
+        sampleValue: 'textPropertySampleValue',
       },
     ]
 
-    process.env['envPropertyName'] = 'testPropertyValue'
+    expect(
+      getDataFromService(serviceVariables, inputVariables, true)
+    ).toStrictEqual({
+      textProperty: 'textPropertySampleValue',
+    })
+  })
+
+  test('should return constant value of service variable', () => {
+    const serviceVariables = [
+      {
+        name: 'constProperty',
+        label: 'ConstProperty',
+        type: VariableType.constant,
+        value: 'constPropertyValue',
+      },
+    ]
+    const inputVariables = []
+
+    expect(getDataFromService(serviceVariables, inputVariables)).toStrictEqual({
+      constProperty: 'constPropertyValue',
+    })
+  })
+
+  test('should return envrionment variable value of service variable', () => {
+    process.env['envPropertyName'] = 'envPropertyValue'
     const serviceVariables = [
       {
         name: 'envProperty',
@@ -220,6 +412,53 @@ describe('getTestDataFromService', () => {
         value: 'envPropertyName',
         type: VariableType.environment,
       },
+    ]
+    const inputVariables = []
+
+    expect(getDataFromService(serviceVariables, inputVariables)).toStrictEqual({
+      envProperty: 'envPropertyValue',
+    })
+  })
+
+  test('should return value when there is a custom input variable', () => {
+    const serviceVariables = []
+    const inputVariables = [
+      {
+        name: 'customProperty',
+        label: 'CustomProperty',
+        type: VariableType.constant,
+        customFieldId: 123,
+        value: 'customValue',
+      },
+    ]
+
+    expect(getDataFromService(serviceVariables, inputVariables)).toStrictEqual({
+      customProperty: 'customValue',
+    })
+  })
+
+  test('should return sample value when it is a test case and there is a custom input variable', () => {
+    const serviceVariables = []
+    const inputVariables = [
+      {
+        name: 'customProperty',
+        label: 'CustomProperty',
+        type: VariableType.constant,
+        customFieldId: 123,
+        sampleValue: 'customSampleValue',
+      },
+    ]
+
+    expect(
+      getDataFromService(serviceVariables, inputVariables, true)
+    ).toStrictEqual({
+      customProperty: 'customSampleValue',
+    })
+  })
+
+  test('should return all correct values when there are all use case variables', () => {
+    process.env['envPropertyName'] = 'envPropertyValue'
+    const serviceVariables = [
       {
         name: 'constProperty',
         label: 'ConstProperty',
@@ -227,18 +466,54 @@ describe('getTestDataFromService', () => {
         type: VariableType.constant,
       },
       {
+        name: 'envProperty',
+        label: 'EnvProperty',
+        value: 'envPropertyName',
+        type: VariableType.environment,
+      },
+      {
         name: 'inputProperty',
         label: 'InputProperty',
-        type: VariableType.user,
+        type: VariableType.text,
+      },
+      {
+        name: 'inputRequiredProperty',
+        label: 'InputRequiredProperty',
+        type: VariableType.text,
         required: true,
       },
     ]
+    const inputVariables = [
+      {
+        name: 'inputRequiredProperty',
+        label: 'InputRequiredProperty',
+        type: VariableType.text,
+        value: 'inputRequiredPropertyValue',
+      },
+      {
+        name: 'inputCustomProperty',
+        label: 'InputCustomProperty',
+        type: VariableType.text,
+        customFieldId: 123,
+        value: 'inputCustomPropertyValue',
+      },
+      {
+        name: 'outputCustomProperty',
+        label: 'OutputCustomProperty',
+        type: VariableType.output,
+        customFieldId: 456,
+        outputIndex: 789,
+        outputPath: 'outputPathValue',
+      },
+    ]
 
-    expect(getTestDataFromService(inputData, serviceVariables)).toStrictEqual({
-      envProperty: 'testPropertyValue',
+    expect(getDataFromService(serviceVariables, inputVariables)).toStrictEqual({
       constProperty: 'constPropertyValue',
-      inputProperty: 'inputPropertyValue',
+      envProperty: 'envPropertyValue',
+      inputRequiredProperty: 'inputRequiredPropertyValue',
       inputCustomProperty: 'inputCustomPropertyValue',
+      outputCustomProperty:
+        '###baita.help###task789_outputData[`outputPathValue`]',
     })
   })
 })
