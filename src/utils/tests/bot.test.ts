@@ -285,7 +285,7 @@ describe('getValueFromInputVariable', () => {
     }
 
     expect(getValueFromInputVariable(variable, false)).toBe(
-      '###baita.help###task123_outputData[`asd`]'
+      '###baita.help###task123_outputData["asd"]'
     )
   })
 
@@ -513,7 +513,7 @@ describe('getDataFromService', () => {
       inputRequiredProperty: 'inputRequiredPropertyValue',
       inputCustomProperty: 'inputCustomPropertyValue',
       outputCustomProperty:
-        '###baita.help###task789_outputData[`outputPathValue`]',
+        '###baita.help###task789_outputData["outputPathValue"]',
     })
   })
 

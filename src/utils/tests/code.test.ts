@@ -1,101 +1,68 @@
 import { VariableType } from 'src/models/service/interface'
-import { getConditionsString, getInputString } from '../code'
+import {
+  getConditionsString,
+  getInputString,
+  getStringifiedVariableValue,
+} from '../code'
 import { ConditionOperator } from 'src/models/bot/interface'
 
-describe('getInputString', () => {
-  test('should return an empty string when there is no service fields', () => {
-    const inputData = []
-    expect(getInputString(inputData)).toBe('')
-    expect(getInputString(inputData, [])).toBe('')
+describe('getStringifiedVariableValue', () => {
+  test('should return string number for number value', () => {
+    const value = 10
+    expect(getStringifiedVariableValue(value)).toBe('10')
   })
 
-  test('should throw error when field is not found', () => {
-    const inputData = []
-    const serviceFields = [
-      {
-        name: 'language',
-        label: 'Language',
-        type: VariableType.constant,
+  test('should return string boolean for boolean value', () => {
+    const value = true
+    expect(getStringifiedVariableValue(value)).toBe('true')
+  })
+
+  test('should return quoted string for string value', () => {
+    const value = 'baita'
+    expect(getStringifiedVariableValue(value)).toBe('`baita`')
+  })
+
+  test('should return string output variable name for output value', () => {
+    const value = '###baita.help###task123_outputData["baita"]'
+    expect(getStringifiedVariableValue(value)).toBe(
+      'task123_outputData["baita"]'
+    )
+  })
+
+  test('should return string output variable name for output value', () => {
+    const value = {
+      person: {
+        age: 35,
+        dev: true,
+        name: 'baita',
+        output: '###baita.help###task123_outputData["baita"]',
       },
-    ]
-    try {
-      expect(getInputString(inputData, serviceFields)).toThrow(
-        'Input field language not found.'
-      )
-    } catch (e) {
-      console.log(e)
     }
-  })
-
-  test('should return simple param when outputIndex and outputPath are undefined', () => {
-    const inputData = [
-      {
-        name: 'language',
-        label: 'Input Language',
-        type: VariableType.constant,
-        value: 'input_language_value',
-      },
-    ]
-    const serviceFields = [
-      {
-        name: 'language',
-        label: 'Service Language',
-        type: VariableType.constant,
-      },
-    ]
-
-    expect(getInputString(inputData, serviceFields)).toBe(
-      "'language': `input_language_value`,"
+    expect(getStringifiedVariableValue(value)).toBe(
+      '{ "person": { "age": 35, "dev": true, "name": `baita`, "output": task123_outputData["baita"] } }'
     )
   })
+})
 
-  test('should return entire task outputData when outputIndex is defined and outputPath is defined but empty', () => {
-    const inputData = [
-      {
-        name: 'language',
-        label: 'Input Language',
-        type: VariableType.output,
-        value: 'input_language_value',
-        outputIndex: 0,
-        outputPath: '',
-      },
-    ]
-    const serviceFields = [
-      {
-        name: 'language',
-        label: 'Service Language',
-        type: VariableType.constant,
-        value: 'service_language_value',
-      },
-    ]
-
-    expect(getInputString(inputData, serviceFields)).toBe(
-      "'language': task0_outputData,"
-    )
+describe('getInputString', () => {
+  test('should return an empty string when there is no properties', () => {
+    const input = {}
+    expect(getInputString(input)).toStrictEqual('')
   })
 
-  test('should return mapped task outputData when outputIndex is defined and outputPath has properties', () => {
-    const inputData = [
-      {
-        name: 'language',
-        label: 'Input Language',
-        type: VariableType.output,
-        value: 'input_language_value',
-        outputIndex: 0,
-        outputPath: 'data.0.name',
+  test('should return simple param ', () => {
+    const input = {
+      type: 'human',
+      person: {
+        age: 35,
+        dev: true,
+        name: 'baita',
+        output: '###baita.help###task123_outputData["baita"]',
       },
-    ]
-    const serviceFields = [
-      {
-        name: 'language',
-        label: 'Service Language',
-        type: VariableType.constant,
-        value: 'service_language_value',
-      },
-    ]
+    }
 
-    expect(getInputString(inputData, serviceFields)).toBe(
-      "'language': task0_outputData[`data`][0][`name`],"
+    expect(getInputString(input)).toBe(
+      '"type": `human`, "person": { "age": 35, "dev": true, "name": `baita`, "output": task123_outputData["baita"] }'
     )
   })
 })
@@ -116,7 +83,7 @@ describe('getConditionsString', () => {
         },
       ],
     ]
-    expect(getConditionsString(conditions)).toBe('(`` == ``)')
+    expect(getConditionsString(conditions)).toBe('("" == "")')
   })
 
   test('should return an comparison between two strings', () => {
@@ -181,7 +148,7 @@ describe('getConditionsString', () => {
       ],
     ]
     expect(getConditionsString(conditions)).toBe(
-      '(!!task2_outputData[`person`][`name`])'
+      '(!!task2_outputData["person"]["name"])'
     )
   })
 
@@ -211,7 +178,7 @@ describe('getConditionsString', () => {
       ],
     ]
     expect(getConditionsString(conditions)).toBe(
-      '(!!task1_outputData[`person`][`name`] && !!task2_outputData[`person`][`name`])'
+      '(!!task1_outputData["person"]["name"] && !!task2_outputData["person"]["name"])'
     )
   })
 
@@ -263,7 +230,7 @@ describe('getConditionsString', () => {
       ],
     ]
     expect(getConditionsString(conditions)).toBe(
-      '(!!task1_outputData[`person`][`name`] && !!task2_outputData[`person`][`name`]) || (!!task3_outputData[`person`][`name`] && !!task4_outputData[`person`][`name`])'
+      '(!!task1_outputData["person"]["name"] && !!task2_outputData["person"]["name"]) || (!!task3_outputData["person"]["name"] && !!task4_outputData["person"]["name"])'
     )
   })
 })

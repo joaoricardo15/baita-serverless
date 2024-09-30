@@ -7,13 +7,17 @@ import {
   ConditionOperator,
 } from 'src/models/bot/interface'
 import { DataType, VariableType } from 'src/models/service/interface'
-import { getDataFromService, OUTPUT_CODE } from './bot'
+import {
+  getDataFromService,
+  getValueFromInputVariable,
+  OUTPUT_CODE,
+} from './bot'
 
 const zip = new JSZip()
 
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX || ''
 
-export const getStringifiedVariableValue = (value: DataType) => {
+export const getStringifiedVariableValue = (value: DataType | undefined) => {
   switch (typeof value) {
     case 'undefined':
       return '""'
@@ -33,7 +37,7 @@ export const getStringifiedVariableValue = (value: DataType) => {
 export const getInputString = (input: object) => {
   return Object.keys(input)
     .map((x) => `"${x}": ${getStringifiedVariableValue(input[x])}`)
-    .join(',')
+    .join(', ')
 }
 
 export const decodeCondition = (condition: ITaskCondition): string => {
@@ -43,9 +47,11 @@ export const decodeCondition = (condition: ITaskCondition): string => {
     comparisonOperand = { name: '', label: '', type: VariableType.constant },
   } = condition
 
-  const stringOperand = getStringifiedVariableValue(operand.value || '')
+  const stringOperand = getStringifiedVariableValue(
+    getValueFromInputVariable(operand)
+  )
   const stringComparison = getStringifiedVariableValue(
-    comparisonOperand.value || ''
+    getValueFromInputVariable(comparisonOperand)
   )
 
   switch (operator) {
@@ -220,7 +226,7 @@ module.exports.handler = async (event, context, callback) => {
 };`
 }
 
-const getBotInnerCode = (tasks: ITask[]) => {
+export const getBotInnerCode = (tasks: ITask[]) => {
   let innerCode = ''
 
   for (let i = 1; i < tasks.length; i++) {

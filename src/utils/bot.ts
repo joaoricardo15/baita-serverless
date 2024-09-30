@@ -5,13 +5,6 @@ import { IVariable, VariableType } from 'src/models/service/interface'
 export const OUTPUT_CODE = '###baita.help###'
 
 export const getDataFromPath = (data: any, outputPath?: string) => {
-  /*
-    data = [{ person: { age: '35' }]
-    outputPath = '0.person.age'
-    
-    => 35
-  */
-
   if (!outputPath) return data
 
   const paths = outputPath.split('.')
@@ -33,20 +26,6 @@ export const getDataFromMapping = (
     [key: string]: string
   }
 ) => {
-  /*
-    data = { 
-      firstName: 'Baita',
-      secondName: 'Help',
-      hobbies: [{ name: 'reading' }]
-    }
-    outputMapping = {
-        name: 'firstName',
-        hobby: 'hobbies.0.name'
-    }
-    
-    => { name: 'Baita', hobby: 'reading' }
-  */
-
   let mappedData = {}
   const outputKeys = Object.keys(outputMapping)
 
@@ -65,12 +44,6 @@ export const getMappedData = (
     [key: string]: string
   }
 ) => {
-  /*
-    data = { personalInfo: { name: 'Baita' } }
-    outputMapping = { 'person.name': 'personalInfo.name' }
-    
-    => { person: { name: 'Baita' } }
-  */
   if (!outputMapping) return data
 
   return Array.isArray(data)
@@ -85,14 +58,6 @@ export const setObjectDataFromPath = (
   value: any,
   inputPath?: string
 ) => {
-  /*
-    data = { id: '123' }
-    value = 'john'
-    inputPath = 'user.name'
-
-    => { id: '123', user: { name: 'john' } }
-  */
-
   if (!inputPath) {
     return data
   }
@@ -144,9 +109,15 @@ export const getValueFromServiceVariable = (variable: IVariable) => {
   return
 }
 
+export const getOutputVariableString = (index: number, path: string) =>
+  `task${index}_outputData${path
+    .split('.')
+    .map((x) => x && (!isNaN(Number(x)) ? `[${x}]` : `["${x}"]`))
+    .join('')}`
+
 export const getValueFromInputVariable = (
   variable: IVariable,
-  testData: boolean
+  testData?: boolean
 ) => {
   const { label, value, sampleValue, type, outputIndex, outputPath } = variable
 
@@ -174,16 +145,10 @@ export const getValueFromInputVariable = (
   return value
 }
 
-export const getOutputVariableString = (index: number, path: string) =>
-  `task${index}_outputData${path
-    .split('.')
-    .map((x) => x && (!isNaN(Number(x)) ? `[${x}]` : `[\`${x}\`]`))
-    .join('')}`
-
 export const getDataFromService = (
   serviceFields: IVariable[],
   inputData: IVariable[],
-  testData: boolean = false
+  testData?: boolean
 ) => {
   let data = {}
 
