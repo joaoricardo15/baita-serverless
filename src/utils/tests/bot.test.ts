@@ -516,4 +516,22 @@ describe('getDataFromService', () => {
         '###baita.help###task789_outputData[`outputPathValue`]',
     })
   })
+
+  test('should return sample value when it is a test case and there is a custom input variable', () => {
+    const serviceVariables = [
+      {
+        name: 'method',
+        label: 'Method',
+        type: 'constant' as any,
+        value: 'getTodo',
+      },
+    ]
+    const inputVariables = []
+
+    expect(
+      getDataFromService(serviceVariables, inputVariables, true)
+    ).toStrictEqual({
+      method: 'getTodo',
+    })
+  })
 })

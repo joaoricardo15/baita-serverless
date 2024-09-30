@@ -6,51 +6,34 @@ import {
   ITaskCondition,
   ConditionOperator,
 } from 'src/models/bot/interface'
-import { IVariable, VariableType } from 'src/models/service/interface'
+import { DataType, VariableType } from 'src/models/service/interface'
+import { getDataFromService, OUTPUT_CODE } from './bot'
 
 const zip = new JSZip()
 
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX || ''
 
-const getOutputVariableString = (index: number = 0, path: string = '') =>
-  `task${index}_outputData${path
-    .split('.')
-    .map((x) => x && (!isNaN(Number(x)) ? `[${x}]` : `[\`${x}\`]`))
-    .join('')}`
-
-const getStringifiedVariable = (variable: IVariable) => {
-  const { type, value, outputPath, outputIndex } = variable
-
-  if (type === VariableType.output)
-    return getOutputVariableString(outputIndex, outputPath)
-
+const getStringifiedVariableValue = (value: DataType) => {
   switch (typeof value) {
+    case 'undefined':
+      return '``'
+    case 'object':
+      return `{ ${value} }`
     case 'number':
+      return `${value}`
     case 'boolean':
       return `${value}`
     case 'string':
-      return `\`${value}\``
-    case 'object':
-      return `{ ${value} }`
-    case 'undefined':
-      return '``'
+      return value.startsWith(OUTPUT_CODE)
+        ? value.replace(OUTPUT_CODE, '')
+        : `\`${value}\``
   }
 }
 
-export const getInputString = (
-  inputData: IVariable[],
-  serviceFields?: IVariable[]
-) => {
-  if (!serviceFields) return ''
-
-  return serviceFields
-    .map((serviceField) => {
-      const inputField = inputData.find((x) => x.name === serviceField.name)
-      if (!inputField) throw `Input field ${serviceField.name} not found.`
-
-      return `'${serviceField.name}': ${getStringifiedVariable(inputField)},`
-    })
-    .join('')
+export const getInputString = (input: object) => {
+  return Object.keys(input)
+    .map((x) => `'${x}': ${getStringifiedVariableValue(input[x])}`)
+    .join(',')
 }
 
 const decodeCondition = (condition: ITaskCondition): string => {
@@ -60,8 +43,10 @@ const decodeCondition = (condition: ITaskCondition): string => {
     comparisonOperand = { name: '', label: '', type: VariableType.constant },
   } = condition
 
-  const stringOperand = getStringifiedVariable(operand)
-  const stringComparison = getStringifiedVariable(comparisonOperand)
+  const stringOperand = getStringifiedVariableValue(operand.value || '')
+  const stringComparison = getStringifiedVariableValue(
+    comparisonOperand.value || ''
+  )
 
   switch (operator) {
     case ConditionOperator.equals:
@@ -128,7 +113,6 @@ module.exports.handler = async (event, context, callback) => {
 
   const botId = '${botId}';
   const userId = '${userId}';
-  
 
   ////////////////////////////////////////////////////////////////////////////////
   // 2. Get data from event and save it as outputData
@@ -142,7 +126,6 @@ module.exports.handler = async (event, context, callback) => {
     FunctionName: '${SERVICE_PREFIX}-service-trigger-sample',
     Payload: JSON.stringify({ userId, botId, outputData, status: 'success' })
   });
-
 
   ////////////////////////////////////////////////////////////////////////////////
   // 4. Return success
@@ -194,7 +177,6 @@ module.exports.handler = async (event, context, callback) => {
     status: 'success'
   });
   
-  
   ////////////////////////////////////////////////////////////////////////////////
   // 4. Execute tasks
 
@@ -203,7 +185,6 @@ module.exports.handler = async (event, context, callback) => {
   } catch (error) {
     errorData = error.toString()
   }
-
 
   ////////////////////////////////////////////////////////////////////////////////
   // 5. Publish bot logs
@@ -216,7 +197,6 @@ module.exports.handler = async (event, context, callback) => {
     error: errorData,
     timestamp: Date.now()
   }));
-
 
   ////////////////////////////////////////////////////////////////////////////////
   // 6. Return success
@@ -244,10 +224,12 @@ const getBotInnerCode = (tasks: ITask[]) => {
     const service = task.service
     const conditions = task.conditions
 
-    const inputDataString = getInputString(
-      task.inputData,
-      service?.config.inputFields
+    const inputData = getDataFromService(
+      service?.config.inputFields || [],
+      task.inputData
     )
+
+    const inputDataString = getInputString(inputData)
 
     const conditionsString = getConditionsString(conditions)
 
@@ -261,9 +243,9 @@ const getBotInnerCode = (tasks: ITask[]) => {
 
     const task${i}_serviceConfig = ${JSON.stringify(service?.config)};
     
-    const task${i}_connectionId = '${task.connectionId}';
+    const task${i}_connectionId = ${task.connectionId || 'undefined'};
 
-    const task${i}_outputPath = '${service?.config.outputPath || ''}';
+    const task${i}_outputPath = ${service?.config.outputPath || '``'};
 
     let task${i}_outputData = {};
 
@@ -282,7 +264,7 @@ const getBotInnerCode = (tasks: ITask[]) => {
       ////////////////////////////////////////////////////////////////////////////////
       // 4.2.2 Parse results
 
-      const task${i}_result = JSON.parse(task${i}_lambda_payload);
+      const task${i}_result = JSON.parse(Buffer.from(task${i}_lambda_payload).toString());
       
       const task${i}_success = task${i}_result.success;
 
@@ -303,7 +285,6 @@ const getBotInnerCode = (tasks: ITask[]) => {
       // 4.2.4 If task executed successfully, increment usage
 
       if (task${i}_success) usage += 1;
-
   ${
     task.returnData
       ? `

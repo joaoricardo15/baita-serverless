@@ -508,8 +508,8 @@ export class Bot {
 
       // Get input data from service in both cases to check input data validity
       const inputData = getDataFromService(
-        task.inputData,
         task.service?.config.inputFields || [],
+        task.inputData,
         true
       )
 
