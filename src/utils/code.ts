@@ -13,12 +13,10 @@ const zip = new JSZip()
 
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX || ''
 
-const getStringifiedVariableValue = (value: DataType) => {
+export const getStringifiedVariableValue = (value: DataType) => {
   switch (typeof value) {
     case 'undefined':
-      return '``'
-    case 'object':
-      return `{ ${value} }`
+      return '""'
     case 'number':
       return `${value}`
     case 'boolean':
@@ -27,12 +25,14 @@ const getStringifiedVariableValue = (value: DataType) => {
       return value.startsWith(OUTPUT_CODE)
         ? value.replace(OUTPUT_CODE, '')
         : `\`${value}\``
+    case 'object':
+      return `{ ${getInputString(value)} }`
   }
 }
 
 export const getInputString = (input: object) => {
   return Object.keys(input)
-    .map((x) => `'${x}': ${getStringifiedVariableValue(input[x])}`)
+    .map((x) => `"${x}": ${getStringifiedVariableValue(input[x])}`)
     .join(',')
 }
 
@@ -235,18 +235,18 @@ const getBotInnerCode = (tasks: ITask[]) => {
 
     innerCode += `
     ////////////////////////////////////////////////////////////////////////////////
-    // 4.1. Collect operation inputs
+    // 4.${i}.1. Collect operation inputs
 
     const task${i}_inputData = { ${getInputString(inputData)} };
 
     let task${i}_outputData = {};
 
     ////////////////////////////////////////////////////////////////////////////////
-    // 4.2. Check conditions
+    // 4.${i}.2. Check conditions
 
     if (${getConditionsString(conditions) || true}) {
       ////////////////////////////////////////////////////////////////////////////////
-      // 4.2.1 If condition passes, execute operation
+      // 4.${i}.3. If condition passes, execute operation
 
       const { Payload: task${i}_lambda_payload } = await lambda.invoke({
         FunctionName: '${SERVICE_PREFIX}-task-${service?.name}',
@@ -261,7 +261,7 @@ const getBotInnerCode = (tasks: ITask[]) => {
       });
 
       ////////////////////////////////////////////////////////////////////////////////
-      // 4.2.2 Parse results
+      // 4.${i}.4. Parse results
 
       const task${i}_result = JSON.parse(Buffer.from(task${i}_lambda_payload).toString());
       
@@ -270,7 +270,7 @@ const getBotInnerCode = (tasks: ITask[]) => {
       task${i}_outputData = task${i}_success && task${i}_result.data ? task${i}_result.data : { message: task${i}_result.message || task${i}_result.errorMessage || 'nothing for you this time : (' };
 
       ////////////////////////////////////////////////////////////////////////////////
-      // 4.2.3 Add result to logs
+      // 4.${i}.5. Add result to logs
 
       logs.push({
         timestamp: Date.now(),
@@ -281,14 +281,14 @@ const getBotInnerCode = (tasks: ITask[]) => {
       });
 
       ////////////////////////////////////////////////////////////////////////////////
-      // 4.2.4 If task executed successfully, increment usage
+      // 4.${i}.6. If task executed successfully, increment usage
 
       if (task${i}_success) usage += 1;
   ${
     task.returnData
       ? `
       ////////////////////////////////////////////////////////////////////////////////
-      // 4.2.5 If task property returnData equals true, set outputData to task result
+      // 4.${i}.7. If task property returnData equals true, set outputData to task result
         
       if (task${i}_success) outputData = task${i}_outputData;
       `
@@ -296,7 +296,7 @@ const getBotInnerCode = (tasks: ITask[]) => {
   }
     } else {
       ////////////////////////////////////////////////////////////////////////////////
-      // 4.2.1 If condition does not pass, add result to logs
+      // 4.${i}.8. If condition does not pass, add result to logs
 
       logs.push({
         timestamp: Date.now(),
