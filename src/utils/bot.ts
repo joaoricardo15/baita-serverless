@@ -85,30 +85,6 @@ export const setObjectDataFromPath = (
   return data
 }
 
-export const getValueFromServiceVariable = (variable: IVariable) => {
-  const { label, value, type } = variable
-
-  // Is it a constant variable?
-  if (type === VariableType.constant) {
-    if (value === undefined) {
-      throw Error(`Constant variable '${label}' has no value`)
-    }
-
-    return value
-  }
-
-  // Is it an environment variable?
-  if (type === VariableType.environment) {
-    if (process.env[value as string] === undefined) {
-      throw Error(`Environment variable '${label}' does not exist`)
-    }
-
-    return process.env[value as string]
-  }
-
-  return
-}
-
 export const getOutputVariableString = (index: number, path: string) =>
   `task${index}_outputData${path
     .split('.')
@@ -143,6 +119,30 @@ export const getValueFromInputVariable = (
   }
 
   return value
+}
+
+export const getValueFromServiceVariable = (variable: IVariable) => {
+  const { label, value, type } = variable
+
+  // Is it a constant variable?
+  if (type === VariableType.constant) {
+    if (value === undefined) {
+      throw Error(`Constant variable '${label}' has no value`)
+    }
+
+    return value
+  }
+
+  // Is it an environment variable?
+  if (type === VariableType.environment) {
+    if (process.env[value as string] === undefined) {
+      throw Error(`Environment variable '${label}' does not exist`)
+    }
+
+    return process.env[value as string]
+  }
+
+  return
 }
 
 export const getDataFromService = (
