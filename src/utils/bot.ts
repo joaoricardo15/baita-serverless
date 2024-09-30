@@ -85,11 +85,12 @@ export const setObjectDataFromPath = (
   return data
 }
 
-export const getOutputVariableString = (index: number, path: string) =>
-  `task${index}_outputData${path
+export const getOutputVariableString = (index: number, path: string) => {
+  return `task${index}_outputData${path
     .split('.')
     .map((x) => x && (!isNaN(Number(x)) ? `[${x}]` : `["${x}"]`))
     .join('')}`
+}
 
 export const getValueFromInputVariable = (
   variable: IVariable,

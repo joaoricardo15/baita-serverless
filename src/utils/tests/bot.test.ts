@@ -4,8 +4,9 @@ import {
   getDataFromMapping,
   getMappedData,
   setObjectDataFromPath,
-  getValueFromServiceVariable,
+  getOutputVariableString,
   getValueFromInputVariable,
+  getValueFromServiceVariable,
   getDataFromService,
 } from '../bot'
 
@@ -172,64 +173,23 @@ describe('setObjectDataFromPath', () => {
   })
 })
 
-describe('getValueFromServiceVariable', () => {
-  test('should throw error when there is no value in constant variable', () => {
-    const variable = {
-      name: 'constProperty',
-      label: 'ConstProperty',
-      type: VariableType.constant,
-    }
+describe('getOutputVariableString', () => {
+  test('should return entire task output data object', () => {
+    const outputIndex = 123
+    const outputPath = ''
 
-    expect(() => getValueFromServiceVariable(variable)).toThrow()
+    expect(getOutputVariableString(outputIndex, outputPath)).toBe(
+      'task123_outputData'
+    )
   })
 
-  test('should return value from variable', () => {
-    const variable = {
-      name: 'constProperty',
-      label: 'ConstProperty',
-      type: VariableType.constant,
-      value: 'constPropertyValue',
-    }
+  test('should return specific task output value including object property and array object', () => {
+    const outputIndex = 123
+    const outputPath = 'baita.0.help'
 
-    expect(getValueFromServiceVariable(variable)).toBe('constPropertyValue')
-  })
-
-  test('should throw error when there is no environment value in environment variable', () => {
-    const variable = {
-      name: 'envProperty',
-      label: 'EnvProperty',
-      type: VariableType.environment,
-    }
-
-    expect(() => getValueFromServiceVariable(variable)).toThrow()
-  })
-
-  test('should return environment value from environment variable', () => {
-    process.env['envPropertyName'] = 'envPropertyValue'
-    const variable = {
-      name: 'envProperty',
-      label: 'EnvProperty',
-      type: VariableType.environment,
-      value: 'envPropertyName',
-    }
-
-    expect(getValueFromServiceVariable(variable)).toBe('envPropertyValue')
-  })
-
-  test('should return undefined for all other variable types', () => {
-    Object.values(VariableType)
-      .filter(
-        (type) => type in [VariableType.constant, VariableType.environment]
-      )
-      .forEach((type) => {
-        const variable = {
-          name: 'property',
-          label: 'Property',
-          type,
-        }
-
-        expect(getValueFromServiceVariable(variable)).toBeUndefined()
-      })
+    expect(getOutputVariableString(outputIndex, outputPath)).toBe(
+      'task123_outputData["baita"][0]["help"]'
+    )
   })
 })
 
@@ -302,6 +262,67 @@ describe('getValueFromInputVariable', () => {
         }
 
         expect(getValueFromInputVariable(variable, false)).toBe('constValue')
+      })
+  })
+})
+
+describe('getValueFromServiceVariable', () => {
+  test('should throw error when there is no value in constant variable', () => {
+    const variable = {
+      name: 'constProperty',
+      label: 'ConstProperty',
+      type: VariableType.constant,
+    }
+
+    expect(() => getValueFromServiceVariable(variable)).toThrow()
+  })
+
+  test('should return value from variable', () => {
+    const variable = {
+      name: 'constProperty',
+      label: 'ConstProperty',
+      type: VariableType.constant,
+      value: 'constPropertyValue',
+    }
+
+    expect(getValueFromServiceVariable(variable)).toBe('constPropertyValue')
+  })
+
+  test('should throw error when there is no environment value in environment variable', () => {
+    const variable = {
+      name: 'envProperty',
+      label: 'EnvProperty',
+      type: VariableType.environment,
+    }
+
+    expect(() => getValueFromServiceVariable(variable)).toThrow()
+  })
+
+  test('should return environment value from environment variable', () => {
+    process.env['envPropertyName'] = 'envPropertyValue'
+    const variable = {
+      name: 'envProperty',
+      label: 'EnvProperty',
+      type: VariableType.environment,
+      value: 'envPropertyName',
+    }
+
+    expect(getValueFromServiceVariable(variable)).toBe('envPropertyValue')
+  })
+
+  test('should return undefined for all other variable types', () => {
+    Object.values(VariableType)
+      .filter(
+        (type) => type in [VariableType.constant, VariableType.environment]
+      )
+      .forEach((type) => {
+        const variable = {
+          name: 'property',
+          label: 'Property',
+          type,
+        }
+
+        expect(getValueFromServiceVariable(variable)).toBeUndefined()
       })
   })
 })
