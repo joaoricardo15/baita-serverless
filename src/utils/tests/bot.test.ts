@@ -459,6 +459,24 @@ describe('getDataFromService', () => {
   })
 
   test('should return sample value when it is a test case and there is a custom input variable', () => {
+    const serviceVariables = [
+      {
+        name: 'method',
+        label: 'Method',
+        type: 'constant' as any,
+        value: 'getTodo',
+      },
+    ]
+    const inputVariables = []
+
+    expect(
+      getDataFromService(serviceVariables, inputVariables, true)
+    ).toStrictEqual({
+      method: 'getTodo',
+    })
+  })
+
+  test('should return sample value when it is a test case and there is a custom input variable', () => {
     const serviceVariables = []
     const inputVariables = [
       {
@@ -538,21 +556,94 @@ describe('getDataFromService', () => {
     })
   })
 
-  test('should return sample value when it is a test case and there is a custom input variable', () => {
+  test('should return correct input object regarding a complex real use case', () => {
+    process.env['OPENAI_API_AUTHORIZATION'] = 'Bearer xxx'
     const serviceVariables = [
       {
         name: 'method',
         label: 'Method',
-        type: 'constant' as any,
-        value: 'getTodo',
+        type: VariableType.constant,
+        value: 'post',
+        required: true,
+      },
+      {
+        name: 'path',
+        label: 'Path',
+        type: VariableType.constant,
+        value: 'chat/completions',
+        required: true,
+      },
+      {
+        name: 'headers.Authorization',
+        label: 'Authorization',
+        type: VariableType.environment,
+        value: 'OPENAI_API_AUTHORIZATION',
+        required: true,
+      },
+      {
+        name: 'bodyParams.model',
+        label: 'Model',
+        type: VariableType.constant,
+        value: 'gpt-4o-mini',
+        required: true,
+      },
+      {
+        name: 'bodyParams.temperature',
+        label: 'Temperature',
+        type: VariableType.constant,
+        value: 0.9,
+      },
+      {
+        name: 'bodyParams.max_completion_tokens',
+        label: 'Max tokens',
+        type: VariableType.constant,
+        value: 100,
+      },
+      {
+        name: 'bodyParams.messages.0.role',
+        label: 'Role of chat message',
+        type: VariableType.constant,
+        value: 'user',
+        required: true,
+      },
+      {
+        name: 'bodyParams.messages.0.content',
+        label: 'Content of chat message',
+        type: VariableType.output,
+        required: true,
       },
     ]
-    const inputVariables = []
 
-    expect(
-      getDataFromService(serviceVariables, inputVariables, true)
-    ).toStrictEqual({
-      method: 'getTodo',
+    const inputVariables = [
+      {
+        outputIndex: 1,
+        outputPath: 'title',
+        name: 'bodyParams.messages.0.content',
+        label: 'title: Plan trip to Italy',
+        type: VariableType.output,
+        sampleValue: 'Plan trip to Italy',
+        value: 'Plan trip to Italy',
+        required: true,
+      },
+    ]
+
+    expect(getDataFromService(serviceVariables, inputVariables)).toStrictEqual({
+      bodyParams: {
+        max_completion_tokens: 100,
+        messages: [
+          {
+            content: '###baita.help###task1_outputData["title"]',
+            role: 'user',
+          },
+        ],
+        model: 'gpt-4o-mini',
+        temperature: 0.9,
+      },
+      headers: {
+        Authorization: 'Bearer xxx',
+      },
+      method: 'post',
+      path: 'chat/completions',
     })
   })
 })

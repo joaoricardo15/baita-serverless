@@ -30,13 +30,19 @@ export const getStringifiedVariableValue = (value: DataType | undefined) => {
         ? value.replace(OUTPUT_CODE, '')
         : `\`${value}\``
     case 'object':
-      return `{ ${getInputString(value)} }`
+      return Array.isArray(value)
+        ? `[ ${getInputString(value)} ]`
+        : `{ ${getInputString(value)} }`
   }
 }
 
 export const getInputString = (input: object) => {
   return Object.keys(input)
-    .map((x) => `"${x}": ${getStringifiedVariableValue(input[x])}`)
+    .map((x) =>
+      isNaN(Number(x))
+        ? `"${x}": ${getStringifiedVariableValue(input[x])}`
+        : getStringifiedVariableValue(input[x])
+    )
     .join(', ')
 }
 
@@ -194,7 +200,7 @@ module.exports.handler = async (event, context, callback) => {
   try {
     ${getBotInnerCode(tasks)}
   } catch (error) {
-    errorData = error.toString()
+    errorData = error.toString();
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -234,84 +240,94 @@ export const getBotInnerCode = (tasks: ITask[]) => {
     const app = task.app
     const service = task.service
     const conditions = task.conditions
-    const inputData = getDataFromService(
-      service?.config.inputFields || [],
-      task.inputData
-    )
 
-    innerCode += `
-    ////////////////////////////////////////////////////////////////////////////////
-    // 4.${i}.1. Collect operation inputs
+    try {
+      const inputData = getDataFromService(
+        service?.config.inputFields || [],
+        task.inputData
+      )
 
-    const task${i}_inputData = { ${getInputString(inputData)} };
-
-    let task${i}_outputData = {};
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // 4.${i}.2. Check conditions
-
-    if (${getConditionsString(conditions) || true}) {
+      innerCode += `
       ////////////////////////////////////////////////////////////////////////////////
-      // 4.${i}.3. If condition passes, execute operation
-
-      const { Payload: task${i}_lambda_payload } = await lambda.invoke({
-        FunctionName: '${SERVICE_PREFIX}-task-${service?.name}',
-        Payload: JSON.stringify({ 
-          botId,
-          userId,
-          inputData: task${i}_inputData,
-          appConfig: ${JSON.stringify(app?.config)},
-          serviceConfig: ${JSON.stringify(service?.config)},
-          connectionId: ${task.connectionId || 'undefined'}
-        }),
-      });
-
+      // Task ${i} ///////////////////////////////////////////////////////////////////
       ////////////////////////////////////////////////////////////////////////////////
-      // 4.${i}.4. Parse results
-
-      const task${i}_result = JSON.parse(Buffer.from(task${i}_lambda_payload).toString());
+      // Task: 4.${i}. Collect operation inputs
       
-      const task${i}_success = task${i}_result.success;
+      ////////////////////////////////////////////////////////////////////////////////
+      // 4.${i}.1. Collect operation inputs
 
-      task${i}_outputData = task${i}_success && task${i}_result.data ? task${i}_result.data : { message: task${i}_result.message || task${i}_result.errorMessage || 'nothing for you this time : (' };
+      const task${i}_inputData = { ${getInputString(inputData)} };
+
+      let task${i}_outputData = {};
 
       ////////////////////////////////////////////////////////////////////////////////
-      // 4.${i}.5. Add result to logs
+      // 4.${i}.2. Check conditions
 
-      logs.push({
-        timestamp: Date.now(),
-        name: '${service?.label}',
-        inputData: task${i}_inputData,
-        outputData: task${i}_outputData,
-        status: task${i}_success ? 'success' : 'fail',
-      });
+      if (${getConditionsString(conditions) || true}) {
+        ////////////////////////////////////////////////////////////////////////////////
+        // 4.${i}.3. If condition passes, execute operation
 
-      ////////////////////////////////////////////////////////////////////////////////
-      // 4.${i}.6. If task executed successfully, increment usage
+        const { Payload: task${i}_lambda_payload } = await lambda.invoke({
+          FunctionName: '${SERVICE_PREFIX}-task-${service?.name}',
+          Payload: JSON.stringify({ 
+            botId,
+            userId,
+            inputData: task${i}_inputData,
+            appConfig: ${JSON.stringify(app?.config)},
+            serviceConfig: ${JSON.stringify(service?.config)},
+            connectionId: ${task.connectionId || 'undefined'}
+          }),
+        });
 
-      if (task${i}_success) usage += 1;
-  ${
-    task.returnData
-      ? `
-      ////////////////////////////////////////////////////////////////////////////////
-      // 4.${i}.7. If task property returnData equals true, set outputData to task result
+        ////////////////////////////////////////////////////////////////////////////////
+        // 4.${i}.4. Parse results
+
+        const task${i}_result = JSON.parse(Buffer.from(task${i}_lambda_payload).toString());
         
-      if (task${i}_success) outputData = task${i}_outputData;
-      `
-      : ''
-  }
-    } else {
-      ////////////////////////////////////////////////////////////////////////////////
-      // 4.${i}.8. If condition does not pass, add result to logs
+        const task${i}_success = task${i}_result.success;
 
-      logs.push({
-        timestamp: Date.now(),
-        name: '${service?.label}',
-        inputData: task${i}_inputData,
-        outputData: task${i}_outputData,
-        status: 'filtered',
-      });
-    }`
+        task${i}_outputData = task${i}_success && task${i}_result.data ? task${i}_result.data : { message: task${i}_result.message || task${i}_result.errorMessage || 'nothing for you this time : (' };
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // 4.${i}.5. Add result to logs
+
+        logs.push({
+          timestamp: Date.now(),
+          name: '${service?.label}',
+          inputData: task${i}_inputData,
+          outputData: task${i}_outputData,
+          status: task${i}_success ? 'success' : 'fail',
+        });
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // 4.${i}.6. If task executed successfully, increment usage
+
+        if (task${i}_success) usage += 1;
+    ${
+      task.returnData
+        ? `
+        ////////////////////////////////////////////////////////////////////////////////
+        // 4.${i}.7. If task property returnData equals true, set outputData to task result
+          
+        if (task${i}_success) outputData = task${i}_outputData;
+        `
+        : ''
+    }
+      } else {
+        ////////////////////////////////////////////////////////////////////////////////
+        // 4.${i}.8. If condition does not pass, add result to logs
+
+        logs.push({
+          timestamp: Date.now(),
+          name: '${service?.label}',
+          inputData: task${i}_inputData,
+          outputData: task${i}_outputData,
+          status: 'filtered',
+        });
+      }`
+    } catch (err) {
+      throw `task ${i}:` + err.message
+    }
   }
 
   return innerCode

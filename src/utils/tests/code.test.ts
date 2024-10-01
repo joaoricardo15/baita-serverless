@@ -50,9 +50,43 @@ describe('getInputString', () => {
     expect(getInputString(input)).toStrictEqual('')
   })
 
-  test('should return simple param ', () => {
+  test('should return string containing list of properties containing primitive types of data', () => {
     const input = {
-      type: 'human',
+      age: 35,
+      dev: true,
+      name: 'baita',
+    }
+
+    expect(getInputString(input)).toBe(
+      '"age": 35, "dev": true, "name": `baita`'
+    )
+  })
+
+  test('should return string containing list of properties containing an object', () => {
+    const input = {
+      person: {
+        age: 35,
+        dev: true,
+        name: 'baita',
+      },
+    }
+
+    expect(getInputString(input)).toBe(
+      '"person": { "age": 35, "dev": true, "name": `baita` }'
+    )
+  })
+
+  test('should return string containing list of properties containing an array', () => {
+    const input = {
+      types: ['baita', 'help'],
+    }
+
+    expect(getInputString(input)).toBe('"types": [ `baita`, `help` ]')
+  })
+
+  test('should return string containing list of properties containing all types of data', () => {
+    const input = {
+      types: ['baita', 'help'],
       person: {
         age: 35,
         dev: true,
@@ -62,7 +96,32 @@ describe('getInputString', () => {
     }
 
     expect(getInputString(input)).toBe(
-      '"type": `human`, "person": { "age": 35, "dev": true, "name": `baita`, "output": task123_outputData["baita"] }'
+      '"types": [ `baita`, `help` ], "person": { "age": 35, "dev": true, "name": `baita`, "output": task123_outputData["baita"] }'
+    )
+  })
+
+  test('should return correct input string regarding a complex real use case', () => {
+    const input = {
+      bodyParams: {
+        max_completion_tokens: 100,
+        messages: [
+          {
+            content: '###baita.help###task1_outputData["title"]',
+            role: 'user',
+          },
+        ],
+        model: 'gpt-4o-mini',
+        temperature: 0.9,
+      },
+      headers: {
+        Authorization: 'Bearer xxx',
+      },
+      method: 'post',
+      path: 'chat/completions',
+    }
+
+    expect(getInputString(input)).toBe(
+      '"bodyParams": { "max_completion_tokens": 100, "messages": [ { "content": task1_outputData["title"], "role": `user` } ], "model": `gpt-4o-mini`, "temperature": 0.9 }, "headers": { "Authorization": `Bearer xxx` }, "method": `post`, "path": `chat/completions`'
     )
   })
 })
