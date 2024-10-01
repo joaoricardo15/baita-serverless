@@ -1,7 +1,16 @@
 'use strict'
 
 import { JSONSchemaType } from 'ajv'
-import { DataType, IService, IServiceConfig, IVariable, ServiceName, ServiceType, VariableType } from './interface'
+import {
+  DataType,
+  IService,
+  IServiceConfig,
+  IVariable,
+  VariableType,
+  ServiceName,
+  ServiceType,
+  MethodName,
+} from './interface'
 
 export const dataSchema: JSONSchemaType<DataType> = {
   anyOf: [
@@ -85,12 +94,9 @@ export const variableSchema: JSONSchemaType<IVariable> = {
 export const serviceConfigSchema: JSONSchemaType<IServiceConfig> = {
   type: 'object',
   properties: {
-    path: {
+    methodName: {
       type: 'string',
-      nullable: true,
-    },
-    method: {
-      type: 'string',
+      enum: Object.values(MethodName) as readonly MethodName[],
       nullable: true,
     },
     customFields: {

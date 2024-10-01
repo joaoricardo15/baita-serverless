@@ -15,6 +15,13 @@ export enum ServiceName {
   schedule = 'schedule',
 }
 
+export enum MethodName {
+  getTodo = 'getTodo',
+  publishToFeed = 'publishToFeed',
+  sendNotification = 'sendNotification',
+  httpRequest = 'httpRequest',
+}
+
 export enum VariableType {
   code = 'code',
   user = 'user',
@@ -52,6 +59,7 @@ export interface IVariable {
 }
 
 export interface IServiceConfig {
+  methodName?: MethodName
   customFields?: boolean
   inputFields?: IVariable[]
   outputPath?: string

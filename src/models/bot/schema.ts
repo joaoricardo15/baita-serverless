@@ -3,11 +3,13 @@
 import Ajv, { JSONSchemaType } from 'ajv'
 import addFormats from 'ajv-formats'
 import { appConfigSchema, appSchema } from '../app/schema'
-import { dataSchema, serviceSchema, variableSchema } from '../service/schema'
 import {
-  DataType,
-  IServiceConfig,
-} from 'src/models/service/interface'
+  dataSchema,
+  serviceConfigSchema,
+  serviceSchema,
+  variableSchema,
+} from '../service/schema'
+import { DataType } from 'src/models/service/interface'
 import {
   ITask,
   ITaskCondition,
@@ -36,30 +38,6 @@ const taskConditionSchema: JSONSchemaType<ITaskCondition> = {
     },
   },
   required: ['operator', 'operand'],
-}
-
-const serviceConfigSchema: JSONSchemaType<IServiceConfig> = {
-  type: 'object',
-  properties: {
-    customFields: {
-      type: 'boolean',
-      nullable: true,
-    },
-    inputFields: {
-      type: 'array',
-      nullable: true,
-      items: variableSchema,
-    },
-    outputPath: {
-      type: 'string',
-      nullable: true,
-    },
-    outputMapping: {
-      type: 'object',
-      nullable: true,
-      required: [],
-    },
-  },
 }
 
 const taskResultSchema: JSONSchemaType<ITaskExecutionResult> = {
