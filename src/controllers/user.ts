@@ -42,7 +42,7 @@ export class User {
 
     try {
       const queueUrlResult = await sqs.getQueueUrl({
-        QueueName: `${SERVICE_PREFIX.replace('dev', 'prod')}-${userId}`,
+        QueueName: `${SERVICE_PREFIX}-${userId}`,
       })
 
       const messagesResult = await sqs.receiveMessage({

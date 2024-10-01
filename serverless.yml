@@ -45,6 +45,7 @@ provider:
         - 'iam:PassRole'
       Resource: '*'
   environment:
+    # Service
     SERVICE_PREFIX: ${self:service}-prod
     SERVICE_API_URL: https://api.baita.help
     SERVICE_SITE_URL: https://www.baita.help
@@ -55,6 +56,10 @@ provider:
     # Bot resources
     BOTS_BUCKET: ${self:provider.environment.SERVICE_PREFIX}-bots
     BOTS_PERMISSION: arn:aws:iam::514311354050:role/${self:provider.environment.SERVICE_PREFIX}
+
+    ####################
+    ##### Partners #####
+    ####################
 
     # Pipedrive
     PIPEDRIVE_AUTH_URL: ${file(./src/partners/pipedrive/secrets.json):auth_uri}
