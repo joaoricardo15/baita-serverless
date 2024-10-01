@@ -75,14 +75,8 @@ functions:
     handler: src/services/trigger-sample/index.handler
 
   ### tasks ###
-  task-http-request:
-    handler: src/tasks/http-request/index.handler
-  task-oauth2-request:
-    handler: src/tasks/oauth2-request/index.handler
   task-code-execute:
     handler: src/tasks/code-execute/index.handler
-  task-queue-publish:
-    handler: src/tasks/queue-publish/index.handler
   task-method-execute:
     handler: src/tasks/method-execute/index.handler
 
