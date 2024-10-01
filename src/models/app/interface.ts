@@ -1,4 +1,4 @@
-import { IService } from "../service/interface"
+import { IService } from '../service/interface'
 
 export interface IAppConfig {
   apiUrl?: string

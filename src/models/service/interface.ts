@@ -1,4 +1,4 @@
-import { IApp } from "../app/interface"
+import { IApp } from '../app/interface'
 
 export enum ServiceType {
   invoke = 'invoke',

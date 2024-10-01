@@ -1,5 +1,10 @@
 import { IApp, IAppConfig } from '../app/interface'
-import { DataType, IServiceConfig, IService, IVariable } from '../service/interface'
+import {
+  DataType,
+  IServiceConfig,
+  IService,
+  IVariable,
+} from '../service/interface'
 
 export enum TaskExecutionStatus {
   fail = 'fail',
@@ -35,7 +40,7 @@ export enum ConditionOperator {
 
 export interface ITaskCondition {
   operator: ConditionOperator
-  operand: IVariable,
+  operand: IVariable
   comparisonOperand?: IVariable
 }
 
