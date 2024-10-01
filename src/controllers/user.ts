@@ -104,7 +104,6 @@ export class User {
     const ddb = DynamoDBDocument.from(new DynamoDB({}))
 
     try {
-      // TODO: Workaround to get the queue url
       const queueResult = await sqs.getQueueUrl({
         QueueName: `${SERVICE_PREFIX}-${userId}`,
       })
