@@ -2,13 +2,16 @@
 
 import { Api, BotStatus } from 'src/utils/api'
 import { validateOperationInput } from 'src/models/bot/schema'
-import { getTodo, publishToFeed } from 'src/tasks/method-execute/methods/user'
-import { sendNotification } from 'src/tasks/method-execute/methods/firebase'
+import { MethodName } from 'src/models/service/interface'
+import { getTodo, publishToFeed } from './methods/user'
+import { sendNotification } from './methods/firebase'
+import { httpRequest } from './methods/http'
 
-const METHODS = {
+const METHODS: { [key in MethodName]: Function } = {
   getTodo,
   publishToFeed,
   sendNotification,
+  httpRequest,
 }
 
 exports.handler = async (event, context, callback) => {
@@ -17,11 +20,7 @@ exports.handler = async (event, context, callback) => {
   try {
     validateOperationInput(event)
 
-    const {
-      inputData: { method }
-    } = event
-
-    const data = await METHODS[method as string](event)
+    const data = await METHODS[event.serviceConfig.methodName as string](event)
 
     api.httpOperationResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {

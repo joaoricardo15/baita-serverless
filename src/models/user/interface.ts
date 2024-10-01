@@ -7,10 +7,10 @@ export interface IUser {
 
 export interface IContent {
   contentId: string
-  body: string
   date: string
+  header: string
+  body?: string
   source?: string
-  header?: string
   image?: string
   url?: string
   likes?: number
