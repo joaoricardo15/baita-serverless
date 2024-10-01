@@ -9,33 +9,32 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount as any),
 })
 
-export const sendNotification = async (
-  taskInput: ITaskExecutionInput<{
-    token: string
-    url?: string
-    notification: {
+interface ISendNotification {
+  token: string
+  url?: string
+  notification: {
+    title: string
+    body: string
+    timestamp?: number
+    image?: string
+    icon?: string
+    actions?: {
+      action: string
       title: string
-      body: string
-      timestamp?: number
-      image?: string
-      icon?: string
-      actions?: {
-        action: string
-        title: string
-      }[]
-    }
-    data?: any
-  }>
+    }[]
+  }
+  data?: any
+}
+
+export const sendNotification = async (
+  taskInput: ITaskExecutionInput<ISendNotification>
 ) => {
   try {
-    const {
-      botId,
-      inputData: { data, notification, token, url },
-    } = taskInput
+    const { botId, inputData } = taskInput
 
     const message: TokenMessage = {
-      data,
-      token,
+      data: inputData.data,
+      token: inputData.token,
       webpush: {
         headers: {
           Topic: botId,
@@ -47,14 +46,14 @@ export const sendNotification = async (
           renotify: false,
           requireInteraction: true,
           badge: `${SERVICE_SITE_URL}/badge.png`,
-          ...notification,
+          ...inputData.notification,
           icon:
-            notification.icon ||
-            notification.image ||
+            inputData.notification.icon ||
+            inputData.notification.image ||
             `${SERVICE_SITE_URL}/logo.png`,
         },
         fcmOptions: {
-          link: url || SERVICE_SITE_URL,
+          link: inputData.url || SERVICE_SITE_URL,
         },
       },
       fcmOptions: {

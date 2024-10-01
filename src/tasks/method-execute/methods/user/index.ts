@@ -5,7 +5,9 @@ import { validateContent } from 'src/models/user/schema'
 
 const user = new User()
 
-export const getTodo = async (taskInput: ITaskExecutionInput<undefined>) => {
+interface IGetTodo {}
+
+export const getTodo = async (taskInput: ITaskExecutionInput<IGetTodo>) => {
   try {
     const { userId } = taskInput
 
@@ -17,22 +19,22 @@ export const getTodo = async (taskInput: ITaskExecutionInput<undefined>) => {
   }
 }
 
+interface IPublishFeed {
+  content: IContent | IContent[]
+}
+
 export const publishToFeed = async (
-  taskInput: ITaskExecutionInput<{ content: IContent[] }>
+  taskInput: ITaskExecutionInput<IPublishFeed>
 ) => {
   try {
     const { userId, inputData } = taskInput
 
-    const { content } = inputData
-
-    let contentList
-    if (Array.isArray(content)) {
-      contentList = content
-    } else {
-      contentList = [content]
-    }
+    const contentList = Array.isArray(inputData.content)
+      ? inputData.content
+      : [inputData.content]
 
     validateContent(contentList)
+    
     await user.publishContent(userId, contentList)
 
     return {

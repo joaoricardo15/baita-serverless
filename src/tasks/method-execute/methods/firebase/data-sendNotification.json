@@ -3,6 +3,7 @@
   "userId": "110944657139284874166",
   "appConfig": {},
   "serviceConfig": {
+    "methodName": "sendNotification",
     "inputFields": [
       {
         "name": "method",
@@ -30,8 +31,23 @@
     ]
   },
   "inputData": {
-    "method": "sendNotification",
-    "token": "eCtjmp0y_DyWVbThAfMo2G:APA91bEch4SNfp1_LXhO-3x1gGXvzJlKgtk55mL7BnSSeZy5nntdsD5sxT7Oh5FkSdw_Hcx0wrJN4gjcjkO8SlQz9g-cJ35jCUdUz5hTNrnlbT7d4Yd5lHbSLnGEjwyP-2tXKLMkWhxO",
-    "notification": { "title": "testing Push" }
+    "token": "c6Sw9Bejx-9HHNkBkM_NcN:APA91bFkqegM8YWIkFzqsbuPDee7qmVV3LKtQ2NmHDxENqr6cy3P5qTv6BRUr6MJ559m39GdIDik1Vfh0MMlxkxc1buRDBEiAfd1dzmuqcDhTE9mll4PqH7jYBOCjgBMvMHr-trCbOx5",
+    "notification": {
+      "title": "Portugal vs. Denmark",
+      "body": "5 to 1",
+      "timestamp": 1674405502774,
+      "image": "https://media.giphy.com/media/j0N6NL1s1utfqxpzdc/giphy.gif",
+      "icon": "https://www.baita.help/logo.png",
+      "actions": [
+        {
+          "action": "like",
+          "title": "👍 Like"
+        },
+        {
+          "action": "reply",
+          "title": "👎 Dislike"
+        }
+      ]
+    }
   }
 }
