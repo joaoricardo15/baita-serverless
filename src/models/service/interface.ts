@@ -20,6 +20,7 @@ export enum MethodName {
   publishToFeed = 'publishToFeed',
   sendNotification = 'sendNotification',
   httpRequest = 'httpRequest',
+  oauth2Request = 'oauth2Request',
 }
 
 export enum VariableType {

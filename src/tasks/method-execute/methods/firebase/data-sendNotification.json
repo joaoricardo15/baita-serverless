@@ -5,12 +5,6 @@
   "serviceConfig": {
     "methodName": "sendNotification",
     "inputFields": [
-      {
-        "name": "method",
-        "label": "Method",
-        "type": "constant",
-        "value": "sendNotification"
-      },
       { "name": "token", "label": "Token", "type": "user", "required": true },
       {
         "name": "notification.title",
@@ -31,12 +25,12 @@
     ]
   },
   "inputData": {
-    "token": "c6Sw9Bejx-9HHNkBkM_NcN:APA91bFkqegM8YWIkFzqsbuPDee7qmVV3LKtQ2NmHDxENqr6cy3P5qTv6BRUr6MJ559m39GdIDik1Vfh0MMlxkxc1buRDBEiAfd1dzmuqcDhTE9mll4PqH7jYBOCjgBMvMHr-trCbOx5",
+    "token": "eCtjmp0y_DyWVbThAfMo2G:APA91bGM123A_QZP7xzxwNFILIKsJhjx1l4ocf5MAE5c2imK7A2VQ0AbKgfBA04NfeWSeUHgwRyRjr48qpSub0uGh-PORoigEUUijHaF2q8hpNV5Ns6u279ummAony-hzBVXkpDMtheX",
     "notification": {
-      "title": "Portugal vs. Denmark",
-      "body": "5 to 1",
+      "title": "Plan trip to Italy",
+      "body": "Planning a trip to Italy is an exciting endeavor, as the country is rich in history, culture, cuisine, and stunning landscapes",
       "timestamp": 1674405502774,
-      "image": "https://media.giphy.com/media/j0N6NL1s1utfqxpzdc/giphy.gif",
+      "image": "https://oaidalleapiprodscus.blob.core.windows.net/private/org-pZ6wxbQAKJWRRS0Y0gxnTDN8/baita-help/img-k6ZHcQK5pNmYgJ4IpnKI0TLD.png?st=2024-10-01T13%3A21%3A07Z&se=2024-10-01T15%3A21%3A07Z&sp=r&sv=2024-08-04&sr=b&rscd=inline&rsct=image/png&skoid=d505667d-d6c1-4a0a-bac7-5c84a87759f8&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2024-10-01T07%3A32%3A55Z&ske=2024-10-02T07%3A32%3A55Z&sks=b&skv=2024-08-04&sig=WHFQmdNsDvx4IlU/KY1IJV5WXkMYHfiFQKxe4xPxjlI%3D",
       "icon": "https://www.baita.help/logo.png",
       "actions": [
         {

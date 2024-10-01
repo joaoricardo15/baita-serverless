@@ -1,17 +1,18 @@
 'use strict'
 
 import { Api, BotStatus } from 'src/utils/api'
-import { validateOperationInput } from 'src/models/bot/schema'
 import { MethodName } from 'src/models/service/interface'
+import { validateOperationInput } from 'src/models/bot/schema'
+import { httpRequest, oauth2Request } from './methods/http'
 import { getTodo, publishToFeed } from './methods/user'
 import { sendNotification } from './methods/firebase'
-import { httpRequest } from './methods/http'
 
 const METHODS: { [key in MethodName]: Function } = {
   getTodo,
   publishToFeed,
   sendNotification,
   httpRequest,
+  oauth2Request,
 }
 
 exports.handler = async (event, context, callback) => {
