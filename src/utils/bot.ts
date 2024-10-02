@@ -88,7 +88,7 @@ export const setObjectDataFromPath = (
 export const getOutputVariableString = (index: number, path: string) => {
   return `task${index}_outputData${path
     .split('.')
-    .map((x) => x && (!isNaN(Number(x)) ? `[${x}]` : `["${x}"]`))
+    .map((x) => x && (!isNaN(Number(x)) ? `[${x}]` : `['${x}']`))
     .join('')}`
 }
 
@@ -115,7 +115,8 @@ export const getValueFromInputVariable = (
 
     return (
       OUTPUT_CODE +
-      getOutputVariableString(outputIndex, outputPath)
+      getOutputVariableString(outputIndex, outputPath) +
+      OUTPUT_CODE
     )
   }
 
@@ -215,7 +216,7 @@ export const getDataFromService = (
         inputDataField,
         testData
       )
-  
+
       data = setObjectDataFromPath(
         data,
         inputDataVariableValue,

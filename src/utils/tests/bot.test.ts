@@ -1,13 +1,14 @@
 import { VariableType } from 'src/models/service/interface'
 import {
+  getMappedData,
   getDataFromPath,
   getDataFromMapping,
-  getMappedData,
   setObjectDataFromPath,
   getOutputVariableString,
   getValueFromInputVariable,
   getValueFromServiceVariable,
   getDataFromService,
+  OUTPUT_CODE,
 } from '../bot'
 
 describe('getDataFromPath', () => {
@@ -188,7 +189,7 @@ describe('getOutputVariableString', () => {
     const outputPath = 'baita.0.help'
 
     expect(getOutputVariableString(outputIndex, outputPath)).toBe(
-      'task123_outputData["baita"][0]["help"]'
+      `task123_outputData['baita'][0]['help']`
     )
   })
 })
@@ -245,7 +246,7 @@ describe('getValueFromInputVariable', () => {
     }
 
     expect(getValueFromInputVariable(variable, false)).toBe(
-      '###baita.help###task123_outputData["asd"]'
+      `${OUTPUT_CODE}task123_outputData['asd']${OUTPUT_CODE}`
     )
   })
 
@@ -551,8 +552,7 @@ describe('getDataFromService', () => {
       envProperty: 'envPropertyValue',
       inputRequiredProperty: 'inputRequiredPropertyValue',
       inputCustomProperty: 'inputCustomPropertyValue',
-      outputCustomProperty:
-        '###baita.help###task789_outputData["outputPathValue"]',
+      outputCustomProperty: `${OUTPUT_CODE}task789_outputData['outputPathValue']${OUTPUT_CODE}`,
     })
   })
 
@@ -632,7 +632,7 @@ describe('getDataFromService', () => {
         max_completion_tokens: 100,
         messages: [
           {
-            content: '###baita.help###task1_outputData["title"]',
+            content: `${OUTPUT_CODE}task1_outputData['title']${OUTPUT_CODE}`,
             role: 'user',
           },
         ],

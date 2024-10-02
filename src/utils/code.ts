@@ -17,33 +17,10 @@ const zip = new JSZip()
 
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX || ''
 
-export const getStringifiedVariableValue = (value: DataType | undefined) => {
-  switch (typeof value) {
-    case 'undefined':
-      return '""'
-    case 'number':
-      return `${value}`
-    case 'boolean':
-      return `${value}`
-    case 'string':
-      return value.startsWith(OUTPUT_CODE)
-        ? value.replace(OUTPUT_CODE, '')
-        : `\`${value}\``
-    case 'object':
-      return Array.isArray(value)
-        ? `[ ${getInputString(value)} ]`
-        : `{ ${getInputString(value)} }`
-  }
-}
-
-export const getInputString = (input: object) => {
-  return Object.keys(input)
-    .map((x) =>
-      isNaN(Number(x))
-        ? `"${x}": ${getStringifiedVariableValue(input[x])}`
-        : getStringifiedVariableValue(input[x])
-    )
-    .join(', ')
+export const getInputString = (input: DataType = '') => {
+  return JSON.stringify(input)
+    .replace(new RegExp(`"${OUTPUT_CODE}`, 'g'), '')
+    .replace(new RegExp(`${OUTPUT_CODE}"`, 'g'), '')
 }
 
 export const decodeCondition = (condition: ITaskCondition): string => {
@@ -53,10 +30,8 @@ export const decodeCondition = (condition: ITaskCondition): string => {
     comparisonOperand = { name: '', label: '', type: VariableType.constant },
   } = condition
 
-  const stringOperand = getStringifiedVariableValue(
-    getValueFromInputVariable(operand)
-  )
-  const stringComparison = getStringifiedVariableValue(
+  const stringOperand = getInputString(getValueFromInputVariable(operand))
+  const stringComparison = getInputString(
     getValueFromInputVariable(comparisonOperand)
   )
 
@@ -188,6 +163,8 @@ module.exports.handler = async (event, context, callback) => {
   ////////////////////////////////////////////////////////////////////////////////
   // 2. Get input bot from event, and save it as task0_outputData
 
+  const task0_inputData = event;
+
   const task0_outputData = ${getParseEventFunctionCode()};
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -196,6 +173,7 @@ module.exports.handler = async (event, context, callback) => {
   usage += 1;
   logs.push({
     name: '${tasks[0].service?.label}',
+    inputData: task0_inputData,
     outputData: task0_outputData,
     timestamp: Date.now(),
     status: 'success'
@@ -263,7 +241,7 @@ export const getBotInnerCode = (tasks: ITask[]) => {
       ////////////////////////////////////////////////////////////////////////////////
       // 4.${i}.1. Collect operation inputs
 
-      const task${i}_inputData = { ${getInputString(inputData)} };
+      const task${i}_inputData = ${getInputString(inputData)};
 
       let task${i}_outputData;
 
