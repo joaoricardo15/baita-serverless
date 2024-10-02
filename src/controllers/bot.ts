@@ -15,7 +15,7 @@ import {
   ITaskExecutionResult,
   TaskExecutionStatus,
 } from 'src/models/bot/interface'
-import { validateTaskResult } from 'src/models/bot/schema'
+import { validateTaskExecutionResult } from 'src/models/bot/schema'
 import {
   getCodeFile,
   getBotSampleCode,
@@ -548,7 +548,7 @@ export class Bot {
         }
       }
 
-      validateTaskResult(sample)
+      validateTaskExecutionResult(sample)
 
       await ddb.update({
         TableName: CORE_TABLE,

@@ -173,19 +173,19 @@ export const validateTasks = (tasks: ITask[]) => {
   if (!validate(tasks)) throw ajv.errorsText(validate.errors)
 }
 
-export const validateTaskResult = (taskResult: ITaskExecutionResult) => {
+export const validateTaskExecutionResult = (taskResult: ITaskExecutionResult) => {
   const validate = ajv.compile(taskResultSchema)
 
   if (!validate(taskResult)) throw ajv.errorsText(validate.errors)
 }
 
-export const validateLog = (log: IBotLog) => {
+export const validateBotLog = (log: IBotLog) => {
   const validate = ajv.compile(botLogSchema)
 
   if (!validate(log)) throw ajv.errorsText(validate.errors)
 }
 
-export const validateOperationInput = (
+export const validateTaskExecutionInput = (
   input: ITaskExecutionInput<DataType>
 ) => {
   const validate = ajv.compile(operationInputSchema)

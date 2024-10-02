@@ -1,13 +1,16 @@
 'use strict'
 
 import { Api, BotStatus } from 'src/utils/api'
-import { MethodName } from 'src/models/service/interface'
-import { validateOperationInput } from 'src/models/bot/schema'
+import { DataType, MethodName } from 'src/models/service/interface'
+import { validateTaskExecutionInput } from 'src/models/bot/schema'
+import { ITaskExecutionInput } from 'src/models/bot/interface'
 import { httpRequest, oauth2Request } from './methods/http'
 import { getTodo, publishToFeed } from './methods/user'
 import { sendNotification } from './methods/firebase'
 
-const METHODS: { [key in MethodName]: Function } = {
+const METHODS: {
+  [key in MethodName]: (input: ITaskExecutionInput<DataType>) => DataType
+} = {
   getTodo,
   publishToFeed,
   sendNotification,
@@ -19,9 +22,11 @@ exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
 
   try {
-    validateOperationInput(event)
+    validateTaskExecutionInput(event)
 
-    const data = await METHODS[event.serviceConfig.methodName as string](event)
+    const { serviceConfig } = event as ITaskExecutionInput<any>
+
+    const data = await METHODS[serviceConfig.methodName as string](event)
 
     api.httpOperationResponse(callback, BotStatus.success, undefined, data)
   } catch (err) {
