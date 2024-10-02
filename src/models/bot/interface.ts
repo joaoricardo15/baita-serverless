@@ -49,10 +49,10 @@ export interface ITask {
   app?: IApp
   service?: IService
   returnData?: boolean
-  connectionId?: string
   inputData: IVariable[]
   sampleResult?: ITaskExecutionResult
   conditions?: ITaskCondition[][]
+  connectionId?: string | number
 }
 
 export interface ITaskLog {
