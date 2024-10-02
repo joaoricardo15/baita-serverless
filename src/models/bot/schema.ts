@@ -103,7 +103,7 @@ const tasksSchema: JSONSchemaType<ITask[]> = {
   },
 }
 
-const operationInputSchema: JSONSchemaType<ITaskExecutionInput<DataType>> = {
+const taskExecutionInputSchema: JSONSchemaType<ITaskExecutionInput<DataType>> = {
   type: 'object',
   properties: {
     userId: {
@@ -113,7 +113,7 @@ const operationInputSchema: JSONSchemaType<ITaskExecutionInput<DataType>> = {
       type: 'string',
     },
     connectionId: {
-      type: 'string',
+      type: ['string', 'number'],
       nullable: true,
     },
     appConfig: appConfigSchema,
@@ -188,7 +188,7 @@ export const validateBotLog = (log: IBotLog) => {
 export const validateTaskExecutionInput = (
   input: ITaskExecutionInput<DataType>
 ) => {
-  const validate = ajv.compile(operationInputSchema)
+  const validate = ajv.compile(taskExecutionInputSchema)
 
   if (!validate(input)) throw `Invalid TaskExecutionInput: ${ajv.errorsText(validate.errors)}`
 }

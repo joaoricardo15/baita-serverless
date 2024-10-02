@@ -43,17 +43,25 @@ usedId | #CONTENT#contentId       | Content
 
 Method | URL
 ------ | ---
-POST   | /dev/user
-GET    | /user/{userId}/content
+POST   | /user
 GET    | /user/{userId}/connections
+GET    | /user/{userId}/content
+POST   | /user/{userId}/content/{contentId}/react/{reaction}
+GET    | /user/{userId}/todo
+PUT    | /user/{userId}/todo
+POST   | /user/{userId}/todo/{taskId}/done
 GET    | /user/{userId}/bots
-GET    | /user/{userId}/bots/{botId}
 POST   | /user/{userId}/bots
+GET    | /user/{userId}/bots/{botId}
 PUT    | /user/{userId}/bots/{botId}
 DELETE | /user/{userId}/bots/{botId}/api/{apiId}
-POST   | /user/{userId}/bots/{botId}/deploy
 POST   | /user/{userId}/bots/{botId}/test/{taskIndex}
+POST   | /user/{userId}/bots/{botId}/deploy
 GET    | /user/{userId}/bots/{botId}/logs
+POST   | /user/{userId}/bots/{botId}/bud
+GET    | /user/{userId}/models
+POST   | /user/{userId}/models
+DELETE | /user/{userId}/models/{modelId}
 GET    | /connectors/pipedrive
 GET    | /connectors/google
 
