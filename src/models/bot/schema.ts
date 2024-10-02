@@ -17,7 +17,7 @@ import {
   ITaskExecutionInput,
   TaskExecutionStatus,
   ConditionOperator,
-  ILog,
+  ITaskLog,
   IBotLog,
 } from 'src/models/bot/interface'
 
@@ -123,7 +123,7 @@ const operationInputSchema: JSONSchemaType<ITaskExecutionInput<DataType>> = {
   required: ['userId', 'botId', 'appConfig', 'serviceConfig'],
 }
 
-const logSchema: JSONSchemaType<ILog> = {
+const taskLogSchema: JSONSchemaType<ITaskLog> = {
   type: 'object',
   properties: {
     name: {
@@ -161,7 +161,7 @@ const botLogSchema: JSONSchemaType<IBotLog> = {
     },
     logs: {
       type: 'array',
-      items: logSchema,
+      items: taskLogSchema,
     },
   },
   required: ['botId', 'userId', 'timestamp', 'usage', 'logs'],
@@ -170,19 +170,19 @@ const botLogSchema: JSONSchemaType<IBotLog> = {
 export const validateTasks = (tasks: ITask[]) => {
   const validate = ajv.compile(tasksSchema)
 
-  if (!validate(tasks)) throw ajv.errorsText(validate.errors)
+  if (!validate(tasks)) throw `Invalid Tasks: ${ajv.errorsText(validate.errors)}`
 }
 
 export const validateTaskExecutionResult = (taskResult: ITaskExecutionResult) => {
   const validate = ajv.compile(taskResultSchema)
 
-  if (!validate(taskResult)) throw ajv.errorsText(validate.errors)
+  if (!validate(taskResult)) throw `Invalid TaskExecutionResult: ${ajv.errorsText(validate.errors)}`
 }
 
 export const validateBotLog = (log: IBotLog) => {
   const validate = ajv.compile(botLogSchema)
 
-  if (!validate(log)) throw ajv.errorsText(validate.errors)
+  if (!validate(log)) throw `Invalid BotLog: ${ajv.errorsText(validate.errors)}`
 }
 
 export const validateTaskExecutionInput = (
@@ -190,5 +190,5 @@ export const validateTaskExecutionInput = (
 ) => {
   const validate = ajv.compile(operationInputSchema)
 
-  if (!validate(input)) throw ajv.errorsText(validate.errors)
+  if (!validate(input)) throw `Invalid TaskExecutionInput: ${ajv.errorsText(validate.errors)}`
 }

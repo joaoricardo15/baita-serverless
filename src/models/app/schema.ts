@@ -113,5 +113,5 @@ addFormats(ajv)
 export const validateAppConnection = (connection: IAppConnection) => {
   const validate = ajv.compile(connectionSchema)
 
-  if (!validate(connection)) throw ajv.errorsText(validate.errors)
+  if (!validate(connection)) throw `Invalid AppConnection: ${ajv.errorsText(validate.errors)}`
 }

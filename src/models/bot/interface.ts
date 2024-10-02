@@ -55,7 +55,7 @@ export interface ITask {
   conditions?: ITaskCondition[][]
 }
 
-export interface ILog {
+export interface ITaskLog {
   name: string
   timestamp: number
   inputData: DataType
@@ -64,7 +64,7 @@ export interface ILog {
 }
 
 export interface IBotLog {
-  logs: ILog[]
+  logs: ITaskLog[]
   usage: number
   botId: string
   userId: string

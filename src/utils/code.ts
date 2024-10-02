@@ -145,7 +145,7 @@ module.exports.handler = async (event, context, callback) => {
       serviceConfig: {},
       inputData: {
         inputData,
-        outputData
+        outputData,
         status: 'success'
       }
     })

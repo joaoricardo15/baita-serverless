@@ -17,7 +17,7 @@ const connectionSchema: JSONSchemaType<IAppConnection> = {
       type: 'string',
     },
     connectionId: {
-      type: 'string',
+      type: ['string', 'number'],
     },
     name: {
       type: 'string',
@@ -47,5 +47,6 @@ const connectionSchema: JSONSchemaType<IAppConnection> = {
 export const validateConnection = (connection: IAppConnection) => {
   const validate = ajv.compile(connectionSchema)
 
-  if (!validate(connection)) throw ajv.errorsText(validate.errors)
+  if (!validate(connection))
+    throw `Invalid Connection: ${ajv.errorsText(validate.errors)}`
 }

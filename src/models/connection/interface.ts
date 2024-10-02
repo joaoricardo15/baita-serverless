@@ -6,8 +6,8 @@ export interface ICredential {
 export interface IAppConnection {
   appId: string
   userId: string
-  connectionId: string
   email: string
   name: string
   credentials: ICredential
+  connectionId: string | number
 }
