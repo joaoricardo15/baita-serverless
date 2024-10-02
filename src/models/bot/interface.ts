@@ -15,9 +15,9 @@ export enum TaskExecutionStatus {
 export interface ITaskExecutionInput<T> {
   userId: string
   botId: string
-  connectionId?: string
   appConfig: IAppConfig
   serviceConfig: IServiceConfig
+  connectionId?: string | number
   inputData: T
 }
 
