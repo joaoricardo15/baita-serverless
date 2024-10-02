@@ -105,7 +105,7 @@ export const getParseEventFunctionCode = () => {
         else {
           return JSON.parse(event.body);
         }
-      } catch (error) {
+      } catch (err) {
         return event.body;
       }
     } else {
@@ -127,7 +127,9 @@ module.exports.handler = async (event, context, callback) => {
   const userId = '${userId}';
 
   ////////////////////////////////////////////////////////////////////////////////
-  // 2. Get data from event and save it as outputData
+  // 2. Get input from event and save it as outputData
+
+  const inputData = event;
 
   const outputData = ${getParseEventFunctionCode()};
   
@@ -135,12 +137,17 @@ module.exports.handler = async (event, context, callback) => {
   // 3. Publish trigger sample
 
   await lambda.invoke({
-    FunctionName: '${SERVICE_PREFIX}-service-trigger-sample',
-    Payload: JSON.stringify({
+    FunctionName: '${SERVICE_PREFIX}-task-trigger-sample',
+    Payload: JSON.stringify({ 
       botId,
       userId,
-      outputData,
-      status: 'success'
+      appConfig: {},
+      serviceConfig: {},
+      inputData: {
+        inputData,
+        outputData
+        status: 'success'
+      }
     })
   });
 
@@ -199,8 +206,8 @@ module.exports.handler = async (event, context, callback) => {
 
   try {
     ${getBotInnerCode(tasks)}
-  } catch (error) {
-    errorData = error.toString();
+  } catch (err) {
+    errorData = err.toString();
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -258,7 +265,7 @@ export const getBotInnerCode = (tasks: ITask[]) => {
 
       const task${i}_inputData = { ${getInputString(inputData)} };
 
-      let task${i}_outputData = {};
+      let task${i}_outputData;
 
       ////////////////////////////////////////////////////////////////////////////////
       // 4.${i}.2. Check conditions
@@ -326,7 +333,7 @@ export const getBotInnerCode = (tasks: ITask[]) => {
         });
       }`
     } catch (err) {
-      throw `task ${i}:` + err.message
+      throw `Error on task ${i}:` + err.message
     }
   }
 

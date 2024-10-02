@@ -71,19 +71,20 @@ provider:
     GOOGLE_CLIENT_ID: ${file(./src/partners/google/secrets.json):web.client_id}
     GOOGLE_CLIENT_SECRET: ${file(./src/partners/google/secrets.json):web.client_secret}
 
+    # NewsAPI
     NEWS_API_KEY: ${file(./src/partners/news/secrets.json):api_key}
+    
+    # OpenAI
     OPENAI_API_AUTHORIZATION: ${file(./src/partners/openAi/secrets.json):Authorization}
 
 functions:
-  ### internal services ###
-  service-trigger-sample:
-    handler: src/services/trigger-sample/index.handler
-
   ### tasks ###
   task-code-execute:
     handler: src/tasks/code-execute/index.handler
   task-method-execute:
     handler: src/tasks/method-execute/index.handler
+  task-trigger-sample:
+    handler: src/tasks/trigger-sample/index.handler
 
   ### endpoints ###
   endpoint-user-create:
