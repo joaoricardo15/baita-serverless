@@ -1,7 +1,5 @@
-'use strict'
-
-import { Api, BotStatus } from 'src/utils/api'
-import { Bot } from 'src/controllers/bot'
+import Api, { ApiRequestStatus } from 'src/utils/api'
+import Bot from 'src/controllers/bot'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
@@ -15,8 +13,8 @@ exports.handler = async (event, context, callback) => {
       event.queryStringParameters?.searchTerm
     )
 
-    api.httpResponse(callback, BotStatus.success, undefined, data)
+    api.httpResponse(callback, ApiRequestStatus.success, undefined, data)
   } catch (err) {
-    api.httpResponse(callback, BotStatus.fail, err)
+    api.httpResponse(callback, ApiRequestStatus.fail, err)
   }
 }

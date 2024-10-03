@@ -1,5 +1,3 @@
-'use strict'
-
 import { SQS } from '@aws-sdk/client-sqs'
 import { DynamoDB } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
@@ -8,7 +6,7 @@ import { IContent, ITodoTask, IUser } from 'src/models/user/interface'
 const CORE_TABLE = process.env.CORE_TABLE || ''
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX || ''
 
-export class User {
+class User {
   async createUser(user: IUser) {
     const sqs = new SQS({})
     const ddb = DynamoDBDocument.from(new DynamoDB({}), {
@@ -63,12 +61,13 @@ export class User {
       })
 
       return messagesResult.Messages.map((message) => {
-        if (message.Body)
+        if (message.Body) {
           try {
             return JSON.parse(message.Body)
           } catch (err) {
             return null
           }
+        }
       }).filter((message) => message)
     } catch (err) {
       throw err.message || err
@@ -108,8 +107,6 @@ export class User {
         QueueName: `${SERVICE_PREFIX}-${userId}`,
       })
 
-      console.log(content)
-
       const { Items: alreadySeen } = await ddb.query({
         TableName: CORE_TABLE,
         KeyConditionExpression:
@@ -120,8 +117,6 @@ export class User {
         },
       })
 
-      console.log(alreadySeen)
-
       const newContent = !alreadySeen
         ? content.slice(0, 10)
         : content
@@ -130,8 +125,6 @@ export class User {
                 !alreadySeen.map((c) => c.contentId).includes(contentId)
             )
             .slice(0, 10)
-
-      console.log(newContent)
 
       if (newContent.length > 0) {
         await sqs.sendMessageBatch({
@@ -193,11 +186,11 @@ export class User {
 
       const tasks = (result.Item?.tasks || []) as ITodoTask[]
 
-      const updatedTasks = tasks.map((task) =>
-        task.taskId === taskId
+      const updatedTasks = tasks.map((task) => {
+        return task.taskId === taskId
           ? { ...task, done: true, updatedAt: Date.now() }
           : task
-      )
+      })
 
       await ddb.update({
         TableName: CORE_TABLE,
@@ -215,3 +208,5 @@ export class User {
     }
   }
 }
+
+export default User

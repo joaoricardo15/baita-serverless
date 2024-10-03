@@ -1,10 +1,8 @@
-'use strict'
-
-import { Api, BotStatus } from 'src/utils/api'
+import Api, { ApiRequestStatus } from 'src/utils/api'
 import { validateAppConnection } from 'src/models/app/schema'
 import { Connection } from 'src/controllers/app'
-import { Bot } from 'src/controllers/bot'
-import { Google } from './google'
+import Bot from 'src/controllers/bot'
+import Google from './google'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
@@ -15,16 +13,18 @@ exports.handler = async (event, context, callback) => {
   try {
     const { code, state, error } = event.queryStringParameters
 
-    if (error) return api.httpConnectorResponse(callback, BotStatus.fail)
+    if (error) {
+      return api.httpConnectorResponse(callback, ApiRequestStatus.fail)
+    }
 
     const { userId, appId, botId, taskIndex } =
       google.desconstructAuthState(state)
 
     const credentials = await google.getCredentials(code)
 
-    const { access_token } = credentials
-
-    const { connectionId, email } = await google.getConnectionInfo(access_token)
+    const { connectionId, email } = await google.getConnectionInfo(
+      credentials.access_token
+    )
 
     const newConnection = {
       userId,
@@ -41,8 +41,8 @@ exports.handler = async (event, context, callback) => {
 
     await bot.addConnection(userId, botId, connectionId, taskIndex)
 
-    api.httpConnectorResponse(callback, BotStatus.success)
+    api.httpConnectorResponse(callback, ApiRequestStatus.success)
   } catch (err) {
-    api.httpConnectorResponse(callback, BotStatus.fail, err)
+    api.httpConnectorResponse(callback, ApiRequestStatus.fail, err)
   }
 }

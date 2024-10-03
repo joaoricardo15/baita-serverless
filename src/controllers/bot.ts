@@ -1,5 +1,3 @@
-'use strict'
-
 import { S3 } from '@aws-sdk/client-s3'
 import { Lambda } from '@aws-sdk/client-lambda'
 import { DynamoDB } from '@aws-sdk/client-dynamodb'
@@ -29,7 +27,7 @@ const BOTS_BUCKET = process.env.BOTS_BUCKET || ''
 const BOTS_PERMISSION = process.env.BOTS_PERMISSION || ''
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX || ''
 
-export class Bot {
+class Bot {
   async getBot(userId: string, botId: string) {
     const ddb = DynamoDBDocument.from(new DynamoDB({}))
 
@@ -75,11 +73,11 @@ export class Bot {
         'fields @message | sort @timestamp desc | filter @message like "\tINFO\t"'
 
       if (searchTerms) {
-        if (Array.isArray(searchTerms))
+        if (Array.isArray(searchTerms)) {
           searchTerms.forEach(
             (term) => (queryString += ` | filter @message like /(?i)${term}/`)
           )
-        else queryString += ` | filter @message like /(?i)${searchTerms}/`
+        } else queryString += ` | filter @message like /(?i)${searchTerms}/`
       }
 
       let startResponse
@@ -92,6 +90,7 @@ export class Bot {
           logGroupName: `/aws/lambda/${botPrefix}`,
         })
       } catch (err) {
+        console.error(err)
         return []
       }
 
@@ -513,7 +512,7 @@ export class Bot {
         true
       )
 
-      if (parseInt(taskIndex) === 0) {
+      if (Number(taskIndex) === 0) {
         const { triggerSamples } = await this.getBot(userId, botId)
         if (!triggerSamples) return
         sample = triggerSamples.reverse()[0]
@@ -532,10 +531,11 @@ export class Bot {
 
         const testLambdaPayload = JSON.parse(
           new TextDecoder().decode(testLambdaResult.Payload),
-          (_, value) =>
-            !isNaN(value) && value > Number.MAX_SAFE_INTEGER
+          (_, value) => {
+            return !isNaN(value) && value > Number.MAX_SAFE_INTEGER
               ? value.toString()
               : value
+          }
         )
 
         sample = {
@@ -615,3 +615,5 @@ export class Bot {
     }
   }
 }
+
+export default Bot

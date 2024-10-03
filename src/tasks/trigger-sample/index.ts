@@ -1,13 +1,14 @@
-'use strict'
-
-import { Api, BotStatus } from 'src/utils/api'
-import { Bot } from 'src/controllers/bot'
+import Api from 'src/utils/api'
+import Bot from 'src/controllers/bot'
 import {
   validateTaskExecutionInput,
   validateTaskExecutionResult,
 } from 'src/models/bot/schema'
-import { ITaskExecutionInput, TaskExecutionStatus } from 'src/models/bot/interface'
 import { DataType } from 'src/models/service/interface'
+import {
+  ITaskExecutionInput,
+  TaskExecutionStatus,
+} from 'src/models/bot/interface'
 
 interface ITriggerSample {
   status: TaskExecutionStatus
@@ -36,8 +37,13 @@ exports.handler = async (event, context, callback) => {
 
     const data = await bot.addTriggerSample(userId, botId, sample)
 
-    api.httpResponse(callback, BotStatus.success, undefined, data)
+    api.taskExecutionResponse(
+      callback,
+      TaskExecutionStatus.success,
+      undefined,
+      data
+    )
   } catch (err) {
-    api.httpResponse(callback, BotStatus.fail, err)
+    api.taskExecutionResponse(callback, TaskExecutionStatus.fail, err)
   }
 }

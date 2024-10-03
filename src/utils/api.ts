@@ -1,20 +1,19 @@
-'use strict'
+import { TaskExecutionStatus } from 'src/models/bot/interface'
+import { DataType } from 'src/models/service/interface'
 
-import { DataType } from "src/models/service/interface"
-
-export enum BotStatus {
+export enum ApiRequestStatus {
   fail = 'fail',
   timeout = 'timeout',
   filtered = 'filtered',
   success = 'success',
 }
 
-export class Api {
+class Api {
   functionName: string
   timeoutLogger: ReturnType<typeof setTimeout>
   logObject: {
-    inputData: any
-    status?: BotStatus
+    inputData: DataType
+    status?: ApiRequestStatus | TaskExecutionStatus
     message?: string
     data?: DataType
   }
@@ -24,11 +23,11 @@ export class Api {
 
     // 200 ms before a lambda times out, logs everything so far with status = 'timeout'
     this.timeoutLogger = setTimeout(() => {
-      this.log(BotStatus.timeout)
+      this.log(ApiRequestStatus.timeout)
     }, functionContext.getRemainingTimeInMillis() - 200)
   }
 
-  parseError(err: any): string {
+  parseError(err): string {
     let errorMessage
 
     if (err) {
@@ -46,21 +45,25 @@ export class Api {
     return errorMessage
   }
 
-  log(status: BotStatus, error?: string, data?: any): void {
+  log(
+    status: ApiRequestStatus | TaskExecutionStatus,
+    error?: string,
+    data?
+  ): void {
     // prevents timeout logging if another log has already started
     clearTimeout(this.timeoutLogger)
 
-    this.logObject['status'] = status
-    this.logObject['message'] = error
-    this.logObject['data'] = data
+    this.logObject.status = status
+    this.logObject.message = error
+    this.logObject.data = data
     console.log(JSON.stringify(this.logObject))
   }
 
   httpResponse(
-    callback: any,
-    status: BotStatus,
+    callback,
+    status: ApiRequestStatus,
     error?: string,
-    data?: any
+    data?
   ): void {
     const errorMessage = this.parseError(error)
 
@@ -73,14 +76,14 @@ export class Api {
         'Access-Control-Allow-Origin': '*',
       },
       body: JSON.stringify({
-        success: status === BotStatus.success,
+        success: status === ApiRequestStatus.success,
         message: errorMessage,
         data,
       }),
     })
   }
 
-  httpConnectorResponse(callback: any, status: BotStatus, error?: any): void {
+  httpConnectorResponse(callback, status: ApiRequestStatus, error?): void {
     const errorMessage = this.parseError(error)
 
     this.log(status, errorMessage)
@@ -92,20 +95,22 @@ export class Api {
     })
   }
 
-  httpOperationResponse(
-    callback: any,
-    status: BotStatus,
-    error?: any,
-    data?: any
+  taskExecutionResponse(
+    callback,
+    status: TaskExecutionStatus,
+    error?,
+    data?
   ): void {
     const errorMessage = this.parseError(error)
 
     this.log(status, errorMessage, data)
 
     callback(null, {
-      success: status === BotStatus.success,
+      success: status === TaskExecutionStatus.success,
       message: errorMessage,
       data,
     })
   }
 }
+
+export default Api

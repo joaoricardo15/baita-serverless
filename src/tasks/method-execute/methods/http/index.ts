@@ -118,11 +118,12 @@ export const oauth2Request = async (
 }
 
 const getAuthParamsFromApp = (authType: string, authFields) => {
-  if (authType === 'basic')
+  if (authType === 'basic') {
     return {
       username: process.env[authFields.username] || '',
       password: process.env[authFields.password] || '',
     }
+  }
 }
 
 const getAuthDataFromApp = (
@@ -140,11 +141,10 @@ const getAuthDataFromApp = (
     const rawData = {
       grant_type: 'refresh_token',
       refresh_token: refreshToken,
-    }
-
-    if (authType === 'body') {
-      rawData['client_id'] = process.env[authFields.username]
-      rawData['client_secret'] = process.env[authFields.password]
+      ...(authType === 'body' && {
+        client_id: process.env[authFields.username],
+        client_secret: process.env[authFields.password],
+      }),
     }
 
     data = new URLSearchParams(rawData)
@@ -155,8 +155,8 @@ const getAuthDataFromApp = (
     }
 
     if (authType === 'body') {
-      data['client_id'] = process.env[authFields.username]
-      data['client_secret'] = process.env[authFields.password]
+      data.client_id = process.env[authFields.username]
+      data.client_secret = process.env[authFields.password]
     }
   }
 

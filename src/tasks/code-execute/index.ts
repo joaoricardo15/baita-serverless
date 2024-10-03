@@ -1,9 +1,10 @@
-'use strict'
-
 import vm from 'vm'
-import { Api, BotStatus } from 'src/utils/api'
+import Api from 'src/utils/api'
+import {
+  ITaskExecutionInput,
+  TaskExecutionStatus,
+} from 'src/models/bot/interface'
 import { validateTaskExecutionInput } from 'src/models/bot/schema'
-import { ITaskExecutionInput } from 'src/models/bot/interface'
 import { DataType } from 'src/models/service/interface'
 
 interface ICodeExecute {
@@ -28,16 +29,19 @@ exports.handler = async (event, context, callback) => {
       ...customFields
     } = inputData
 
-    const codeContext: any = { ...customFields, userId, botId }
+    const codeContext = { ...customFields, userId, botId, output: undefined }
 
     vm.createContext(codeContext)
 
     vm.runInContext(code, codeContext, { displayErrors: true, timeout: 5000 })
 
-    const { output: data } = codeContext
-
-    api.httpOperationResponse(callback, BotStatus.success, undefined, data)
+    api.taskExecutionResponse(
+      callback,
+      TaskExecutionStatus.success,
+      undefined,
+      codeContext.output
+    )
   } catch (err) {
-    api.httpOperationResponse(callback, BotStatus.fail, err)
+    api.taskExecutionResponse(callback, TaskExecutionStatus.fail, err)
   }
 }

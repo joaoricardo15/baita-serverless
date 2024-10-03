@@ -1,5 +1,3 @@
-'use strict'
-
 import { JSONSchemaType } from 'ajv'
 import {
   DataType,
@@ -89,7 +87,7 @@ export const variableSchema: JSONSchemaType<IVariable> = {
     },
   },
   required: ['type', 'name', 'label'],
-} as any // any added here as a workararound for the 'nullable cannot be used without type' issue
+} as never // never added here as a workararound for the 'nullable cannot be used without type' issue
 
 export const serviceConfigSchema: JSONSchemaType<IServiceConfig> = {
   type: 'object',

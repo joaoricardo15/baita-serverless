@@ -1,10 +1,8 @@
-'use strict'
-
-import { Api, BotStatus } from 'src/utils/api'
+import Api, { ApiRequestStatus } from 'src/utils/api'
 import { validateAppConnection } from 'src/models/app/schema'
 import { Connection } from 'src/controllers/app'
-import { Bot } from 'src/controllers/bot'
-import { Pipedrive } from './pipedrive'
+import Bot from 'src/controllers/bot'
+import Pipedrive from './pipedrive'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
@@ -15,18 +13,18 @@ exports.handler = async (event, context, callback) => {
   try {
     const { code, state, error } = event.queryStringParameters
 
-    if (error) return api.httpConnectorResponse(callback, BotStatus.fail)
+    if (error) {
+      return api.httpConnectorResponse(callback, ApiRequestStatus.fail)
+    }
 
     const { userId, appId, botId, taskIndex } =
       pipedrive.desconstructAuthState(state)
 
     const credentials = await pipedrive.getCredentials(code)
 
-    const { api_domain, access_token } = credentials
-
     const { connectionId, email } = await pipedrive.getConnectionInfo(
-      api_domain,
-      access_token
+      credentials.api_domain,
+      credentials.access_token
     )
 
     const newConnection = {
@@ -44,8 +42,8 @@ exports.handler = async (event, context, callback) => {
 
     await bot.addConnection(userId, botId, connectionId, taskIndex)
 
-    api.httpConnectorResponse(callback, BotStatus.success)
+    api.httpConnectorResponse(callback, ApiRequestStatus.success)
   } catch (err) {
-    api.httpConnectorResponse(callback, BotStatus.fail, err)
+    api.httpConnectorResponse(callback, ApiRequestStatus.fail, err)
   }
 }

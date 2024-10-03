@@ -1,18 +1,20 @@
-'use strict'
-
 import { IVariable, VariableType } from 'src/models/service/interface'
 
 export const OUTPUT_CODE = '###baita.help###'
 
-export const getDataFromPath = (data: any, outputPath?: string) => {
-  if (!outputPath) return data
+export const getDataFromPath = (data, outputPath?: string) => {
+  if (!outputPath) {
+    return data
+  }
 
   const paths = outputPath.split('.')
 
   for (let i = 0; i < paths.length; i++) {
     const key = isNaN(Number(paths[i])) ? paths[i] : Number(paths[i])
 
-    if (!data || typeof data !== 'object' || !Object.hasOwn(data, key)) return
+    if (!data || typeof data !== 'object' || !Object.hasOwn(data, key)) {
+      return undefined
+    }
 
     data = data[key]
   }
@@ -21,7 +23,7 @@ export const getDataFromPath = (data: any, outputPath?: string) => {
 }
 
 export const getDataFromMapping = (
-  data: any,
+  data,
   outputMapping: {
     [key: string]: string
   }
@@ -39,7 +41,7 @@ export const getDataFromMapping = (
 }
 
 export const getMappedData = (
-  data: any,
+  data,
   outputMapping?: {
     [key: string]: string
   }
@@ -55,7 +57,7 @@ export const getMappedData = (
 
 export const setObjectDataFromPath = (
   data: object,
-  value: any,
+  value,
   inputPath?: string
 ) => {
   if (!inputPath) {
@@ -71,7 +73,7 @@ export const setObjectDataFromPath = (
     if (i === paths.length - 1) {
       currentData[key] = value
     } else if (!(key in currentData)) {
-      const nextIntKey = parseInt(paths[i + 1])
+      const nextIntKey = Number(paths[i + 1])
       if (isNaN(nextIntKey)) {
         currentData[key] = {}
       } else {
@@ -160,7 +162,7 @@ export const getDataFromService = (
     const serviceVariableValue = getValueFromServiceVariable(serviceVariable)
 
     // If there is no value in the service variable
-    if (serviceVariableValue == undefined) {
+    if (serviceVariableValue === undefined) {
       // Let's find a corresponding input variable
       const inputVariable = inputData.find(
         (x) => x.name === serviceVariable.name

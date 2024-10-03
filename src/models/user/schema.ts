@@ -1,5 +1,3 @@
-'use strict'
-
 import Ajv, { JSONSchemaType } from 'ajv'
 import addFormats from 'ajv-formats'
 import { IContent, ITodoTask, IUser } from './interface'
@@ -135,17 +133,23 @@ export const todoTasksSchema: JSONSchemaType<ITodoTask[]> = {
 export const validateUser = (user: IUser) => {
   const validate = ajv.compile(userSchema)
 
-  if (!validate(user)) throw `Invalid User: ${ajv.errorsText(validate.errors)}`
+  if (!validate(user)) {
+    throw Error(`Invalid User: ${ajv.errorsText(validate.errors)}`)
+  }
 }
 
 export const validateContent = (content: IContent[]) => {
   const validate = ajv.compile(contentSchema)
 
-  if (!validate(content)) throw `Invalid Content: ${ajv.errorsText(validate.errors)}`
+  if (!validate(content)) {
+    throw Error(`Invalid Content: ${ajv.errorsText(validate.errors)}`)
+  }
 }
 
 export const validateTodoTasks = (todoTask: ITodoTask[]) => {
   const validate = ajv.compile(todoTasksSchema)
 
-  if (!validate(todoTask)) throw `Invalid TodoTasks: ${ajv.errorsText(validate.errors)}`
+  if (!validate(todoTask)) {
+    throw Error(`Invalid TodoTasks: ${ajv.errorsText(validate.errors)}`)
+  }
 }

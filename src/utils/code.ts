@@ -1,5 +1,3 @@
-'use strict'
-
 import JSZip from 'jszip'
 import {
   ITask,
@@ -311,7 +309,7 @@ export const getBotInnerCode = (tasks: ITask[]) => {
         });
       }`
     } catch (err) {
-      throw `Error on task ${i}:` + err.message
+      throw Error(`Error on task ${i}:${err.message}`)
     }
   }
 

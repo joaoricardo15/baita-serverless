@@ -1,15 +1,16 @@
-'use strict'
-
-import { Api, BotStatus } from 'src/utils/api'
-import { DataType, MethodName } from 'src/models/service/interface'
+import Api from 'src/utils/api'
+import {
+  ITaskExecutionInput,
+  TaskExecutionStatus,
+} from 'src/models/bot/interface'
+import { MethodName } from 'src/models/service/interface'
 import { validateTaskExecutionInput } from 'src/models/bot/schema'
-import { ITaskExecutionInput } from 'src/models/bot/interface'
 import { httpRequest, oauth2Request } from './methods/http'
 import { getTodo, publishToFeed } from './methods/user'
 import { sendNotification } from './methods/firebase'
 
 const METHODS: {
-  [key in MethodName]: (input: ITaskExecutionInput<DataType>) => DataType
+  [key in MethodName]: (input: ITaskExecutionInput<unknown>) => unknown
 } = {
   getTodo,
   publishToFeed,
@@ -24,12 +25,17 @@ exports.handler = async (event, context, callback) => {
   try {
     validateTaskExecutionInput(event)
 
-    const { serviceConfig } = event as ITaskExecutionInput<any>
+    const { serviceConfig } = event as ITaskExecutionInput<unknown>
 
     const data = await METHODS[serviceConfig.methodName as string](event)
 
-    api.httpOperationResponse(callback, BotStatus.success, undefined, data)
+    api.taskExecutionResponse(
+      callback,
+      TaskExecutionStatus.success,
+      undefined,
+      data
+    )
   } catch (err) {
-    api.httpOperationResponse(callback, BotStatus.fail, err)
+    api.taskExecutionResponse(callback, TaskExecutionStatus.fail, err)
   }
 }

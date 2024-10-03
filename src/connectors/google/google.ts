@@ -1,6 +1,4 @@
-'use strict'
-
-import Axios from 'axios'
+import axios from 'axios'
 import qs from 'qs'
 
 const SERVICE_API_URL = process.env.SERVICE_API_URL || ''
@@ -8,7 +6,7 @@ const GOOGLE_AUTH_URL = process.env.GOOGLE_AUTH_URL || ''
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || ''
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || ''
 
-export class Google {
+class Google {
   async getCredentials(code: string): Promise<{ access_token: string }> {
     try {
       const headers = {
@@ -16,7 +14,7 @@ export class Google {
       }
 
       const data = qs.stringify({
-        code: code,
+        code,
         grant_type: 'authorization_code',
         redirect_uri: `${SERVICE_API_URL}/connectors/google`,
         client_id: GOOGLE_CLIENT_ID,
@@ -24,7 +22,7 @@ export class Google {
         access_type: 'offline',
       })
 
-      const credentialsResult = await Axios({
+      const credentialsResult = await axios({
         method: 'post',
         url: GOOGLE_AUTH_URL,
         headers,
@@ -43,7 +41,7 @@ export class Google {
     accessToken: string
   ): Promise<{ connectionId: string; email: string }> {
     try {
-      const tokenResult = await Axios({
+      const tokenResult = await axios({
         method: 'get',
         url: `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${accessToken}`,
       })
@@ -70,7 +68,9 @@ export class Google {
       appId: splitedState[0],
       userId: splitedState[1],
       botId: splitedState[2],
-      taskIndex: parseInt(splitedState[3]),
+      taskIndex: Number(splitedState[3]),
     }
   }
 }
+
+export default Google

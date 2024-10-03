@@ -1,5 +1,3 @@
-'use strict'
-
 import Ajv, { JSONSchemaType } from 'ajv'
 import addFormats from 'ajv-formats'
 import { IAppConnection } from '../connection/interface'
@@ -113,5 +111,7 @@ addFormats(ajv)
 export const validateAppConnection = (connection: IAppConnection) => {
   const validate = ajv.compile(connectionSchema)
 
-  if (!validate(connection)) throw `Invalid AppConnection: ${ajv.errorsText(validate.errors)}`
+  if (!validate(connection)) {
+    throw Error(`Invalid AppConnection: ${ajv.errorsText(validate.errors)}`)
+  }
 }

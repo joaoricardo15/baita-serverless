@@ -1,8 +1,6 @@
-'use strict'
-
-import { Api, BotStatus } from 'src/utils/api'
-import { User } from 'src/controllers/user'
+import Api, { ApiRequestStatus } from 'src/utils/api'
 import { validateTodoTasks } from 'src/models/user/schema'
+import User from 'src/controllers/user'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
@@ -17,8 +15,8 @@ exports.handler = async (event, context, callback) => {
 
     const data = await user.updateTodo(userId, tasks)
 
-    api.httpResponse(callback, BotStatus.success, undefined, data)
+    api.httpResponse(callback, ApiRequestStatus.success, undefined, data)
   } catch (err) {
-    api.httpResponse(callback, BotStatus.fail, err)
+    api.httpResponse(callback, ApiRequestStatus.fail, err)
   }
 }

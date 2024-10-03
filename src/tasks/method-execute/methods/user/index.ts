@@ -1,13 +1,11 @@
-import { User } from 'src/controllers/user'
+import User from 'src/controllers/user'
 import { ITaskExecutionInput } from 'src/models/bot/interface'
-import { IContent } from 'src/models/user/interface'
 import { validateContent } from 'src/models/user/schema'
+import { IContent } from 'src/models/user/interface'
 
 const user = new User()
 
-interface IGetTodo {}
-
-export const getTodo = async (taskInput: ITaskExecutionInput<IGetTodo>) => {
+export const getTodo = async (taskInput: ITaskExecutionInput<undefined>) => {
   try {
     const { userId } = taskInput
 
@@ -34,7 +32,7 @@ export const publishToFeed = async (
       : [inputData.content]
 
     validateContent(contentList)
-    
+
     await user.publishContent(userId, contentList)
 
     return {

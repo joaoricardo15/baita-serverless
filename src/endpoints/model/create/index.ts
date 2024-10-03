@@ -1,6 +1,4 @@
-'use strict'
-
-import { Api, BotStatus } from 'src/utils/api'
+import Api, { ApiRequestStatus } from 'src/utils/api'
 import { App } from 'src/controllers/app'
 import { validateTasks } from 'src/models/bot/schema'
 
@@ -24,8 +22,8 @@ exports.handler = async (event, context, callback) => {
       tasks,
     })
 
-    api.httpResponse(callback, BotStatus.success, undefined, data)
+    api.httpResponse(callback, ApiRequestStatus.success, undefined, data)
   } catch (err) {
-    api.httpResponse(callback, BotStatus.fail, err)
+    api.httpResponse(callback, ApiRequestStatus.fail, err)
   }
 }
