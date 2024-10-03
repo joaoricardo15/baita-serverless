@@ -65,6 +65,7 @@ class User {
           try {
             return JSON.parse(message.Body)
           } catch (err) {
+            console.log(err)
             return null
           }
         }

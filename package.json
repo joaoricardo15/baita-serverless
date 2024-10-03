@@ -7,7 +7,7 @@
     "build": "serverless-bundle test",
     "test": "jest --watchAll",
     "lint": "eslint './src/**/*.{js,ts}' --fix",
-    "format": "prettier './src/**/*.{js,ts,json}' --write"
+    "format": "prettier './**/*.{js,ts,json,yml}' --write"
   },
   "dependencies": {
     "@aws-sdk/client-apigatewayv2": "^3.650.0",

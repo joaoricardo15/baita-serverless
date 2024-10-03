@@ -1,25 +1,25 @@
 {
-	"compilerOptions": {
-		// Default config from https://www.serverless.com/plugins/serverless-plugin-typescript
-		"preserveConstEnums": true,
-		"strictNullChecks": true,
-		"sourceMap": true,
-		"allowJs": true,
-		"moduleResolution": "node",
-		"isolatedModules": false,
-		"outDir": ".build",
-		"lib": ["esnext"],
-		"target": "es6",
-		"rootDir": "./",
-		
-		// Tip from https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/
-		"esModuleInterop": true,
+  "compilerOptions": {
+    // Default config from https://www.serverless.com/plugins/serverless-plugin-typescript
+    "preserveConstEnums": true,
+    "strictNullChecks": true,
+    "sourceMap": true,
+    "allowJs": true,
+    "moduleResolution": "node",
+    "isolatedModules": false,
+    "outDir": ".build",
+    "lib": ["esnext"],
+    "target": "es6",
+    "rootDir": "./",
 
-		// Issue https://github.com/dividab/tsconfig-paths-webpack-plugin/issues/32
-		"baseUrl": ".",
+    // Tip from https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/
+    "esModuleInterop": true,
 
-		// Tip from https://stackoverflow.com/questions/44220327/firebase-admin-with-typescript-in-firebase-cloud-functions
-		"resolveJsonModule": true,
-		"allowSyntheticDefaultImports": true
-	}
+    // Issue https://github.com/dividab/tsconfig-paths-webpack-plugin/issues/32
+    "baseUrl": ".",
+
+    // Tip from https://stackoverflow.com/questions/44220327/firebase-admin-with-typescript-in-firebase-cloud-functions
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true
+  }
 }

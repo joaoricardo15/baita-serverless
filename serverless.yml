@@ -73,7 +73,7 @@ provider:
 
     # NewsAPI
     NEWS_API_KEY: ${file(./src/partners/news/secrets.json):api_key}
-    
+
     # OpenAI
     OPENAI_API_AUTHORIZATION: ${file(./src/partners/openAi/secrets.json):Authorization}
 

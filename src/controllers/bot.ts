@@ -363,7 +363,7 @@ class Bot {
           logGroupName: `/aws/lambda/${botPrefix}`,
         })
       } catch (err) {
-        console.log(err.message)
+        console.log(err)
       }
 
       await s3.deleteObject({ Bucket: BOTS_BUCKET, Key: `${botPrefix}.zip` })
