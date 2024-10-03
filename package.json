@@ -6,8 +6,8 @@
     "start": "serverless offline --httpPort 5000",
     "build": "serverless-bundle test",
     "test": "jest --watchAll",
-    "lint": "eslint ./src --fix",
-    "format": "prettier ./src --write '**/*.{ts,js}'"
+    "lint": "eslint './src/**/*.{js,ts}' --fix",
+    "format": "prettier './src/**/*.{js,ts,json}' --write"
   },
   "dependencies": {
     "@aws-sdk/client-apigatewayv2": "^3.650.0",
@@ -30,15 +30,13 @@
   },
   "devDependencies": {
     "@types/jest": "^29.5.13",
-    "@typescript-eslint/eslint-plugin": "^5.10.0",
-    "@typescript-eslint/parser": "^5.10.0",
+    "@typescript-eslint/eslint-plugin": "^8.8.0",
+    "@typescript-eslint/parser": "^8.8.0",
     "eslint": "^8.30.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.5.2",
     "eslint-plugin-import": "^2.30.0",
     "eslint-plugin-prettier": "^5.2.1",
-    "eslint-plugin-react": "^7.36.1",
-    "eslint-plugin-react-hooks": "^4.6.2",
     "jest": "^29.7.0",
     "prettier": "^3.3.3",
     "serverless-deployment-bucket": "^1.6.0",
