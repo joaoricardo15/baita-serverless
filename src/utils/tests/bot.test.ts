@@ -189,7 +189,7 @@ describe('getOutputVariableString', () => {
     const outputPath = 'baita.0.help'
 
     expect(getOutputVariableString(outputIndex, outputPath)).toBe(
-      `task123_outputData['baita'][0]['help']`
+      "task123_outputData['baita'][0]['help']"
     )
   })
 })
@@ -300,7 +300,7 @@ describe('getValueFromServiceVariable', () => {
   })
 
   test('should return environment value from environment variable', () => {
-    process.env['envPropertyName'] = 'envPropertyValue'
+    process.env.envPropertyName = 'envPropertyValue'
     const variable = {
       name: 'envProperty',
       label: 'EnvProperty',
@@ -426,7 +426,7 @@ describe('getDataFromService', () => {
   })
 
   test('should return envrionment variable value of service variable', () => {
-    process.env['envPropertyName'] = 'envPropertyValue'
+    process.env.envPropertyName = 'envPropertyValue'
     const serviceVariables = [
       {
         name: 'envProperty',
@@ -464,7 +464,7 @@ describe('getDataFromService', () => {
       {
         name: 'method',
         label: 'Method',
-        type: 'constant' as any,
+        type: VariableType.constant,
         value: 'getTodo',
       },
     ]
@@ -497,7 +497,7 @@ describe('getDataFromService', () => {
   })
 
   test('should return all correct values when there are all use case variables', () => {
-    process.env['envPropertyName'] = 'envPropertyValue'
+    process.env.envPropertyName = 'envPropertyValue'
     const serviceVariables = [
       {
         name: 'constProperty',
@@ -557,7 +557,7 @@ describe('getDataFromService', () => {
   })
 
   test('should return correct input object regarding a complex real use case', () => {
-    process.env['OPENAI_API_AUTHORIZATION'] = 'Bearer xxx'
+    process.env.OPENAI_API_AUTHORIZATION = 'Bearer xxx'
     const serviceVariables = [
       {
         name: 'method',

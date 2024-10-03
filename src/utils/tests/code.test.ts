@@ -1,6 +1,6 @@
 import { VariableType } from 'src/models/service/interface'
-import { getConditionsString, getInputString } from '../code'
 import { ConditionOperator } from 'src/models/bot/interface'
+import { getConditionsString, getInputString } from '../code'
 
 describe('getInputString', () => {
   test('should return string version of properties', () => {
@@ -60,12 +60,12 @@ describe('getInputString', () => {
         age: 35,
         dev: true,
         name: 'baita',
-        output: `###baita.help###task123_outputData['baita']###baita.help###`,
+        output: "###baita.help###task123_outputData['baita']###baita.help###",
       },
     }
 
     expect(getInputString(input)).toBe(
-      `{"types":["baita","help"],"person":{"age":35,"dev":true,"name":"baita","output":task123_outputData['baita']}}`
+      '{"types":["baita","help"],"person":{"age":35,"dev":true,"name":"baita","output":task123_outputData[\'baita\']}}'
     )
   })
 
@@ -91,7 +91,7 @@ describe('getInputString', () => {
     }
 
     expect(getInputString(input)).toBe(
-      `{"bodyParams":{"max_completion_tokens":100,"messages":[{"content":task1_outputData['title'],"role":"user"}],"model":"gpt-4o-mini","temperature":0.9},"headers":{"Authorization":"Bearer xxx"},"method":"post","path":"chat/completions"}`
+      '{"bodyParams":{"max_completion_tokens":100,"messages":[{"content":task1_outputData[\'title\'],"role":"user"}],"model":"gpt-4o-mini","temperature":0.9},"headers":{"Authorization":"Bearer xxx"},"method":"post","path":"chat/completions"}'
     )
   })
 })
@@ -177,7 +177,7 @@ describe('getConditionsString', () => {
       ],
     ]
     expect(getConditionsString(conditions)).toBe(
-      `(!!task2_outputData['person']['name'])`
+      "(!!task2_outputData['person']['name'])"
     )
   })
 
@@ -207,7 +207,7 @@ describe('getConditionsString', () => {
       ],
     ]
     expect(getConditionsString(conditions)).toBe(
-      `(!!task1_outputData['person']['name'] && !!task2_outputData['person']['name'])`
+      "(!!task1_outputData['person']['name'] && !!task2_outputData['person']['name'])"
     )
   })
 
@@ -259,7 +259,7 @@ describe('getConditionsString', () => {
       ],
     ]
     expect(getConditionsString(conditions)).toBe(
-      `(!!task1_outputData['person']['name'] && !!task2_outputData['person']['name']) || (!!task3_outputData['person']['name'] && !!task4_outputData['person']['name'])`
+      "(!!task1_outputData['person']['name'] && !!task2_outputData['person']['name']) || (!!task3_outputData['person']['name'] && !!task4_outputData['person']['name'])"
     )
   })
 })
