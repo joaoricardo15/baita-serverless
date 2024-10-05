@@ -13,15 +13,16 @@ This project is currently in development.
 ## Key capabilities:
 
 - REST API capabilities
-- DynamoDB 
-- Request authentication (Auth0)
+- Data storage (DynamoDB)
 - JSON schema validation (ajv)
+- Request authentication (Auth0)
+- Fully automated CI/CD (Github actions)
 - Safe and isolated code execution mechanism (vm)
 - Oauth integrations with very popular and well established systems (so far, GMail, Pipedrive and OpenAI)
-- Fully automated CI/CD (Github actions)
 - Centralized error handling and logging (AWS CloudWatch)
 - Custom domain https://api.baita.help (AWS Route53)
 - Code linting and formatting (ESLint + prettier)
+- Unit tests (Jest)
 
 ## Next improvements
 
@@ -31,13 +32,13 @@ This project is currently in development.
 
 Storage uses DynamoDB on a single table design. Here are the data schemas:
 
-PK     | SK                       | Definition
------- | ------------------------ | ----------
-usedId | #USER                    | User
-usedId | #TODO                    | Todo list
-usedId | #BOT#botId               | Bot
-usedId | #CONNECTION#connectionId | Connection
-usedId | #CONTENT#contentId       | Content
+PK     | SK                         | Definition
+------ | -------------------------- | ----------
+usedId | #USER                      | User
+usedId | #TODO                      | Todo list
+usedId | #BOT#{botId}               | Bot
+usedId | #CONTENT#{contentId}       | Content
+usedId | #CONNECTION#{connectionId} | Connection
 
 ## Main endpoints:
 
@@ -73,7 +74,7 @@ Installation:
 
 `npm install`
 
-To Run Test Suite:
+To Run Test Suite (Jest):
 
 `npm test`
 
@@ -85,10 +86,10 @@ To Access Api:
 
 `localhost:5000/dev`
 
-To Run Code linting:
+To Run Code linting (ESlint):
 
 `npm lint`
 
-To Run Code formatting:
+To Run Code formatting (Prettier):
 
 `npm format`
