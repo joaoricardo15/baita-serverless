@@ -4,7 +4,7 @@
   "author": "Joao Ricardo Cardoso",
   "scripts": {
     "start": "serverless offline --httpPort 5000",
-    "build": "serverless-bundle test",
+    "deploy": "serverless deploy --stage prod",
     "test": "jest --watchAll",
     "lint": "eslint './src/**/*.{js,ts}' --fix",
     "format": "prettier './**/*.{js,ts,json,yml}' --write"
