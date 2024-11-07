@@ -21,6 +21,17 @@ export const getInputString = (input: DataType = '') => {
     .replace(new RegExp(`${OUTPUT_CODE}"`, 'g'), '')
 }
 
+export const getConditionsString = (conditions?: ITaskCondition[][]) => {
+  return conditions
+    ?.map((orConditions) =>
+      orConditions
+        .map((andCondition) => decodeCondition(andCondition))
+        .join(' && ')
+    )
+    .map((x) => `(${x})`)
+    .join(' || ')
+}
+
 export const decodeCondition = (condition: ITaskCondition): string => {
   const {
     operator,
@@ -49,17 +60,6 @@ export const decodeCondition = (condition: ITaskCondition): string => {
     case ConditionOperator.doNotExists:
       return `!${stringOperand}`
   }
-}
-
-export const getConditionsString = (conditions?: ITaskCondition[][]) => {
-  return conditions
-    ?.map((orConditions) =>
-      orConditions
-        .map((andCondition) => decodeCondition(andCondition))
-        .join(' && ')
-    )
-    .map((x) => `(${x})`)
-    .join(' || ')
 }
 
 export const getParseEventFunctionCode = () => {
@@ -220,13 +220,10 @@ export const getBotInnerCode = (tasks: ITask[]) => {
 
   for (let i = 1; i < tasks.length; i++) {
     const task = tasks[i]
-    const app = task.app
-    const service = task.service
-    const conditions = task.conditions
 
     try {
       const inputData = getDataFromService(
-        service?.config.inputFields || [],
+        task.service?.config.inputFields || [],
         task.inputData
       )
 
@@ -246,18 +243,18 @@ export const getBotInnerCode = (tasks: ITask[]) => {
       ////////////////////////////////////////////////////////////////////////////////
       // 4.${i}.2. Check conditions
 
-      if (${getConditionsString(conditions) || true}) {
+      if (${getConditionsString(task.conditions) || true}) {
         ////////////////////////////////////////////////////////////////////////////////
         // 4.${i}.3. If condition passes, execute operation
 
         const { Payload: task${i}_lambda_payload } = await lambda.invoke({
-          FunctionName: '${SERVICE_PREFIX}-task-${service?.name}',
+          FunctionName: '${SERVICE_PREFIX}-task-${task.service?.name}',
           Payload: JSON.stringify({ 
             botId,
             userId,
             inputData: task${i}_inputData,
-            appConfig: ${JSON.stringify(app?.config)},
-            serviceConfig: ${JSON.stringify(service?.config)},
+            appConfig: ${JSON.stringify(task.app?.config)},
+            serviceConfig: ${JSON.stringify(task.service?.config)},
             connectionId: ${task.connectionId || 'undefined'}
           }),
         });
@@ -276,7 +273,7 @@ export const getBotInnerCode = (tasks: ITask[]) => {
 
         logs.push({
           timestamp: Date.now(),
-          name: '${service?.label}',
+          name: '${task.service?.label}',
           inputData: task${i}_inputData,
           outputData: task${i}_outputData,
           status: task${i}_success ? 'success' : 'fail',
@@ -302,7 +299,7 @@ export const getBotInnerCode = (tasks: ITask[]) => {
 
         logs.push({
           timestamp: Date.now(),
-          name: '${service?.label}',
+          name: '${task.service?.label}',
           inputData: task${i}_inputData,
           outputData: task${i}_outputData,
           status: 'filtered',

@@ -136,6 +136,13 @@ functions:
           path: user/{userId}/todo/{taskId}/done
           method: post
           cors: true
+  endpoint-user-resource:
+    handler: src/endpoints/resource/index.handler
+    events:
+      - http:
+          path: user/{userId}/resource/{resourceName}/{operation}/{resourceId?}
+          method: post
+          cors: true
 
   endpoint-model-list:
     handler: src/endpoints/model/list/index.handler
