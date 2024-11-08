@@ -2,14 +2,15 @@ import User from 'src/controllers/user'
 import { ITaskExecutionInput } from 'src/models/bot/interface'
 import { validateContent } from 'src/models/user/schema'
 import { IContent } from 'src/models/user/interface'
-
-const user = new User()
+import Resource from 'src/controllers/resource'
 
 export const getTodo = async (taskInput: ITaskExecutionInput<undefined>) => {
   try {
     const { userId } = taskInput
 
-    const data = await user.getTodo(userId)
+    const resource = new Resource(userId, 'todo')
+
+    const data = await resource.read()
 
     return data
   } catch (err) {
@@ -32,6 +33,8 @@ export const publishToFeed = async (
       : [inputData.content]
 
     validateContent(contentList)
+
+    const user = new User()
 
     await user.publishContent(userId, contentList)
 

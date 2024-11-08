@@ -94,62 +94,19 @@ functions:
           path: user
           method: post
           cors: true
-  endpoint-user-resource:
-    handler: src/endpoints/resource/index.handler
-    events:
-      - http:
-          path: user/{userId}/resource/{resourceName}/{operation}/{resourceId+}
-          method: post
-          cors: true
   endpoint-content-get:
-    handler: src/endpoints/content/get/index.handler
+    handler: src/endpoints/content/index.handler
     events:
       - http:
           path: user/{userId}/content
           method: get
           cors: true
-  endpoint-content-react:
-    handler: src/endpoints/content/react/index.handler
+  endpoint-resource-operation:
+    handler: src/endpoints/resource/index.handler
     events:
       - http:
-          path: user/{userId}/content/{contentId}/react/{reaction}
+          path: user/{userId}/resource/{resourceName}/{operation}/{resourceId+}
           method: post
-          cors: true
-  endpoint-todo-get:
-    handler: src/endpoints/todo/get/index.handler
-    events:
-      - http:
-          path: user/{userId}/todo
-          method: get
-          cors: true
-  endpoint-todo-update:
-    handler: src/endpoints/todo/update/index.handler
-    events:
-      - http:
-          path: user/{userId}/todo
-          method: put
-          cors: true
-  endpoint-todo-done:
-    handler: src/endpoints/todo/done/index.handler
-    events:
-      - http:
-          path: user/{userId}/todo/{taskId}/done
-          method: post
-          cors: true
-
-  endpoint-bot-list:
-    handler: src/endpoints/bot/list/index.handler
-    events:
-      - http:
-          path: user/{userId}/bots
-          method: get
-          cors: true
-  endpoint-bot-get:
-    handler: src/endpoints/bot/get/index.handler
-    events:
-      - http:
-          path: user/{userId}/bots/{botId}
-          method: get
           cors: true
   endpoint-bot-create:
     handler: src/endpoints/bot/create/index.handler

@@ -1,7 +1,6 @@
 import Ajv, { JSONSchemaType } from 'ajv'
 import addFormats from 'ajv-formats'
-import { IAppConnection } from '../connection/interface'
-import { IApp, IAppConfig } from './interface'
+import { IApp, IAppConfig, IAppConnection } from './interface'
 
 export const appConfigSchema: JSONSchemaType<IAppConfig> = {
   type: 'object',

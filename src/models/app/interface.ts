@@ -25,3 +25,17 @@ export interface IApp {
 export interface IAppService extends IApp {
   services: IService[]
 }
+
+export interface ICredential {
+  refresh_token?: string
+  access_token?: string
+}
+
+export interface IAppConnection {
+  appId: string
+  userId: string
+  email: string
+  name: string
+  credentials: ICredential
+  connectionId: string | number
+}

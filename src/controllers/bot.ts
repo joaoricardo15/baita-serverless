@@ -21,6 +21,7 @@ import {
 } from 'src/utils/code'
 import { ServiceName } from 'src/models/service/interface'
 import { getDataFromService } from 'src/utils/bot'
+import Resource from './resource'
 
 const CORE_TABLE = process.env.CORE_TABLE || ''
 const BOTS_BUCKET = process.env.BOTS_BUCKET || ''
@@ -28,41 +29,6 @@ const BOTS_PERMISSION = process.env.BOTS_PERMISSION || ''
 const SERVICE_PREFIX = process.env.SERVICE_PREFIX || ''
 
 class Bot {
-  async getBot(userId: string, botId: string) {
-    const ddb = DynamoDBDocument.from(new DynamoDB({}))
-
-    try {
-      const result = await ddb.get({
-        TableName: CORE_TABLE,
-        Key: { userId, sortKey: `#BOT#${botId}` },
-      })
-
-      return result.Item as IBot
-    } catch (err) {
-      throw err.message || err
-    }
-  }
-
-  async getBots(userId: string) {
-    const ddb = DynamoDBDocument.from(new DynamoDB({}))
-
-    try {
-      const result = await ddb.query({
-        TableName: CORE_TABLE,
-        KeyConditionExpression:
-          'userId = :userId and begins_with(sortKey, :sortKey)',
-        ExpressionAttributeValues: {
-          ':userId': userId,
-          ':sortKey': '#BOT',
-        },
-      })
-
-      return result.Items
-    } catch (err) {
-      throw err.message || err
-    }
-  }
-
   async getBotLogs(botId: string, searchTerms: string | string[] | undefined) {
     const cloudWatchLogs = new CloudWatchLogs({})
 
@@ -513,7 +479,8 @@ class Bot {
       )
 
       if (Number(taskIndex) === 0) {
-        const { triggerSamples } = await this.getBot(userId, botId)
+        const resource = new Resource(userId, 'bot')
+        const { triggerSamples } = await resource.read(botId)
         if (!triggerSamples) return
         sample = triggerSamples.reverse()[0]
       } else {

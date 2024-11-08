@@ -3,11 +3,7 @@ import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
 
 const CORE_TABLE = process.env.CORE_TABLE || ''
 
-export const resourceOperations = {
-  all: ['list', 'read', 'delete', 'create', 'update'],
-  resourceId: ['read', 'delete', 'create', 'update'],
-  resource: ['create', 'update'],
-}
+export const resourceOperations = ['list', 'read', 'delete', 'create', 'update']
 
 class Resource {
   userId: string
@@ -22,6 +18,10 @@ class Resource {
     })
   }
 
+  sortKey(resourceId?: string) {
+    return '#' + this.resourceName + (!resourceId ? '' : '#' + resourceId)
+  }
+
   async list() {
     try {
       const result = await this.ddb.query({
@@ -30,7 +30,7 @@ class Resource {
           'userId = :userId and begins_with(sortKey, :sortKey)',
         ExpressionAttributeValues: {
           ':userId': this.userId,
-          ':sortKey': `#${this.resourceName}`,
+          ':sortKey': this.sortKey(),
         },
       })
 
@@ -40,13 +40,13 @@ class Resource {
     }
   }
 
-  async read(resourceId: string) {
+  async read(resourceId?: string) {
     try {
       const result = await this.ddb.get({
         TableName: CORE_TABLE,
         Key: {
           userId: this.userId,
-          sortKey: `#${this.resourceName}#${resourceId}`,
+          sortKey: this.sortKey(resourceId),
         },
       })
 
@@ -62,7 +62,7 @@ class Resource {
         TableName: CORE_TABLE,
         Key: {
           userId: this.userId,
-          sortKey: `#${this.resourceName}#${resourceId}`,
+          sortKey: this.sortKey(resourceId),
         },
       })
     } catch (err) {
@@ -78,7 +78,7 @@ class Resource {
         TableName: CORE_TABLE,
         Item: {
           userId: this.userId,
-          sortKey: `#${this.resourceName}#${resourceId}`,
+          sortKey: this.sortKey(resourceId),
           ...resource,
         },
       })
@@ -95,7 +95,7 @@ class Resource {
         TableName: CORE_TABLE,
         Key: {
           userId: this.userId,
-          sortKey: `#${this.resourceName}#${resourceId}`,
+          sortKey: this.sortKey(resourceId),
         },
         UpdateExpression: `SET ${resourceKeys.map((k, index) => `#field${index} = :value${index}`).join(', ')}`,
         ExpressionAttributeNames: resourceKeys.reduce(

@@ -11,16 +11,8 @@ exports.handler = async (event, context, callback) => {
 
     const body = JSON.parse(event.body)
 
-    if (!resourceOperations.all.includes(operation)) {
+    if (!resourceOperations.includes(operation)) {
       throw 'Operation not supported'
-    }
-
-    if (resourceOperations.resourceId.includes(operation) && !resourceId) {
-      throw 'Operation required a resourceId'
-    }
-
-    if (resourceOperations.resource.includes(operation) && !body) {
-      throw 'Operation required a resource'
     }
 
     const data = await resource[operation](resourceId, body)
