@@ -140,7 +140,7 @@ functions:
     handler: src/endpoints/resource/index.handler
     events:
       - http:
-          path: user/{userId}/resource/{resourceName}/{operation}/{resourceId?}
+          path: user/{userId}/resource/{resourceName}/{operation}/{resourceId+}
           method: post
           cors: true
 
@@ -245,15 +245,9 @@ functions:
           method: get
 
 resources:
-  Conditions:
-    IsProd:
-      Fn::Equals:
-        - ${self:provider.stage}
-        - prod
   Resources:
     # Database
     coreTable:
-      Condition: IsProd
       Type: AWS::DynamoDB::Table
       DeletionPolicy: Retain
       Properties:
