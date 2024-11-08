@@ -1,6 +1,6 @@
 import Api, { ApiRequestStatus } from 'src/utils/api'
 import { validateAppConnection } from 'src/models/app/schema'
-import { Connection } from 'src/controllers/app'
+import Resource from 'src/controllers/resource'
 import Bot from 'src/controllers/bot'
 import Pipedrive from './pipedrive'
 
@@ -8,7 +8,6 @@ exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
   const bot = new Bot()
   const pipedrive = new Pipedrive()
-  const connection = new Connection()
 
   try {
     const { code, state, error } = event.queryStringParameters
@@ -38,7 +37,9 @@ exports.handler = async (event, context, callback) => {
 
     validateAppConnection(newConnection)
 
-    await connection.createConnection(newConnection)
+    const resource = new Resource(userId, 'connection')
+
+    await resource.create(connectionId, newConnection)
 
     await bot.addConnection(userId, botId, connectionId, taskIndex)
 

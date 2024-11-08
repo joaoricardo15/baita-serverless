@@ -1,5 +1,5 @@
 import Api, { ApiRequestStatus } from 'src/utils/api'
-import { App } from 'src/controllers/app'
+import App from 'src/controllers/app'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)

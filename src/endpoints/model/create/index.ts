@@ -1,6 +1,6 @@
 import Api, { ApiRequestStatus } from 'src/utils/api'
-import { App } from 'src/controllers/app'
 import { validateTasks } from 'src/models/bot/schema'
+import App from 'src/controllers/app'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)

@@ -17,7 +17,9 @@ class Resource {
   constructor(userId: string, resourceName: string) {
     this.userId = userId
     this.resourceName = resourceName.toUpperCase()
-    this.ddb = DynamoDBDocument.from(new DynamoDB({}))
+    this.ddb = DynamoDBDocument.from(new DynamoDB({}), {
+      marshallOptions: { removeUndefinedValues: true },
+    })
   }
 
   async list() {

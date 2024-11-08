@@ -94,12 +94,12 @@ functions:
           path: user
           method: post
           cors: true
-  endpoint-connection-list:
-    handler: src/endpoints/connection/list/index.handler
+  endpoint-user-resource:
+    handler: src/endpoints/resource/index.handler
     events:
       - http:
-          path: user/{userId}/connections
-          method: get
+          path: user/{userId}/resource/{resourceName}/{operation}/{resourceId+}
+          method: post
           cors: true
   endpoint-content-get:
     handler: src/endpoints/content/get/index.handler
@@ -134,13 +134,6 @@ functions:
     events:
       - http:
           path: user/{userId}/todo/{taskId}/done
-          method: post
-          cors: true
-  endpoint-user-resource:
-    handler: src/endpoints/resource/index.handler
-    events:
-      - http:
-          path: user/{userId}/resource/{resourceName}/{operation}/{resourceId+}
           method: post
           cors: true
 

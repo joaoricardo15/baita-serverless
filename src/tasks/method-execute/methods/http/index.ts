@@ -1,7 +1,7 @@
 import Axios from 'axios'
 import { ITaskExecutionInput } from 'src/models/bot/interface'
 import { getDataFromPath, getMappedData } from 'src/utils/bot'
-import { Connection } from 'src/controllers/app'
+import Resource from 'src/controllers/resource'
 
 interface IHttpRequest {
   path: string
@@ -46,8 +46,6 @@ export const httpRequest = async (
 export const oauth2Request = async (
   taskInput: ITaskExecutionInput<IHttpRequest>
 ) => {
-  const connectionClient = new Connection()
-
   try {
     const { userId, appConfig, serviceConfig, inputData, connectionId } =
       taskInput
@@ -61,10 +59,9 @@ export const oauth2Request = async (
     }
 
     // Get credentials from connection database
-    const credentialsResponse = await connectionClient.getConnection(
-      userId,
-      connectionId
-    )
+    const resource = new Resource(userId, 'connection')
+
+    const credentialsResponse = await resource.read(connectionId as string)
 
     if (!credentialsResponse.credentials.refresh_token) {
       throw 'No refresh token'
