@@ -17,8 +17,6 @@ exports.handler = async (event, context, callback) => {
 
     const data = await resource[operation](resourceId, body)
 
-    console.log('data', data)
-
     api.httpResponse(callback, ApiRequestStatus.success, undefined, data)
   } catch (err) {
     api.httpResponse(callback, ApiRequestStatus.fail, err)

@@ -105,7 +105,11 @@ functions:
     handler: src/endpoints/resource/index.handler
     events:
       - http:
-          path: user/{userId}/resource/{resourceName}/{operation}/{resourceId+}
+          path: user/{userId}/resource/{resourceName}/{operation}
+          method: post
+          cors: true
+      - http:
+          path: user/{userId}/resource/{resourceName}/{operation}/{resourceId}
           method: post
           cors: true
   endpoint-bot-create:
