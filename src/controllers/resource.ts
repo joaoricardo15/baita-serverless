@@ -1,9 +1,19 @@
 import { DynamoDB } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
+import { validateTodoTasks } from 'src/models/user/schema'
+import { validateTasks } from 'src/models/bot/schema'
+import { IBotModel } from 'src/models/bot/interface'
+import { ITodo } from 'src/models/user/interface'
 
 const CORE_TABLE = process.env.CORE_TABLE || ''
 
 export const resourceOperations = ['list', 'read', 'delete', 'create', 'update']
+export const resourceValidationProneOperations = ['create', 'update']
+
+export const resourceValidations = {
+  'todo': (todo: ITodo) => validateTodoTasks(todo.tasks),
+  'model': (model: IBotModel) => validateTasks(model.tasks)
+}
 
 class Resource {
   userId: string

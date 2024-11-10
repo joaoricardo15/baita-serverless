@@ -26,6 +26,11 @@ export interface IContent {
   }
 }
 
+export interface ITodo {
+  userId: string
+  tasks: ITodoTask[]
+}
+
 export interface ITodoTask {
   taskId: string
   title: string

@@ -1,5 +1,9 @@
 import Api, { ApiRequestStatus } from 'src/utils/api'
-import Resource, { resourceOperations } from 'src/controllers/resource'
+import Resource, {
+  resourceOperations,
+  resourceValidationProneOperations,
+  resourceValidations,
+} from 'src/controllers/resource'
 
 exports.handler = async (event, context, callback) => {
   const api = new Api(event, context)
@@ -13,6 +17,13 @@ exports.handler = async (event, context, callback) => {
 
     if (!resourceOperations.includes(operation)) {
       throw 'Operation not supported'
+    }
+
+    if (
+      resourceValidationProneOperations.includes(operation) &&
+      Object.keys(resourceValidations).includes(resourceName)
+    ) {
+      resourceValidations[resourceName](body)
     }
 
     const data = await resource[operation](resourceId, body)
