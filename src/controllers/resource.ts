@@ -1,18 +1,28 @@
 import { DynamoDB } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { validateTodoTasks } from 'src/models/user/schema'
 import { validateTasks } from 'src/models/bot/schema'
 import { IBotModel } from 'src/models/bot/interface'
 import { ITodo } from 'src/models/user/interface'
 
 const CORE_TABLE = process.env.CORE_TABLE || ''
+const FILES_BUCKET = process.env.FILES_BUCKET || ''
 
-export const resourceOperations = ['list', 'read', 'delete', 'create', 'update']
+export const resourceOperations = [
+  'list',
+  'read',
+  'delete',
+  'create',
+  'update',
+  'upload',
+]
 export const resourceValidationProneOperations = ['create', 'update']
 
 export const resourceValidations = {
-  'todo': (todo: ITodo) => validateTodoTasks(todo.tasks),
-  'model': (model: IBotModel) => validateTasks(model.tasks)
+  todo: (todo: ITodo) => validateTodoTasks(todo.tasks),
+  model: (model: IBotModel) => validateTasks(model.tasks),
 }
 
 class Resource {
@@ -81,10 +91,8 @@ class Resource {
   }
 
   async create(resourceId: string, resource) {
-    const ddb = DynamoDBDocument.from(new DynamoDB({}))
-
     try {
-      await ddb.put({
+      await this.ddb.put({
         TableName: CORE_TABLE,
         Item: {
           userId: this.userId,
@@ -123,6 +131,24 @@ class Resource {
           {}
         ),
       })
+    } catch (err) {
+      throw err.message || err
+    }
+  }
+
+  async upload(resourceId: string) {
+    const s3 = new S3Client({})
+
+    try {
+      const uploadUrl = await getSignedUrl(
+        s3,
+        new PutObjectCommand({
+          Bucket: FILES_BUCKET,
+          Key: this.sortKey(resourceId),
+        })
+      )
+
+      return uploadUrl
     } catch (err) {
       throw err.message || err
     }

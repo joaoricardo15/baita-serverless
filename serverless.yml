@@ -49,13 +49,15 @@ provider:
     SERVICE_PREFIX: ${self:service}-prod
     SERVICE_API_URL: https://api.baita.help
     SERVICE_SITE_URL: https://www.baita.help
+    SERVICE_LOCAL_URL: http://localhost:3000
 
     # Core Database
     CORE_TABLE: ${self:provider.environment.SERVICE_PREFIX}
 
     # Bot resources
     BOTS_BUCKET: ${self:provider.environment.SERVICE_PREFIX}-bots
-    BOTS_PERMISSION: arn:aws:iam::514311354050:role/${self:provider.environment.SERVICE_PREFIX}
+    FILES_BUCKET: ${self:provider.environment.SERVICE_PREFIX}-files
+    BOTS_PERMISSION: arn:aws:iam::${aws:accountId}:role/${self:provider.environment.SERVICE_PREFIX}
 
     ####################
     ##### Partners #####
@@ -203,6 +205,40 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:provider.environment.BOTS_BUCKET}
+
+    filesBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.FILES_BUCKET}
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          IgnorePublicAcls: true
+          BlockPublicPolicy: false
+          RestrictPublicBuckets: false
+        CorsConfiguration:
+          CorsRules:
+            - AllowedMethods:
+                - PUT
+              AllowedOrigins:
+                - ${self:provider.environment.SERVICE_SITE_URL}
+                - ${self:provider.environment.SERVICE_LOCAL_URL}
+
+    filesBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref filesBucket
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action: 's3:GetObject'
+              Resource: 'arn:aws:s3:::${self:provider.environment.FILES_BUCKET}/*'
+              Condition:
+                StringLike:
+                  aws:Referer:
+                    - ${self:provider.environment.SERVICE_SITE_URL}/*
+                    - ${self:provider.environment.SERVICE_LOCAL_URL}/*
 
     # Iam
     botsRole:
