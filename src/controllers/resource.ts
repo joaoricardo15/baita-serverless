@@ -1,6 +1,6 @@
 import { DynamoDB } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { validateTodoTasks } from 'src/models/user/schema'
 import { validateTasks } from 'src/models/bot/schema'
@@ -17,6 +17,7 @@ export const resourceOperations = [
   'create',
   'update',
   'upload',
+  'remove'
 ]
 export const resourceValidationProneOperations = ['create', 'update']
 
@@ -144,11 +145,28 @@ class Resource {
         s3,
         new PutObjectCommand({
           Bucket: FILES_BUCKET,
-          Key: this.sortKey(resourceId),
+          Key: resourceId
         })
       )
 
       return uploadUrl
+    } catch (err) {
+      throw err.message || err
+    }
+  }
+
+  async remove(resourceId: string) {
+    const s3 = new S3Client({})
+
+    try {
+      await s3.send(
+        new DeleteObjectCommand({
+          Bucket: FILES_BUCKET,
+          Key: resourceId
+        })
+      )
+
+      return
     } catch (err) {
       throw err.message || err
     }
