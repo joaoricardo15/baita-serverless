@@ -1,6 +1,6 @@
 # Baita Serverless
 
-Backend application for BaitaHelp: the app that helps you to automate your life. This is a personal project that was inspired by Zapier's architecture, but aimed at normal people.
+Backend application for BaitaHelp: the app that helps you to automate your life. This is a personal project that was inspired by standard workflow automation tools, but aimed at normal people.
 
 API available at: **https://api.baita.help**
 
