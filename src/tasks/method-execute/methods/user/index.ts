@@ -1,6 +1,6 @@
 import User from 'src/controllers/user'
 import { ITaskExecutionInput } from 'src/models/bot/interface'
-import { validateContent } from 'src/models/user/schema'
+import { validateContent } from 'src/models/user/validation'
 import { IContent } from 'src/models/user/interface'
 import Resource from 'src/controllers/resource'
 

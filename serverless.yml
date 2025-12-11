@@ -5,6 +5,7 @@ plugins:
   - serverless-offline
   - serverless-domain-manager
   - serverless-deployment-bucket
+  - serverless-openapi-documentation
 
 package:
   individually: true
@@ -18,6 +19,14 @@ custom:
   customDomain:
     domainName: api.baita.help
     stage: prod
+  documentation:
+    documentation:
+    version: 1.0.0
+    title: Baita Help API
+    description: Backend application for BaitaHelp
+    models:
+      - name: CreateUserRequest
+        schema: ${file(src/models/user/schema.json)}
 
 provider:
   name: aws
@@ -96,6 +105,15 @@ functions:
           path: user
           method: post
           cors: true
+          documentation:
+            summary: Create User
+            description: Creates a user
+            requestModels:
+              application/json: CreateUserRequest
+            methodResponses:
+              - statusCode: 200
+                responseModels:
+                  application/json: CreateUserResponse
   endpoint-content-get:
     handler: src/endpoints/content/index.handler
     events:
@@ -226,7 +244,8 @@ resources:
     filesBucketPolicy:
       Type: AWS::S3::BucketPolicy
       Properties:
-        Bucket: !Ref filesBucket
+        Bucket:
+          Ref: filesBucket
         PolicyDocument:
           Version: '2012-10-17'
           Statement:

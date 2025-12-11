@@ -1,29 +1,12 @@
 import Ajv, { JSONSchemaType } from 'ajv'
 import addFormats from 'ajv-formats'
 import { IContent, ITodoTask, IUser } from './interface'
+import userSchema from './schema.json'
 
 const ajv = new Ajv()
 addFormats(ajv)
 
-export const userSchema: JSONSchemaType<IUser> = {
-  type: 'object',
-  properties: {
-    userId: {
-      type: 'string',
-    },
-    name: {
-      type: 'string',
-    },
-    email: {
-      type: 'string',
-      format: 'email',
-    },
-    picture: {
-      type: 'string',
-    },
-  },
-  required: ['userId', 'name', 'email', 'picture'],
-}
+export const userSchemaType = userSchema as JSONSchemaType<IUser>
 
 export const contentSchema: JSONSchemaType<IContent[]> = {
   type: 'array',
@@ -131,7 +114,7 @@ export const todoTasksSchema: JSONSchemaType<ITodoTask[]> = {
 }
 
 export const validateUser = (user: IUser) => {
-  const validate = ajv.compile(userSchema)
+  const validate = ajv.compile(userSchemaType)
 
   if (!validate(user)) {
     throw Error(`Invalid User: ${ajv.errorsText(validate.errors)}`)

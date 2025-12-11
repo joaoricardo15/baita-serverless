@@ -1,5 +1,5 @@
 import Api, { ApiRequestStatus } from 'src/utils/api'
-import { validateUser } from 'src/models/user/schema'
+import { validateUser } from 'src/models/user/validation'
 import User from 'src/controllers/user'
 
 exports.handler = async (event, context, callback) => {
