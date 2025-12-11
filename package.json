@@ -5,7 +5,7 @@
   "scripts": {
     "start": "serverless offline --httpPort 5000",
     "deploy": "serverless deploy --stage prod",
-    "docs": "serverless openapi generate --format json --output src/docs/openapi.json",
+    "docs": "serverless openapi generate --format json --output src/docs/openapi.json && aws s3 cp src/docs/openapi.json s3://baita-help-prod-docs",
     "test": "jest --watchAll",
     "lint": "eslint './src/**/*.{js,ts}' --fix",
     "format": "prettier './**/*.{js,ts,json,yml}' --write"

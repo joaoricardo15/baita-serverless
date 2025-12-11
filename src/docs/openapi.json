@@ -4,7 +4,6 @@
     "schemas": {
       "CreateUserRequest": {
         "title": "User",
-        "description": "Schema for a user object",
         "type": "object",
         "properties": {
           "userId": {
