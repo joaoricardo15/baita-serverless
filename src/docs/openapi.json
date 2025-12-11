@@ -1,0 +1,54 @@
+{
+  "openapi": "3.0.0",
+  "components": {
+    "schemas": {
+      "CreateUserRequest": {
+        "title": "User",
+        "description": "Schema for a user object",
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "picture": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "userId",
+          "name",
+          "email",
+          "picture"
+        ]
+      }
+    },
+    "securitySchemes": {}
+  },
+  "info": {
+    "title": "Baita Help API",
+    "description": "Backend application for BaitaHelp",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/user": {
+      "post": {
+        "operationId": "endpoint-user-create",
+        "summary": "Create User",
+        "description": "Creates a user",
+        "responses": {
+          "200": {
+            "description": "Status 200 Response",
+            "content": {}
+          }
+        }
+      }
+    }
+  }
+}
