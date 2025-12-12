@@ -2,7 +2,7 @@
 
 Backend application for BaitaHelp: the app that helps you to automate your life. This is a personal project that was inspired by standard workflow automation tools, but aimed at normal people.
 
-API available at: **https://api.baita.help**
+API docs available at: **https://api.baita.help**
 
 At the end of the day, the baseline technologies implemented in this project are `Serverless Framework`, `Typescript`, `@aws-sdk`, `ajv`, `axios`.
 
@@ -32,39 +32,13 @@ This project is currently in development.
 
 Storage uses DynamoDB on a single table design. Here are the data schemas:
 
-PK     | SK                         | Definition
------- | -------------------------- | ----------
-usedId | #USER                      | User
-usedId | #TODO                      | Todo list
-usedId | #BOT#{botId}               | Bot
-usedId | #CONTENT#{contentId}       | Content
-usedId | #CONNECTION#{connectionId} | Connection
-
-## Main endpoints:
-
-Method | URL
------- | ---
-POST   | /user
-GET    | /user/{userId}/connections
-GET    | /user/{userId}/content
-POST   | /user/{userId}/content/{contentId}/react/{reaction}
-GET    | /user/{userId}/todo
-PUT    | /user/{userId}/todo
-POST   | /user/{userId}/todo/{taskId}/done
-GET    | /user/{userId}/bots
-POST   | /user/{userId}/bots
-GET    | /user/{userId}/bots/{botId}
-PUT    | /user/{userId}/bots/{botId}
-DELETE | /user/{userId}/bots/{botId}/api/{apiId}
-POST   | /user/{userId}/bots/{botId}/test/{taskIndex}
-POST   | /user/{userId}/bots/{botId}/deploy
-GET    | /user/{userId}/bots/{botId}/logs
-POST   | /user/{userId}/bots/{botId}/bud
-GET    | /user/{userId}/models
-POST   | /user/{userId}/models
-DELETE | /user/{userId}/models/{modelId}
-GET    | /connectors/pipedrive
-GET    | /connectors/google
+PK     | SK                             | Definition
+------ | ------------------------------ | ----------
+usedId | #USER                          | User
+usedId | #BOT#{botId}                   | Bot
+usedId | #{resourceName}#{resourceName} | Generic resource
+usedId | #CONTENT#{contentId}           | Content
+usedId | #CONNECTION#{connectionId}     | Connection
 
 ## Installation and Setup Instructions
 

@@ -145,14 +145,17 @@ functions:
             pathParams:
               - name: userId
                 description: ID of the user
+                required: true
                 schema:
-                  type: "string"
+                  type: string
               - name: resourceName
                 description: Name of the resource
+                required: true
                 schema:
-                  type: "string"
+                  type: string
               - name: operation
-                description: Operation to be performed on the resource (list, read, delete, create, update, upload, remove)
+                description: Operation to be performed on the resource
+                required: true
                 schema:
                   type: string
                   enum:
@@ -165,6 +168,9 @@ functions:
                     - remove
               - name: resourceId
                 description: ID of the resource (required for read, delete, update, remove)
+                required: true
+                schema:
+                  type: string
             methodResponses:
               - statusCode: 200
                 responseModels:
@@ -357,18 +363,11 @@ resources:
                   Resource: '*'
 
     # API Gateway - Docs Route
-    docsResource:
-      Type: AWS::ApiGateway::Resource
-      Properties:
-        RestApiId: !Ref ApiGatewayRestApi
-        ParentId: !GetAtt ApiGatewayRestApi.RootResourceId
-        PathPart: docs
-
-    docsMethod:
+    docsRootMethod:
       Type: AWS::ApiGateway::Method
       Properties:
         RestApiId: !Ref ApiGatewayRestApi
-        ResourceId: !Ref docsResource
+        ResourceId: !GetAtt ApiGatewayRestApi.RootResourceId
         HttpMethod: GET
         AuthorizationType: NONE
         Integration:
