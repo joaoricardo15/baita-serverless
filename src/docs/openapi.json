@@ -59,7 +59,7 @@
       "post": {
         "operationId": "endpoint-user-create",
         "summary": "Create User",
-        "description": "Creates a user",
+        "description": "Creates a new user account",
         "responses": {
           "200": {
             "description": "Status 200 Response",
@@ -77,8 +77,8 @@
     "/user/{userId}/resource/{resourceName}/{operation}/{resourceId}": {
       "post": {
         "operationId": "endpoint-resource-operation",
-        "summary": "Create User",
-        "description": "Creates a user and then sends a generated password email",
+        "summary": "Resource Operation",
+        "description": "Performs an operation on a resource. A resource can be any json object that will be stored under the user's id and indexed with the resource name of your choice. The operation are list, read, delete, create, update, upload (file) and remove (file).",
         "responses": {
           "200": {
             "description": "Status 200 Response",
