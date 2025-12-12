@@ -1,8 +1,8 @@
 service: baita-help
 
 plugins:
-  - serverless-esbuild
   - serverless-offline
+  - serverless-esbuild
   - serverless-domain-manager
   - serverless-deployment-bucket
   - serverless-openapi-documentation
@@ -112,7 +112,9 @@ functions:
           cors: true
           documentation:
             summary: Create User
-            description: Creates a user
+            description: Creates a new user account
+            requestBody:
+              description: "A user information object"
             requestModels:
               application/json: CreateUserRequest
             methodResponses:
@@ -145,17 +147,14 @@ functions:
             pathParams:
               - name: userId
                 description: ID of the user
-                required: true
                 schema:
                   type: string
               - name: resourceName
                 description: Name of the resource
-                required: true
                 schema:
                   type: string
               - name: operation
                 description: Operation to be performed on the resource
-                required: true
                 schema:
                   type: string
                   enum:
@@ -168,7 +167,6 @@ functions:
                     - remove
               - name: resourceId
                 description: ID of the resource (required for read, delete, update, remove)
-                required: true
                 schema:
                   type: string
             methodResponses:
