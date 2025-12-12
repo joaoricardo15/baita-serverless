@@ -308,6 +308,12 @@ resources:
           IgnorePublicAcls: false
           BlockPublicPolicy: false
           RestrictPublicBuckets: false
+        CorsConfiguration:
+          CorsRules:
+            - AllowedMethods:
+                - GET
+              AllowedOrigins:
+                - ${self:provider.environment.SERVICE_API_URL}
 
     docsBucketPolicy:
       Type: AWS::S3::BucketPolicy
